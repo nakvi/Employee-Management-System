@@ -24,7 +24,7 @@ const BackdateEntry = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="BackdateEntry" />
+                  <PreviewCardHeader2 title="Backdate Entry" />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -102,11 +102,11 @@ const BackdateEntry = () => {
                               className="form-check-label"
                               for="SaturdayHalfTime"
                             >
-                              Pending Posting
+                              In Actual
                             </Label>
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={3}>
                           <div className="form-check mb-2 mt-2 ">
                             <Input
                               className="form-check-input"
@@ -117,7 +117,7 @@ const BackdateEntry = () => {
                               className="form-check-label"
                               for="SaturdayHalfTime"
                             >
-                              Resign Employee
+                              Retain Old Attendance
                             </Label>
                           </div>
                         </Col>
