@@ -9,11 +9,12 @@ import {
   Input,
   Label,
   Form,
-  CardHeader,
 } from "reactstrap";
-import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
-const BackdateEntry = () => {
-  document.title = "Backdate Entry | EMS";
+import { Link } from "react-router-dom";
+import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+
+const SpecialLeaveEntry = () => {
+  document.title = "Special Leave Entry | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -24,11 +25,14 @@ const BackdateEntry = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="Backdate Entry" />
+                  <PreviewCardHeader
+                    title="Special Leave Entry"
+                    // onCancel={formik.resetForm}
+                  />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -47,85 +51,82 @@ const BackdateEntry = () => {
                             </select>
                           </div>
                         </Col>
+                        <Col xxl={2} md={4}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Employee
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">001:Sir Amir:Hr</option>
+                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                            </select>
+                          </div>
+                        </Col>
+                      
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
+                              Leave
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="VName"
+                              placeholder="Leave"
+                            />
+                          </div>
+                        </Col>
+
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="DateFrom" className="form-label">
                               Date From
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="VName"
+                              id="DateFrom"
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Leave Type
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">001:Sir Amir:Hr</option>
+                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={6}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                              Date To
+                              Remarks
                             </Label>
                             <Input
-                              type="date"
+                              type="number"
                               className="form-control-sm"
                               id="VName"
+                              placeholder="Remarks"
                             />
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="fatherName" className="form-label">
-                              Old Salary
-                            </Label>
-                            <Input
-                              type="number"
-                              className="form-control-sm"
-                              id="fatherName"
-                              placeholder="Old Salary"
-                            />
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="fatherName" className="form-label">
-                              Old Tax
-                            </Label>
-                            <Input
-                              type="number"
-                              className="form-control-sm"
-                              id="fatherName"
-                              placeholder="Old Tax"
-                            />
-                          </div>
-                        </Col>
-                 
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mb-2 mt-2 ">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="SaturdayHalfTime"
-                            />
-                            <Label
-                              className="form-check-label"
-                              for="SaturdayHalfTime"
-                            >
-                              In Actual
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={3}>
-                          <div className="form-check mb-2 mt-2 ">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="SaturdayHalfTime"
-                            />
-                            <Label
-                              className="form-check-label"
-                              for="SaturdayHalfTime"
-                            >
-                              Retain Old Attendance
-                            </Label>
                           </div>
                         </Col>
                       </Row>
@@ -138,7 +139,7 @@ const BackdateEntry = () => {
               <Card>
                 <CardBody>
                   <div className="Location-table" id="customerList">
-                    {/* <Row className="g-4 mb-3">
+                    <Row className="g-4 mb-3">
                       <Col className="col-sm">
                         <div className="d-flex justify-content-sm-end">
                           <div className="search-box ms-2">
@@ -150,7 +151,7 @@ const BackdateEntry = () => {
                           </div>
                         </div>
                       </Col>
-                    </Row> */}
+                    </Row>
 
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
@@ -159,31 +160,37 @@ const BackdateEntry = () => {
                       >
                         <thead className="table-light">
                           <tr>
-                            <th>Sr #</th>
                             <th>Employee</th>
-                            <th>Department</th>
-                            <th>Designation</th>
-                            <th>
-                              <Input
-                                className="form-check-input me-1"
-                                type="checkbox"
-                              />
-                              Select ALL
-                            </th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Invoice No</th>
+                            <th>QTY</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           <tr>
-                            <td>1</td>
                             <td>001:Sir Amir:Hr</td>
-                            <td> zeta solutions </td>
-
-                            <td>SOftware Developer</td>
+                            <td>2462</td>
+                            <td>02/02/2025</td>
+                            <td>33</td>
+                            <td>3300</td>
+                            
+                            <td>Ok</td>
                             <td>
-                              <Input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
+                              <div className="d-flex gap-2">
+                                <div className="edit ">
+                                  <Button className="btn btn-soft-info">
+                                    <i className="bx bx-edit"></i>
+                                  </Button>
+                                </div>
+                                <div className="delete">
+                                  <Button className="btn btn-soft-danger">
+                                    <i className="ri-delete-bin-2-line"></i>
+                                  </Button>
+                                </div>
+                              </div>
                             </td>
                           </tr>
                         </tbody>
@@ -204,6 +211,21 @@ const BackdateEntry = () => {
                         </div>
                       </div>
                     </div>
+
+                    <div className="d-flex justify-content-end">
+                      <div className="pagination-wrap hstack gap-2">
+                        <Link
+                          className="page-item pagination-prev disabled"
+                          to="#"
+                        >
+                          Previous
+                        </Link>
+                        <ul className="pagination Location-pagination mb-0"></ul>
+                        <Link className="page-item pagination-next" to="#">
+                          Next
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </CardBody>
               </Card>
@@ -215,4 +237,4 @@ const BackdateEntry = () => {
   );
 };
 
-export default BackdateEntry;
+export default SpecialLeaveEntry;

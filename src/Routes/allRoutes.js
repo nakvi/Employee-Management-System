@@ -59,6 +59,9 @@ import RoleRights from "../pages/Administration/RoleRights/RoleRights";
 import UserManagement from "../pages/Administration/UserManagement/UserManagement";
 import UserRights from "../pages/Administration/UserRights/UserRights";
 import PermissionManagement from "../pages/Administration/Permissions/PermissionManagement";
+import OTMonthly from "../pages/Attendance/OTMonthly/OTMonthly";
+import SpecialLeaveEntry from "../pages/Attendance/SpecialLeaveEntry/SpecialLeaveEntry";
+import LeaveEntryDepartment from "../pages/Attendance/LeaveEntryDepartment/LeaveEntryDepartment";
 
 const authProtectedRoutes = [
   // my routes setup
@@ -93,7 +96,11 @@ const authProtectedRoutes = [
   { path: "/attendance-entry", component: <AttendanceEntry /> },
   { path: "/change-attendance", component: <ChangeAttendance /> },
   { path: "/attendance-employee", component: <AttendanceEmployee /> },
+  { path: "/leaves", component: <Leave /> },
+  { path: "/special-leave-entry", component: <SpecialLeaveEntry /> },
+  { path: "/leave-entry-department", component:<LeaveEntryDepartment/>},
   { path: "/ot-entry", component: <OTEntry /> },
+  { path: "/ot-monthly", component: <OTMonthly/>},
   { path: "/roster", component: <Roster/>},
   { path: "/backdate-entry", component: <BackdateEntry/>},
   // Posting
@@ -126,7 +133,6 @@ const authProtectedRoutes = [
 
 
   // Attendance routes setup
-  { path: "/leaves", component: <Leave /> },
 
   { path: "/dashboard-crm", component: <DashboardCrm /> },
   { path: "/dashboard", component: <DashboardEcommerce /> },

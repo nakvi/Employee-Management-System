@@ -11,9 +11,10 @@ import {
   Form,
   CardHeader,
 } from "reactstrap";
+import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
-const BackdateEntry = () => {
-  document.title = "Backdate Entry | EMS";
+const OTMonthly = () => {
+  document.title = "OT Monthly | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -24,11 +25,11 @@ const BackdateEntry = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="Backdate Entry" />
+                  <PreviewCardHeader2 title="OT Monthly" />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -48,9 +49,66 @@ const BackdateEntry = () => {
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Location
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">IT</option>
+                              <option value="Choices2">Software</option>
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Department
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">IT</option>
+                              <option value="Choices2">Software</option>
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Designation
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">IT</option>
+                              <option value="Choices2">Software</option>
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                              Date From
+                              Date
                             </Label>
                             <Input
                               type="date"
@@ -59,47 +117,8 @@ const BackdateEntry = () => {
                             />
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="VName" className="form-label">
-                              Date To
-                            </Label>
-                            <Input
-                              type="date"
-                              className="form-control-sm"
-                              id="VName"
-                            />
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="fatherName" className="form-label">
-                              Old Salary
-                            </Label>
-                            <Input
-                              type="number"
-                              className="form-control-sm"
-                              id="fatherName"
-                              placeholder="Old Salary"
-                            />
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="fatherName" className="form-label">
-                              Old Tax
-                            </Label>
-                            <Input
-                              type="number"
-                              className="form-control-sm"
-                              id="fatherName"
-                              placeholder="Old Tax"
-                            />
-                          </div>
-                        </Col>
-                 
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mb-2 mt-2 ">
+                        <Col xxl={2} md={2} className="mt-3">
+                          <div className="form-check  mt-4 ">
                             <Input
                               className="form-check-input"
                               type="checkbox"
@@ -109,22 +128,7 @@ const BackdateEntry = () => {
                               className="form-check-label"
                               for="SaturdayHalfTime"
                             >
-                              In Actual
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={3}>
-                          <div className="form-check mb-2 mt-2 ">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="SaturdayHalfTime"
-                            />
-                            <Label
-                              className="form-check-label"
-                              for="SaturdayHalfTime"
-                            >
-                              Retain Old Attendance
+                              O/T Only
                             </Label>
                           </div>
                         </Col>
@@ -151,7 +155,6 @@ const BackdateEntry = () => {
                         </div>
                       </Col>
                     </Row> */}
-
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
@@ -161,14 +164,17 @@ const BackdateEntry = () => {
                           <tr>
                             <th>Sr #</th>
                             <th>Employee</th>
-                            <th>Department</th>
-                            <th>Designation</th>
+                            <th>Attendance Code</th>
+                            <th>Shift Time</th>
+                            <th>Total Time</th>
+                            <th>Over Time</th>
+                            <th>Remarks</th>
                             <th>
                               <Input
                                 className="form-check-input me-1"
                                 type="checkbox"
                               />
-                              Select ALL
+                              Post
                             </th>
                           </tr>
                         </thead>
@@ -176,9 +182,24 @@ const BackdateEntry = () => {
                           <tr>
                             <td>1</td>
                             <td>001:Sir Amir:Hr</td>
-                            <td> zeta solutions </td>
-
-                            <td>SOftware Developer</td>
+                            <td>VN1</td>
+                            <td>44</td>
+                            <td>44</td>
+                            <td>
+                              <Input
+                                type="number"
+                                className="form-control form-control-sm"
+                                id="VIN"
+                                name="VType"
+                                placeholder="00.0"
+                              />
+                            </td>
+                            <td>
+                              <Input
+                                className="form-control-sm w-75"
+                                type="text"
+                              />
+                            </td>
                             <td>
                               <Input
                                 className="form-check-input"
@@ -215,4 +236,4 @@ const BackdateEntry = () => {
   );
 };
 
-export default BackdateEntry;
+export default OTMonthly;

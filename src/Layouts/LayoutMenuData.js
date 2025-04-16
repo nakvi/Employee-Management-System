@@ -333,9 +333,27 @@ const Navdata = () => {
           parentId: "attendance",
         },
         {
+          id: "specialLeaveEntry",
+          label: "Special Leave Entry",
+          link: "/special-leave-entry",
+          parentId: "attendance",
+        },
+        {
+          id: "leaveEntryDepartment",
+          label: "Leave Entry Department",
+          link: "/leave-entry-department",
+          parentId: "attendance",
+        },
+        {
           id: "oTEntry",
           label: "O/T Entry",
           link: "/ot-entry",
+          parentId: "attendance",
+        },
+        {
+          id: "oTMonthly",
+          label: "O/T Monthly",
+          link: "/ot-monthly",
           parentId: "attendance",
         },
         {
