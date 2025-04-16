@@ -54,6 +54,11 @@ import DeductionReport from "../pages/Reports/DeductionReport/DeductionReport";
 import Gratuity from "../pages/Employee/Gratuity/Gratuity";
 import TrialEmployee from "../pages/Employee/TrialEmployee/TrialEmployee";
 import BackdateEntry from "../pages/Attendance/BackdateEntry/BackdateEntry";
+import RoleManagement from "../pages/Administration/RoleManagement/RoleManagement";
+import RoleRights from "../pages/Administration/RoleRights/RoleRights";
+import UserManagement from "../pages/Administration/UserManagement/UserManagement";
+import UserRights from "../pages/Administration/UserRights/UserRights";
+import PermissionManagement from "../pages/Administration/Permissions/PermissionManagement";
 
 const authProtectedRoutes = [
   // my routes setup
@@ -104,7 +109,12 @@ const authProtectedRoutes = [
   { path: "/deduction-reports", component: <DeductionReport /> },
 
 
-
+// Administration routes
+{ path: "/role-management", component: <RoleManagement /> },
+{ path: "/role-rights", component: <RoleRights /> },
+{ path: "/user-management", component: <UserManagement /> },
+{ path: "/user-rights", component: <UserRights /> },
+{ path: "/permission-management", component: <PermissionManagement /> },
 
 
 
