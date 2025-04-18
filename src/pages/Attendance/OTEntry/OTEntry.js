@@ -14,7 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 const OTEntry = () => {
-  document.title = "OT Entry | EMS";
+  document.title = "O/T Daily | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -25,7 +25,7 @@ const OTEntry = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="OT Entry" />
+                  <PreviewCardHeader2 title="O/T Entry" />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -71,7 +71,19 @@ const OTEntry = () => {
                         <Col xxl={2} md={3}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                              Date
+                              Date From
+                            </Label>
+                            <Input
+                              type="date"
+                              className="form-control-sm"
+                              id="VName"
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              To
                             </Label>
                             <Input
                               type="date"

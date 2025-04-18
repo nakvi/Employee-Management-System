@@ -75,7 +75,7 @@ const LeaveEntryDepartment = () => {
                         <Col xxl={2} md={3}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
-                              Date From
+                              Date
                             </Label>
                             <Input
                               type="date"
@@ -84,7 +84,7 @@ const LeaveEntryDepartment = () => {
                             />
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -97,9 +97,8 @@ const LeaveEntryDepartment = () => {
                               name="AttGroupID"
                               id="AttGroupID"
                             >
-                              <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              <option value="0">Absent</option>
+                              <option value="1" selected>Present</option>
                             </select>
                           </div>
                         </Col>
@@ -147,23 +146,18 @@ const LeaveEntryDepartment = () => {
                       >
                         <thead className="table-light">
                           <tr>
-                            <th>Employee</th>
-                            <th>Amount</th>
+                            <th>Department</th>
                             <th>Date</th>
-                            <th>Invoice No</th>
-                            <th>QTY</th>
+                            <th>Leave Type</th>
                             <th>Remarks</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           <tr>
-                            <td>001:Sir Amir:Hr</td>
-                            <td>2462</td>
+                            <td>IT Supports</td>
                             <td>02/02/2025</td>
-                            <td>33</td>
-                            <td>3300</td>
-                            
+                            <td>Absent</td>
                             <td>Ok</td>
                             <td>
                               <div className="d-flex gap-2">

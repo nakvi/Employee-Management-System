@@ -62,6 +62,9 @@ import PermissionManagement from "../pages/Administration/Permissions/Permission
 import OTMonthly from "../pages/Attendance/OTMonthly/OTMonthly";
 import SpecialLeaveEntry from "../pages/Attendance/SpecialLeaveEntry/SpecialLeaveEntry";
 import LeaveEntryDepartment from "../pages/Attendance/LeaveEntryDepartment/LeaveEntryDepartment";
+import OTDaily from "../pages/Attendance/OTDaily/OTDaily";
+import LateComingExemptAttendance from "../pages/Attendance/LateComingExemptAttendance/LateComingExemptAttendance";
+import Configuration from "../pages/Administration/Configuration/Configuration";
 
 const authProtectedRoutes = [
   // my routes setup
@@ -99,7 +102,9 @@ const authProtectedRoutes = [
   { path: "/leaves", component: <Leave /> },
   { path: "/special-leave-entry", component: <SpecialLeaveEntry /> },
   { path: "/leave-entry-department", component:<LeaveEntryDepartment/>},
-  { path: "/ot-entry", component: <OTEntry /> },
+  { path: "/late-coming-exempt-attendance", component:<LateComingExemptAttendance/>},
+  // { path: "/ot-entry", component: <OTEntry /> },
+  { path: "/ot-daily", component: <OTDaily /> },
   { path: "/ot-monthly", component: <OTMonthly/>},
   { path: "/roster", component: <Roster/>},
   { path: "/backdate-entry", component: <BackdateEntry/>},
@@ -122,6 +127,7 @@ const authProtectedRoutes = [
 { path: "/user-management", component: <UserManagement /> },
 { path: "/user-rights", component: <UserRights /> },
 { path: "/permission-management", component: <PermissionManagement /> },
+{ path: "/configuration", component:<Configuration/>},
 
 
 

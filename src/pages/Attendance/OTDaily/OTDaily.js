@@ -13,8 +13,8 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
-const ChangeAttendance = () => {
-  document.title = "Change Attendance | EMS";
+const OTDaily = () => {
+  document.title = "O/T Daily | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -25,7 +25,7 @@ const ChangeAttendance = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="Change Attendance" />
+                  <PreviewCardHeader2 title="O/T Daily" />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -71,13 +71,40 @@ const ChangeAttendance = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                              Date
+                              Date From
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
                               id="VName"
                             />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              To
+                            </Label>
+                            <Input
+                              type="date"
+                              className="form-control-sm"
+                              id="VName"
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2} className="mt-3">
+                          <div className="form-check  mt-4 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="SaturdayHalfTime"
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="SaturdayHalfTime"
+                            >
+                              O/T Only
+                            </Label>
                           </div>
                         </Col>
                       </Row>
@@ -103,8 +130,7 @@ const ChangeAttendance = () => {
                         </div>
                       </Col>
                     </Row> */}
-
-                    <div className="table-responsive table-card mt-3 mb-1">
+   <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
                         id="customerTable"
@@ -116,8 +142,7 @@ const ChangeAttendance = () => {
                             <th>Attendance Code</th>
                             <th>Shift Time</th>
                             <th>Total Time</th>
-                            <th>Time In</th>
-                            <th>Time Out</th>
+                            <th>Over Time</th>
                             <th>Remarks</th>
                             <th>
                               <Input
@@ -137,19 +162,13 @@ const ChangeAttendance = () => {
                             <td>44</td>
                             <td>
                               <Input
-                                type="time"
-                                className="form-control form-control-sm" 
+                                type="number"
+                                className="form-control form-control-sm"
                                 id="VIN"
                                 name="VType"
+                                placeholder="00.0"
                               />
                             </td>
-
-                            <td>    <Input
-                                type="time"
-                                className="form-control form-control-sm " 
-                                id="VIN"
-                                name="VType"
-                              /></td>
                             <td>
                               <Input
                                 className="form-control-sm w-75"
@@ -192,4 +211,4 @@ const ChangeAttendance = () => {
   );
 };
 
-export default ChangeAttendance;
+export default OTDaily;

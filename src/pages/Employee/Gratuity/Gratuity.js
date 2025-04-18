@@ -12,6 +12,7 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { FiRefreshCw } from "react-icons/fi";
 
 const Gratuity = () => {
   document.title = "Gratuity | EMS";
@@ -118,19 +119,7 @@ const Gratuity = () => {
                             />
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="VName" className="form-label">
-                              Currrent Salary
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="VName"
-                              placeholder="Cheque No"
-                            />
-                          </div>
-                        </Col>
+
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
@@ -157,7 +146,7 @@ const Gratuity = () => {
                             />
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={4}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -214,6 +203,32 @@ const Gratuity = () => {
                             />
                           </div>
                         </Col>
+                        <Col xxl={2} md={4}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              Current Salary
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="VName"
+                              placeholder="Current Salary"
+                              readOnly
+                              disabled
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Button
+                              className="btn btn-soft-success mt-4 px-4 py-1"
+                              title="Refresh"
+                              data-bs-toggle="tooltip"
+                            >
+                              <FiRefreshCw strokeWidth={4} />
+                            </Button>
+                          </div>
+                        </Col>
                       </Row>
                     </div>
                   </CardBody>
@@ -246,27 +261,27 @@ const Gratuity = () => {
                         <thead className="table-light">
                           <tr>
                             <th>Employee</th>
-                            <th>Bank</th>
                             <th>Demand Date </th>
                             <th>Demand Till</th>
                             <th>Paid Till</th>
                             <th> Previous</th>
-                            <th>Currrent Salaray</th>
                             <th>Due Amount</th>
                             <th>Amount</th>
+                            <th>Bank</th>
                             <th>Cheque No</th>
+                            <th>Currrent Salaray</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           <tr>
                             <td>001:Sir Amir:Hr</td>
-                            <td>Loan</td>
                             <td>02/02/2025</td>
                             <td>Habib</td>
                             <td>84843</td>
                             <td>02/03/2025</td>
                             <td>2000</td>
+                            <td>Loan</td>
                             <td>200</td>
                             <td>16</td>
                             <td>205555550</td>
