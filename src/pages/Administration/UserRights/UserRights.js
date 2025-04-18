@@ -16,110 +16,92 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import DeleteModal from "../../../Components/Common/DeleteModal";
-import { getAttendanceGroup } from "../../../slices/setup/attendanceGroup/thunk";
-import {
-  getAttendanceCode,
-  submitAttendanceCode,
-  updateAttendanceCode,
-  deleteAttendanceCode,
-} from "../../../slices/setup/attendanceCode/thunk";
+// Assume these thunks fetch and manage user rights data
+// import { getUserRoles, getUserRights, updateUserRights } from "../../../slices/setup/userRights/thunk";
 
 const UserRights = () => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [editingGroup, setEditingGroup] = useState(null);
+  const [editingRights, setEditingRights] = useState(null);
 
-  // Access Redux state
-  const { loading, error, attendanceCode } = useSelector(
-    (state) => state.AttendanceCode
-  );
-  const { attendanceGroup } = useSelector((state) => state.AttendanceGroup);
+  // Sample data structure based on the image (replace with Redux state)
+  const roles = ["ACCOUNTS", "ADMIN", "EMPLOYEE", "HR", "SHOP"];
+  const pages = [
+    { name: "MFileLogin", permissions: { View: true, Insert: true, Update: false, Delete: false, Backdate: false, Print: false } },
+    { name: "MFileChangePassword", permissions: { View: true, Insert: true, Update: false, Delete: false, Backdate: false, Print: false } },
+    { name: "MSetupSP1", permissions: { View: true, Insert: true, Update: false, Delete: false, Backdate: false, Print: false } },
+    { name: "MSetupLocation", permissions: { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false } },
+    { name: "MSetupDepartmentGroup", permissions: { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false } },
+  ];
 
-  // Fetch data on component mount
+  // Mock Redux state (replace with actual state)
+  const userRights = roles.map((role) => ({
+    roleName: role,
+    pages: pages.map((page) => ({
+      pageName: page.name,
+      permissions: { ...page.permissions },
+    })),
+  }));
+
+  // Fetch data on component mount (mocked here)
   useEffect(() => {
-    dispatch(getAttendanceCode());
-    dispatch(getAttendanceGroup());
+    // dispatch(getUserRoles());
+    // dispatch(getUserRights());
   }, [dispatch]);
 
-  // Formik form setup
+  // Formik setup for managing roles and permissions
   const formik = useFormik({
     initialValues: {
-      VCode: "",
-      VName: "",
-      SortOrder: 0,
-      GroupID: "-1",
-      CompanyID: "1",
-      UID: "1",
-      IsActive: false,
+      roleName: "",
+      pages: pages.reduce((acc, page) => {
+        acc[page.name] = { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false };
+        return acc;
+      }, {}),
     },
     validationSchema: Yup.object({
-      VCode: Yup.string()
-        .required("Code is required.")
-        .min(3, "Code must be at least 3 characters ")
-        .max(10, "Code must be less then 10 characters"),
-      VName: Yup.string()
-        .required("Title is required.")
-        .min(3, "Title at least must be 3 characters "),
-      SortOrder: Yup.number()
-        .typeError("Sort Order must be a number.")
-        .required("Sort Order is required."),
-      // GroupID: Yup.string().required("Attendance Group is required."),
-      GroupID: Yup.string()
-      .test("is-valid-leave-type", "Attendance Group is required.", (value) => value !== "-1"),
-      IsActive: Yup.boolean(),
+      roleName: Yup.string().required("Role Name is required."),
     }),
     onSubmit: (values) => {
-      // Add your form submission logic here
-      const transformedValues = {
-        ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
-      };
-    if (transformedValues.GroupID === -1) {
-      transformedValues.GroupID === "";
-    }
-      if (editingGroup) {
-        console.log("Editing Group", transformedValues);
-        dispatch(
-          updateAttendanceCode({ ...transformedValues, VID: editingGroup.VID })
-        );
-        setEditingGroup(null); // Reset after submission
+      if (editingRights) {
+        dispatch(updateUserRights({ ...values, roleId: editingRights.roleId }));
+        setEditingRights(null);
       } else {
-        dispatch(submitAttendanceCode(transformedValues));
+        // Add new role logic here
       }
       formik.resetForm();
     },
   });
-  // Delete Data
+
+  const handleEditClick = (role) => {
+    setEditingRights(role);
+    formik.setValues({
+      roleName: role.roleName,
+      pages: role.pages.reduce((acc, page) => {
+        acc[page.pageName] = { ...page.permissions };
+        return acc;
+      }, {}),
+    });
+  };
+
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
   };
+
   const handleDeleteConfirm = () => {
     if (deleteId) {
-      dispatch(deleteAttendanceCode(deleteId));
+      // dispatch(deleteUserRights(deleteId));
     }
     setDeleteModal(false);
   };
-  const handleEditClick = (group) => {
-    setEditingGroup(group);
-    formik.setValues({
-      VCode: group.VCode,
-      VName: group.VName,
-      SortOrder: group.SortOrder,
-      GroupID: group.GroupID,
-      UID: group.UID,
-      CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
-    });
-  };
+
   document.title = "User Rights | EMS";
+
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
@@ -133,56 +115,19 @@ const UserRights = () => {
                       <Row className="gy-4">
                         <Col xxl={3} md={4}>
                           <div>
-                            <Label htmlFor="name" className="form-label">
-                              Name
+                            <Label htmlFor="roleName" className="form-label">
+                              Role Name
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="name"
-                              placeholder="Code"
-                              {...formik.getFieldProps("name")}
+                              id="roleName"
+                              placeholder="Role Name"
+                              {...formik.getFieldProps("roleName")}
                             />
-                            {formik.touched.name && formik.errors.name ? (
-                              <div className="text-danger">
-                                {formik.errors.name}
-                              </div>
+                            {formik.touched.roleName && formik.errors.roleName ? (
+                              <div className="text-danger">{formik.errors.roleName}</div>
                             ) : null}
-                          </div>
-                        </Col>
-                        <Col xxl={3} md={4}>
-                          <div>
-                            <Label htmlFor="SortOrder" className="form-label">
-                              Sort Order
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="SortOrder"
-                              placeholder="Sort Order"
-                              {...formik.getFieldProps("SortOrder")}
-                            />
-                            {formik.touched.SortOrder &&
-                            formik.errors.SortOrder ? (
-                              <div className="text-danger">
-                                {formik.errors.SortOrder}
-                              </div>
-                            ) : null}
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check form-switch " dir="ltr">
-                            <Input
-                              type="checkbox"
-                              className="form-check-input"
-                              id="IsActive"
-                              defaultChecked=""
-                              {...formik.getFieldProps("IsActive")}
-                              checked={formik.values.IsActive}
-                            />
-                            <Label className="form-check-label" for="IsActive">
-                              IsActive
-                            </Label>
                           </div>
                         </Col>
                       </Row>
@@ -211,59 +156,120 @@ const UserRights = () => {
 
                     <div className="table-responsive table-card mb-1">
                       <table
-                        className="table align-middle  table-nowrap table-striped table-sm "
+                        className="table align-middle table-nowrap table-striped table-sm"
                         id="customerTable"
                       >
                         <thead className="table-light">
                           <tr>
-                            <th className="" data-sort="name">
-                              Name
-                            </th>
-                            <th className="" data-sort="action">
-                              Action
-                            </th>
+                            <th data-sort="roleName">Role Name</th>
+                            <th data-sort="select">Select</th>
+                            <th data-sort="pageName">Page Name</th>
+                            <th data-sort="view">View</th>
+                            <th data-sort="insert">Insert</th>
+                            <th data-sort="update">Update</th>
+                            <th data-sort="delete">Delete</th>
+                            <th data-sort="backdate">Backdate</th>
+                            <th data-sort="print">Print</th>
+                            <th data-sort="action">Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          {attendanceCode?.length > 0 ? (
-                            attendanceCode.map((group, index) => (
-                              <tr key={group.VID}>
-                                <td>{group.VCode}</td>
-                                <td>{group.VName}</td>
-                                <td>
-                                  {attendanceGroup?.data?.find(
-                                    (groupItem) =>
-                                      groupItem.VID === group.GroupID
-                                  )?.VName || "N/A"}
-                                </td>
-                                <td>
-                                  <div className="d-flex gap-2">
-                                    <div className="edit ">
-                                      <Button
-                                        className="btn btn-soft-info"
-                                        onClick={() => handleEditClick(group)}
-                                      >
-                                        <i className="bx bx-edit"></i>
-                                      </Button>
-                                    </div>
-                                    <div className="delete">
-                                      <Button
-                                        className="btn btn-soft-danger"
-                                        onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }
-                                      >
-                                        <i className="ri-delete-bin-2-line"></i>
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
+                          {userRights?.length > 0 ? (
+                            userRights.map((role) =>
+                              role.pages.map((page, index) => (
+                                <tr key={`${role.roleName}-${page.pageName}`}>
+                                  {index === 0 && (
+                                    <td rowSpan={role.pages.length}>{role.roleName}</td>
+                                  )}
+                                  {index === 0 && (
+                                    <td rowSpan={role.pages.length}>
+                                      <Input type="checkbox" />
+                                    </td>
+                                  )}
+                                  <td>{page.pageName}</td>
+                                  <td>
+                                    <Input
+                                      type="checkbox"
+                                      checked={page.permissions.View}
+                                      onChange={() => {
+                                        // Update permissions logic
+                                      }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Input
+                                      type="checkbox"
+                                      checked={page.permissions.Insert}
+                                      onChange={() => {
+                                        // Update permissions logic
+                                      }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Input
+                                      type="checkbox"
+                                      checked={page.permissions.Update}
+                                      onChange={() => {
+                                        // Update permissions logic
+                                      }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Input
+                                      type="checkbox"
+                                      checked={page.permissions.Delete}
+                                      onChange={() => {
+                                        // Update permissions logic
+                                      }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Input
+                                      type="checkbox"
+                                      checked={page.permissions.Backdate}
+                                      onChange={() => {
+                                        // Update permissions logic
+                                      }}
+                                    />
+                                  </td>
+                                  <td>
+                                    <Input
+                                      type="checkbox"
+                                      checked={page.permissions.Print}
+                                      onChange={() => {
+                                        // Update permissions logic
+                                      }}
+                                    />
+                                  </td>
+                                  {index === 0 && (
+                                    <td rowSpan={role.pages.length}>
+                                      <div className="d-flex gap-2">
+                                        <div className="edit">
+                                          <Button
+                                            className="btn btn-soft-info"
+                                            onClick={() => handleEditClick(role)}
+                                          >
+                                            <i className="bx bx-edit"></i>
+                                          </Button>
+                                        </div>
+                                        <div className="delete">
+                                          <Button
+                                            className="btn btn-soft-danger"
+                                            onClick={() => handleDeleteClick(role.roleName)}
+                                          >
+                                            <i className="ri-delete-bin-2-line"></i>
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))
+                            )
                           ) : (
                             <tr>
-                              <td colSpan="8" className="text-center">
-                                No User Right found.
+                              <td colSpan="10" className="text-center">
+                                No User Rights found.
                               </td>
                             </tr>
                           )}
@@ -280,7 +286,7 @@ const UserRights = () => {
                           <h5 className="mt-2">Sorry! No Result Found</h5>
                           <p className="text-muted mb-0">
                             We've searched more than 150+ Orders We did not find
-                            any orders for you search.
+                            any orders for your search.
                           </p>
                         </div>
                       </div>
