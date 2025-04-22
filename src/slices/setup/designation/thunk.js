@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Define a custom async thunk to fetch data from an API
-const API_ENDPOINT = "http://192.168.18.57:8001/ems/designation/";
+const API_ENDPOINT = "http://192.168.18.58:8001/ems/designation/";
 // Fetch Designation
 export const getDesignation = createAsyncThunk(
   "designation/getDesignation",

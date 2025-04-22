@@ -345,9 +345,21 @@ const Navdata = () => {
           parentId: "attendance",
         },
         {
-          id: "oTEntry",
-          label: "O/T Entry",
-          link: "/ot-entry",
+          id: "lateComingExemptAttendance",
+          label: "Late Coming",
+          link: "/late-coming-exempt-attendance",
+          parentId: "attendance",
+        },
+        // {
+        //   id: "oTEntry",
+        //   label: "O/T Entry",
+        //   link: "/ot-entry",
+        //   parentId: "attendance",
+        // },
+        {
+          id: "oTDaily",
+          label: "O/T Daily",
+          link: "/ot-daily",
           parentId: "attendance",
         },
         {
@@ -494,6 +506,12 @@ const Navdata = () => {
         //   link: "/permission-management",
         //   parentId: "administration",
         // },
+        {
+          id: "configuration",
+          label: "Configuration",
+          link: "/configuration",
+          parentId: "administration",
+        },
       ],
     },
     //  other code here

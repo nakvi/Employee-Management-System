@@ -14,7 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 const OTMonthly = () => {
-  document.title = "OT Monthly | EMS";
+  document.title = "O/T Monthly | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -25,7 +25,7 @@ const OTMonthly = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="OT Monthly" />
+                  <PreviewCardHeader2 title="O/T Monthly" />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -108,7 +108,7 @@ const OTMonthly = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                              Date
+                              Month
                             </Label>
                             <Input
                               type="date"

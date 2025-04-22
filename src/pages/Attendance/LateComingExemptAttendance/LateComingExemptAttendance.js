@@ -9,12 +9,12 @@ import {
   Input,
   Label,
   Form,
-  CardHeader,
 } from "reactstrap";
 import { Link } from "react-router-dom";
-import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
-const ChangeAttendance = () => {
-  document.title = "Change Attendance | EMS";
+import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+
+const LateComingExemptAttendance = () => {
+  document.title = "Late Coming Exempt | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -25,7 +25,10 @@ const ChangeAttendance = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="Change Attendance" />
+                  <PreviewCardHeader
+                    title="Late Coming Exempt Attendance"
+                    // onCancel={formik.resetForm}
+                  />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -54,7 +57,7 @@ const ChangeAttendance = () => {
                               htmlFor="departmentGroupInput"
                               className="form-label"
                             >
-                              Department
+                              Employee
                             </Label>
                             <select
                               className="form-select  form-select-sm"
@@ -62,21 +65,72 @@ const ChangeAttendance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              <option value="Choices1">001:Sir Amir:Hr</option>
+                              <option value="Choices2">002:Sir Ijaz:HOD</option>
                             </select>
                           </div>
                         </Col>
-
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Location
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">001:Sir Amir:Hr</option>
+                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Department
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="-1">---Select---</option>
+                              <option value="0">Absent</option>
+                              <option value="1" >Present</option>
+                            </select>
+                          </div>
+                        </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="DateFrom" className="form-label">
                               Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
+                              id="Date"
+                            />
+                          </div>
+                        </Col>
+                      
+                        <Col xxl={2} md={6}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              Remarks
+                            </Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
                               id="VName"
+                              placeholder="Remarks"
                             />
                           </div>
                         </Col>
@@ -90,7 +144,7 @@ const ChangeAttendance = () => {
               <Card>
                 <CardBody>
                   <div className="Location-table" id="customerList">
-                    {/* <Row className="g-4 mb-3">
+                    <Row className="g-4 mb-3">
                       <Col className="col-sm">
                         <div className="d-flex justify-content-sm-end">
                           <div className="search-box ms-2">
@@ -102,7 +156,7 @@ const ChangeAttendance = () => {
                           </div>
                         </div>
                       </Col>
-                    </Row> */}
+                    </Row>
 
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
@@ -111,56 +165,35 @@ const ChangeAttendance = () => {
                       >
                         <thead className="table-light">
                           <tr>
-                            <th>Sr #</th>
                             <th>Employee</th>
-                            <th>Attendance Code</th>
-                            <th>Shift Time</th>
-                            <th>Total Time</th>
-                            <th>Time In</th>
-                            <th>Time Out</th>
+                            <th>Location </th>
+                           
+                            <th>Department</th>
+                            <th>Date</th>
                             <th>Remarks</th>
-                            <th>
-                              <Input
-                                className="form-check-input me-1"
-                                type="checkbox"
-                              />
-                               Post
-                            </th>
+                            <th>Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           <tr>
-                          <td>1</td>
                             <td>001:Sir Amir:Hr</td>
-                            <td>VN1</td>
-                            <td>44</td>
-                            <td>44</td>
+                            <td>Lahore</td>
+                            <td>IT</td> 
+                            <td>02/02/2025</td>                           
+                            <td>Ok</td>
                             <td>
-                              <Input
-                                type="time"
-                                className="form-control form-control-sm" 
-                                id="VIN"
-                                name="VType"
-                              />
-                            </td>
-
-                            <td>    <Input
-                                type="time"
-                                className="form-control form-control-sm " 
-                                id="VIN"
-                                name="VType"
-                              /></td>
-                            <td>
-                              <Input
-                                className="form-control-sm w-75"
-                                type="text"
-                              />
-                            </td>
-                            <td>
-                              <Input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
+                              <div className="d-flex gap-2">
+                                <div className="edit ">
+                                  <Button className="btn btn-soft-info">
+                                    <i className="bx bx-edit"></i>
+                                  </Button>
+                                </div>
+                                <div className="delete">
+                                  <Button className="btn btn-soft-danger">
+                                    <i className="ri-delete-bin-2-line"></i>
+                                  </Button>
+                                </div>
+                              </div>
                             </td>
                           </tr>
                         </tbody>
@@ -181,6 +214,21 @@ const ChangeAttendance = () => {
                         </div>
                       </div>
                     </div>
+
+                    <div className="d-flex justify-content-end">
+                      <div className="pagination-wrap hstack gap-2">
+                        <Link
+                          className="page-item pagination-prev disabled"
+                          to="#"
+                        >
+                          Previous
+                        </Link>
+                        <ul className="pagination Location-pagination mb-0"></ul>
+                        <Link className="page-item pagination-next" to="#">
+                          Next
+                        </Link>
+                      </div>
+                    </div>
                   </div>
                 </CardBody>
               </Card>
@@ -192,4 +240,4 @@ const ChangeAttendance = () => {
   );
 };
 
-export default ChangeAttendance;
+export default LateComingExemptAttendance;

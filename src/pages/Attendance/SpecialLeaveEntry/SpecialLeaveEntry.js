@@ -74,13 +74,13 @@ const SpecialLeaveEntry = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                              Leave
+                              Application No
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
                               id="VName"
-                              placeholder="Leave"
+                              placeholder="Application No"
                             />
                           </div>
                         </Col>
@@ -88,12 +88,12 @@ const SpecialLeaveEntry = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
-                              Date From
+                              Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="DateFrom"
+                              id="Date"
                             />
                           </div>
                         </Col>
@@ -110,9 +110,8 @@ const SpecialLeaveEntry = () => {
                               name="AttGroupID"
                               id="AttGroupID"
                             >
-                              <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              <option value="0">Absent</option>
+                              <option value="1" selected>Present</option>
                             </select>
                           </div>
                         </Col>
@@ -161,10 +160,9 @@ const SpecialLeaveEntry = () => {
                         <thead className="table-light">
                           <tr>
                             <th>Employee</th>
-                            <th>Amount</th>
+                            <th>Application No</th>
                             <th>Date</th>
-                            <th>Invoice No</th>
-                            <th>QTY</th>
+                            <th>Leave Type</th>
                             <th>Remarks</th>
                             <th>Action</th>
                           </tr>
@@ -174,9 +172,7 @@ const SpecialLeaveEntry = () => {
                             <td>001:Sir Amir:Hr</td>
                             <td>2462</td>
                             <td>02/02/2025</td>
-                            <td>33</td>
-                            <td>3300</td>
-                            
+                            <td>33</td>                            
                             <td>Ok</td>
                             <td>
                               <div className="d-flex gap-2">

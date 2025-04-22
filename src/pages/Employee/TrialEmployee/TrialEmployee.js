@@ -59,15 +59,12 @@ const TrialEmployee = () => {
                             >
                               Employee
                             </Label>
-                            <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
-                            >
-                              <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
-                            </select>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="fatherName"
+                              placeholder="Employee Name"
+                            />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
