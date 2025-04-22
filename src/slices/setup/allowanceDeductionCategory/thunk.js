@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 // Define the API endpoint
 
-const API_ENDPOINT = "http://192.168.18.57:8001/ems/allowDedCat/";
+const API_ENDPOINT = "http://192.168.18.58:8001/ems/allowDedCat/";
 
 // Create the async thunk
 export const getAllowanceDeductionCategory = createAsyncThunk(
