@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Card,
@@ -14,39 +14,27 @@ import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useDispatch, useSelector } from "react-redux";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 
-// Dummy data for roles
-const initialRoles = [
-  {
-    VID: 1,
-    VName: "Admin",
-    SortOrder: 1,
-    GroupID: "-1",
-    CompanyID: "1",
-    UID: "1",
-    IsActive: 1,
-  },
-  {
-    VID: 2,
-    VName: "User",
-    SortOrder: 2,
-    GroupID: "-1",
-    CompanyID: "1",
-    UID: "1",
-    IsActive: 0,
-  },
-];
-
 const RoleManagement = () => {
-  const [roles, setRoles] = useState(initialRoles);
+  const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
 
+  // Access Redux state
+  const { loading, error, attendanceCode } = useSelector(
+    (state) => state.AttendanceCode
+  );
+  const { attendanceGroup } = useSelector((state) => state.AttendanceGroup);
+
+  
+
   // Formik form setup
   const formik = useFormik({
     initialValues: {
+      VCode: "",
       VName: "",
       SortOrder: 0,
       GroupID: "-1",
@@ -55,116 +43,106 @@ const RoleManagement = () => {
       IsActive: false,
     },
     validationSchema: Yup.object({
-      VName: Yup.string()
-        .required("Role name is required.")
-        .min(3, "Role name must be at least 3 characters")
-        .max(30, "Role name must be less than 30 characters"),
+      name: Yup.string()
+        .required("name is required.")
+        .min(3, "name must be at least 3 characters ")
+        .max(30, "Code must be less then 30 characters"),
       IsActive: Yup.boolean(),
     }),
     onSubmit: (values) => {
+      // Add your form submission logic here
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0,
-        GroupID: values.GroupID === "-1" ? "" : values.GroupID,
+        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
       };
-
+    if (transformedValues.GroupID === -1) {
+      transformedValues.GroupID === "";
+    }
       if (editingGroup) {
-        // Update existing role
-        setRoles(
-          roles.map((role) =>
-            role.VID === editingGroup.VID
-              ? { ...transformedValues, VID: editingGroup.VID }
-              : role
-          )
+        console.log("Editing Group", transformedValues);
+        dispatch(
+          updateAttendanceCode({ ...transformedValues, VID: editingGroup.VID })
         );
-        setEditingGroup(null);
+        setEditingGroup(null); // Reset after submission
       } else {
-        // Add new role
-        const newRole = {
-          ...transformedValues,
-          VID: roles.length + 1, // Simple ID generation
-        };
-        setRoles([...roles, newRole]);
+        dispatch(submitAttendanceCode(transformedValues));
       }
       formik.resetForm();
     },
   });
-
-  // Handle delete
+  // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
   };
-
   const handleDeleteConfirm = () => {
-    setRoles(roles.filter((role) => role.VID !== deleteId));
+    if (deleteId) {
+      dispatch(deleteAttendanceCode(deleteId));
+    }
     setDeleteModal(false);
-    setDeleteId(null);
   };
-
-  // Handle edit
   const handleEditClick = (group) => {
     setEditingGroup(group);
     formik.setValues({
+      VCode: group.VCode,
       VName: group.VName,
       SortOrder: group.SortOrder,
-      GroupID: group.GroupID || "-1",
+      GroupID: group.GroupID,
       UID: group.UID,
       CompanyID: group.CompanyID,
       IsActive: group.IsActive === 1,
     });
   };
-
   document.title = "Role Management | EMS";
-
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                     title="Role Management"
-                    onCancel={() => {
-                      formik.resetForm();
-                      setEditingGroup(null);
-                    }}
+                    onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
                         <Col xxl={3} md={4}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="name" className="form-label">
                               Role Name
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="VName"
-                              placeholder="Enter role name"
-                              {...formik.getFieldProps("VName")}
+                              id="name"
+                              placeholder="role name    "
+                              {...formik.getFieldProps("name")}
                             />
-                            {formik.touched.VName && formik.errors.VName ? (
+                            {formik.touched.name && formik.errors.name ? (
                               <div className="text-danger">
-                                {formik.errors.VName}
+                                {formik.errors.name}
                               </div>
                             ) : null}
                           </div>
                         </Col>
+                        
                         <Col xxl={2} md={2}>
                           <div className="form-check form-switch mt-4" dir="ltr">
                             <Input
                               type="checkbox"
                               className="form-check-input"
                               id="IsActive"
+                              defaultChecked=""
                               {...formik.getFieldProps("IsActive")}
                               checked={formik.values.IsActive}
                             />
-                            <Label className="form-check-label" htmlFor="IsActive">
-                              Is Active
+                            <Label className="form-check-label" for="IsActive">
+                              IsActive
                             </Label>
                           </div>
                         </Col>
@@ -185,7 +163,6 @@ const RoleManagement = () => {
                             <input
                               type="text"
                               className="form-control-sm search"
-                              placeholder=""
                             />
                             <i className="ri-search-line search-icon"></i>
                           </div>
@@ -195,51 +172,79 @@ const RoleManagement = () => {
 
                     <div className="table-responsive table-card mb-1">
                       <table
-                        className="table align-middle table-nowrap table-striped table-sm"
+                        className="table align-middle  table-nowrap table-striped table-sm "
                         id="customerTable"
                       >
                         <thead className="table-light">
                           <tr>
-                            <th data-sort="VName">Name</th>
-                            <th data-sort="IsActive">Status</th>
-                            <th data-sort="action">Action</th>
+                            <th className="" data-sort="name">
+                              Name
+                            </th>
+                            <th className="" data-sort="action">
+                              Action
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          {roles.length > 0 ? (
-                            roles.map((group) => (
+                          {attendanceCode?.length > 0 ? (
+                            attendanceCode.map((group, index) => (
                               <tr key={group.VID}>
+                                <td>{group.VCode}</td>
                                 <td>{group.VName}</td>
                                 <td>
-                                  {group.IsActive === 1 ? "Active" : "Inactive"}
+                                  {attendanceGroup?.data?.find(
+                                    (groupItem) =>
+                                      groupItem.VID === group.GroupID
+                                  )?.VName || "N/A"}
                                 </td>
                                 <td>
                                   <div className="d-flex gap-2">
-                                    <Button
-                                      className="btn btn-soft-info btn-sm"
-                                      onClick={() => handleEditClick(group)}
-                                    >
-                                      <i className="bx bx-edit"></i>
-                                    </Button>
-                                    <Button
-                                      className="btn btn-soft-danger btn-sm"
-                                      onClick={() => handleDeleteClick(group.VID)}
-                                    >
-                                      <i className="ri-delete-bin-2-line"></i>
-                                    </Button>
+                                    <div className="edit ">
+                                      <Button
+                                        className="btn btn-soft-info"
+                                        onClick={() => handleEditClick(group)}
+                                      >
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
                                   </div>
                                 </td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan="4" className="text-center">
-                                No Roles found.
+                              <td colSpan="8" className="text-center">
+                                No Role found.
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
+                      <div className="noresult" style={{ display: "none" }}>
+                        <div className="text-center">
+                          <lord-icon
+                            src="https://cdn.lordicon.com/msoeawqm.json"
+                            trigger="loop"
+                            colors="primary:#121331,secondary:#08a88a"
+                            style={{ width: "75px", height: "75px" }}
+                          ></lord-icon>
+                          <h5 className="mt-2">Sorry! No Result Found</h5>
+                          <p className="text-muted mb-0">
+                            We've searched more than 150+ Orders We did not find
+                            any orders for you search.
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="d-flex justify-content-end">
@@ -250,7 +255,7 @@ const RoleManagement = () => {
                         >
                           Previous
                         </Link>
-                        <ul className="pagination listjs-pagination mb-0"></ul>
+                        <ul className="pagination Location-pagination mb-0"></ul>
                         <Link className="page-item pagination-next" to="#">
                           Next
                         </Link>
@@ -265,7 +270,7 @@ const RoleManagement = () => {
       </div>
       <DeleteModal
         show={deleteModal}
-        onCloseClick={() => setDeleteModal(false)}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
         onDeleteClick={handleDeleteConfirm}
       />
     </React.Fragment>

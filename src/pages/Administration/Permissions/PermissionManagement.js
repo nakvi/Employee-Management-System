@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Button,
   Card,
@@ -8,107 +8,106 @@ import {
   Row,
   Input,
   Label,
-  Form,
 } from "reactstrap";
-import { Link } from "react-router-dom";
-import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { useDispatch, useSelector } from "react-redux";
-import DeleteModal from "../../../Components/Common/DeleteModal";
+
+// Dummy data for permissions
+const initialPermissions = [
+  { id: 1, name: "Permission 1", isActive: true },
+  { id: 2, name: "Permission 2", isActive: false },
+  { id: 3, name: "Permission 3", isActive: true },
+];
 
 const PermissionManagement = () => {
-  const dispatch = useDispatch();
-  const [deleteModal, setDeleteModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [editingGroup, setEditingGroup] = useState(null);
-
-  // Access Redux state
-  const { loading, error, attendanceCode } = useSelector(
-    (state) => state.AttendanceCode
-  );
-  const { attendanceGroup } = useSelector((state) => state.AttendanceGroup);
-
-  
+  const [permissions, setPermissions] = useState(initialPermissions);
+  const [editingPermission, setEditingPermission] = useState(null);
 
   // Formik form setup
   const formik = useFormik({
     initialValues: {
-      VCode: "",
-      VName: "",
-      SortOrder: 0,
-      GroupID: "-1",
-      CompanyID: "1",
-      UID: "1",
-      IsActive: false,
+      name: "",
+      isActive: false,
     },
     validationSchema: Yup.object({
       name: Yup.string()
-        .required("name is required.")
-        .min(3, "name must be at least 3 characters ")
-        .max(30, "Code must be less then 30 characters"),
-      IsActive: Yup.boolean(),
+        .required("Name is required.")
+        .min(3, "Name must be at least 3 characters")
+        .max(30, "Name must be less than 30 characters"),
+      isActive: Yup.boolean(),
     }),
-    onSubmit: (values) => {
-      // Add your form submission logic here
-      const transformedValues = {
-        ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
-      };
-    if (transformedValues.GroupID === -1) {
-      transformedValues.GroupID === "";
-    }
-      if (editingGroup) {
-        console.log("Editing Group", transformedValues);
-        dispatch(
-          updateAttendanceCode({ ...transformedValues, VID: editingGroup.VID })
+    onSubmit: (values, { resetForm }) => {
+      if (editingPermission) {
+        // Edit existing permission
+        setPermissions(
+          permissions.map((perm) =>
+            perm.id === editingPermission.id
+              ? { ...perm, name: values.name, isActive: values.isActive }
+              : perm
+          )
         );
-        setEditingGroup(null); // Reset after submission
+        setEditingPermission(null);
       } else {
-        dispatch(submitAttendanceCode(transformedValues));
+        // Add new permission
+        const newPermission = {
+          id: permissions.length + 1,
+          name: values.name,
+          isActive: values.isActive,
+        };
+        setPermissions([...permissions, newPermission]);
       }
-      formik.resetForm();
+      resetForm();
     },
   });
-  // Delete Data
-  const handleDeleteClick = (id) => {
-    setDeleteId(id);
-    setDeleteModal(true);
-  };
-  const handleDeleteConfirm = () => {
-    if (deleteId) {
-      dispatch(deleteAttendanceCode(deleteId));
-    }
-    setDeleteModal(false);
-  };
-  const handleEditClick = (group) => {
-    setEditingGroup(group);
+
+  // Handle edit
+  const handleEditClick = (permission) => {
+    setEditingPermission(permission);
     formik.setValues({
-      VCode: group.VCode,
-      VName: group.VName,
-      SortOrder: group.SortOrder,
-      GroupID: group.GroupID,
-      UID: group.UID,
-      CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
+      name: permission.name,
+      isActive: permission.isActive,
     });
   };
-  document.title = "Permission Management | EMS";
+
+  // Handle delete
+  const handleDeleteClick = (id) => {
+    setPermissions(permissions.filter((perm) => perm.id !== id));
+  };
+
+  // Handle cancel
+  const handleCancel = () => {
+    setEditingPermission(null);
+    formik.resetForm();
+  };
+
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
-                <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
-                    title="Permission Management"
-                    onCancel={formik.resetForm}
-                  />
+                <form onSubmit={formik.handleSubmit}>
                   <CardBody className="card-body">
+                    <div className="d-flex justify-content-between align-items-center mb-3">
+                      <h4 className="card-title mb-0">Permission Management</h4>
+                      <div>
+                        <Button
+                          type="submit"
+                          color="success"
+                          className="me-2"
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          type="button"
+                          color="dark"
+                          onClick={handleCancel}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
                     <div className="live-preview">
                       <Row className="gy-4">
                         <Col xxl={3} md={4}>
@@ -120,7 +119,7 @@ const PermissionManagement = () => {
                               type="text"
                               className="form-control-sm"
                               id="name"
-                              placeholder=" name    "
+                              placeholder="name"
                               {...formik.getFieldProps("name")}
                             />
                             {formik.touched.name && formik.errors.name ? (
@@ -130,18 +129,16 @@ const PermissionManagement = () => {
                             ) : null}
                           </div>
                         </Col>
-                        
                         <Col xxl={2} md={2}>
                           <div className="form-check form-switch mt-4" dir="ltr">
                             <Input
                               type="checkbox"
                               className="form-check-input"
-                              id="IsActive"
-                              defaultChecked=""
-                              {...formik.getFieldProps("IsActive")}
-                              checked={formik.values.IsActive}
+                              id="isActive"
+                              {...formik.getFieldProps("isActive")}
+                              checked={formik.values.isActive}
                             />
-                            <Label className="form-check-label" for="IsActive">
+                            <Label className="form-check-label" htmlFor="isActive">
                               IsActive
                             </Label>
                           </div>
@@ -149,7 +146,7 @@ const PermissionManagement = () => {
                       </Row>
                     </div>
                   </CardBody>
-                </Form>
+                </form>
               </Card>
             </Col>
             <Col lg={12}>
@@ -159,12 +156,27 @@ const PermissionManagement = () => {
                     <Row className="g-4 mb-4">
                       <Col className="col-sm">
                         <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
+                          <div className="search-box ms-2 position-relative">
+                            <Input
                               type="text"
-                              className="form-control-sm search"
+                              className="form-control-sm"
+                              placeholder="Search permissions..."
+                              style={{
+                                paddingLeft: "30px",
+                                border: "1px solid #e7f0fa",
+                                borderRadius: "5px",
+                              }}
                             />
-                            <i className="ri-search-line search-icon"></i>
+                            <i
+                              className="ri-search-line"
+                              style={{
+                                position: "absolute",
+                                left: "10px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                color: "#6c757d",
+                              }}
+                            ></i>
                           </div>
                         </div>
                       </Col>
@@ -172,93 +184,75 @@ const PermissionManagement = () => {
 
                     <div className="table-responsive table-card mb-1">
                       <table
-                        className="table align-middle  table-nowrap table-striped table-sm "
+                        className="table align-middle table-nowrap table-striped table-sm"
                         id="customerTable"
                       >
                         <thead className="table-light">
                           <tr>
-                            <th className="" data-sort="name">
-                              Name
-                            </th>
-                            <th className="" data-sort="action">
-                              Action
-                            </th>
+                            <th data-sort="name">Name</th>
+                            <th data-sort="action">Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          {attendanceCode?.length > 0 ? (
-                            attendanceCode.map((group, index) => (
-                              <tr key={group.VID}>
-                                <td>{group.VCode}</td>
-                                <td>{group.VName}</td>
-                                <td>
-                                  {attendanceGroup?.data?.find(
-                                    (groupItem) =>
-                                      groupItem.VID === group.GroupID
-                                  )?.VName || "N/A"}
-                                </td>
+                          {permissions.length > 0 ? (
+                            permissions.map((permission) => (
+                              <tr key={permission.id}>
+                                <td>{permission.name}</td>
                                 <td>
                                   <div className="d-flex gap-2">
-                                    <div className="edit ">
-                                      <Button
-                                        className="btn btn-soft-info"
-                                        onClick={() => handleEditClick(group)}
-                                      >
-                                        <i className="bx bx-edit"></i>
-                                      </Button>
-                                    </div>
-                                    <div className="delete">
-                                      <Button
-                                        className="btn btn-soft-danger"
-                                        onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }
-                                      >
-                                        <i className="ri-delete-bin-2-line"></i>
-                                      </Button>
-                                    </div>
+                                    <Button
+                                      className="btn btn-soft-info btn-sm"
+                                      onClick={() => handleEditClick(permission)}
+                                    >
+                                      <i className="bx bx-edit"></i>
+                                    </Button>
+                                    <Button
+                                      className="btn btn-soft-danger btn-sm"
+                                      onClick={() => handleDeleteClick(permission.id)}
+                                    >
+                                      <i className="ri-delete-bin-2-line"></i>
+                                    </Button>
                                   </div>
                                 </td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan="8" className="text-center">
+                              <td colSpan="2" className="text-center">
                                 No Permission found.
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
-                        </div>
-                      </div>
                     </div>
 
                     <div className="d-flex justify-content-end">
                       <div className="pagination-wrap hstack gap-2">
-                        <Link
-                          className="page-item pagination-prev disabled"
-                          to="#"
+                        <Button
+                          style={{
+                            backgroundColor: "#fff",
+                            color: "#6c757d",
+                            border: "1px solid #e7f0fa",
+                            borderRadius: "5px",
+                            padding: "6px 12px",
+                          }}
+                          disabled
                         >
                           Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
+                        </Button>
+                        <Button
+                          style={{
+                            backgroundColor: "#fff",
+                            color: "#6c757d",
+                            border: "1px solid #e7f0fa",
+                            borderRadius: "5px",
+                            padding: "6px 12px",
+                          }}
+                          disabled
+                        >
                           Next
-                        </Link>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -268,11 +262,6 @@ const PermissionManagement = () => {
           </Row>
         </Container>
       </div>
-      <DeleteModal
-        show={deleteModal}
-        onCloseClick={() => setDeleteModal(!deleteModal)}
-        onDeleteClick={handleDeleteConfirm}
-      />
     </React.Fragment>
   );
 };

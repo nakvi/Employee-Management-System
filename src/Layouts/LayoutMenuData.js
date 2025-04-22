@@ -488,12 +488,12 @@ const Navdata = () => {
           link: "/user-rights",
           parentId: "administration",
         },
-        {
-          id: "Permissions",
-          label: "Permission Management",
-          link: "/permission-management",
-          parentId: "administration",
-        },
+        // {
+        //   id: "Permissions",
+        //   label: "Permission Management",
+        //   link: "/permission-management",
+        //   parentId: "administration",
+        // },
       ],
     },
     //  other code here

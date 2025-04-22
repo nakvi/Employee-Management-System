@@ -1,305 +1,251 @@
-import React, { useState, useEffect } from "react";
-import {
-  Button,
-  Card,
-  CardBody,
-  Col,
-  Container,
-  Row,
-  Input,
-  Label,
-  Form,
-} from "reactstrap";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Card, CardBody, Col, Container, Row, Input, Label, FormGroup } from "reactstrap";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { useDispatch, useSelector } from "react-redux";
-import DeleteModal from "../../../Components/Common/DeleteModal";
-import { getAttendanceGroup } from "../../../slices/setup/attendanceGroup/thunk";
-import {
-  getAttendanceCode,
-  submitAttendanceCode,
-  updateAttendanceCode,
-  deleteAttendanceCode,
-} from "../../../slices/setup/attendanceCode/thunk";
+
+// Dummy data for roles and sidebar menus
+const initialRoles = [
+  {
+    id: 1,
+    name: "Admin",
+    permissions: {
+      dashboard: { add: true, edit: true, delete: false },
+      users: { add: true, edit: true, delete: false },
+    },
+  },
+  {
+    id: 2,
+    name: "User",
+    permissions: {
+      dashboard: { add: false, edit: true, delete: false },
+      users: { add: false, edit: false, delete: false },
+    },
+  },
+  {
+    id: 3,
+    name: "Guest",
+    permissions: {
+      dashboard: { add: false, edit: false, delete: false },
+      users: { add: false, edit: false, delete: false },
+    },
+  },
+];
+
+const sidebarMenus = ["Dashboard", "Users"];
 
 const RoleRights = () => {
-  const dispatch = useDispatch();
-  const [deleteModal, setDeleteModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
-  const [editingGroup, setEditingGroup] = useState(null);
-
-  // Access Redux state
-  const { loading, error, attendanceCode } = useSelector(
-    (state) => state.AttendanceCode
+  const [roles, setRoles] = useState(initialRoles);
+  const [selectedRole, setSelectedRole] = useState(initialRoles[0]);
+  const [selectAll, setSelectAll] = useState(
+    sidebarMenus.every((menu) =>
+      Object.values(initialRoles[0].permissions[menu.toLowerCase()]).every(Boolean)
+    )
   );
-  const { attendanceGroup } = useSelector((state) => state.AttendanceGroup);
 
-  // Fetch data on component mount
-  useEffect(() => {
-    dispatch(getAttendanceCode());
-    dispatch(getAttendanceGroup());
-  }, [dispatch]);
+  // Handle role selection
+  const handleRoleSelect = (event) => {
+    const roleId = parseInt(event.target.value);
+    const role = roles.find((r) => r.id === roleId);
+    setSelectedRole(role);
+    setSelectAll(
+      sidebarMenus.every((menu) =>
+        Object.values(role.permissions[menu.toLowerCase()]).every(Boolean)
+      )
+    );
+  };
 
-  // Formik form setup
-  const formik = useFormik({
-    initialValues: {
-      VCode: "",
-      VName: "",
-      SortOrder: 0,
-      GroupID: "-1",
-      CompanyID: "1",
-      UID: "1",
-      IsActive: false,
-    },
-    validationSchema: Yup.object({
-      VCode: Yup.string()
-        .required("Code is required.")
-        .min(3, "Code must be at least 3 characters ")
-        .max(10, "Code must be less then 10 characters"),
-      VName: Yup.string()
-        .required("Title is required.")
-        .min(3, "Title at least must be 3 characters "),
-      SortOrder: Yup.number()
-        .typeError("Sort Order must be a number.")
-        .required("Sort Order is required."),
-      // GroupID: Yup.string().required("Attendance Group is required."),
-      GroupID: Yup.string()
-      .test("is-valid-leave-type", "Attendance Group is required.", (value) => value !== "-1"),
-      IsActive: Yup.boolean(),
-    }),
-    onSubmit: (values) => {
-      // Add your form submission logic here
-      const transformedValues = {
-        ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
-      };
-    if (transformedValues.GroupID === -1) {
-      transformedValues.GroupID === "";
-    }
-      if (editingGroup) {
-        console.log("Editing Group", transformedValues);
-        dispatch(
-          updateAttendanceCode({ ...transformedValues, VID: editingGroup.VID })
-        );
-        setEditingGroup(null); // Reset after submission
-      } else {
-        dispatch(submitAttendanceCode(transformedValues));
-      }
-      formik.resetForm();
-    },
-  });
-  // Delete Data
-  const handleDeleteClick = (id) => {
-    setDeleteId(id);
-    setDeleteModal(true);
+  // Toggle individual permission
+  const handlePermissionChange = (menu, permission) => {
+    const updatedRoles = roles.map((role) =>
+      role.id === selectedRole.id
+        ? {
+            ...role,
+            permissions: {
+              ...role.permissions,
+              [menu]: {
+                ...role.permissions[menu],
+                [permission]: !role.permissions[menu][permission],
+              },
+            },
+          }
+        : role
+    );
+    setRoles(updatedRoles);
+    const updatedRole = updatedRoles.find((role) => role.id === selectedRole.id);
+    setSelectedRole(updatedRole);
+    setSelectAll(
+      sidebarMenus.every((m) =>
+        Object.values(updatedRole.permissions[m.toLowerCase()]).every(Boolean)
+      )
+    );
   };
-  const handleDeleteConfirm = () => {
-    if (deleteId) {
-      dispatch(deleteAttendanceCode(deleteId));
-    }
-    setDeleteModal(false);
+
+  // Toggle all permissions for a specific menu
+  const handleSelectAllForMenu = (menu) => {
+    const allChecked = Object.values(selectedRole.permissions[menu]).every(Boolean);
+    const updatedRoles = roles.map((role) =>
+      role.id === selectedRole.id
+        ? {
+            ...role,
+            permissions: {
+              ...role.permissions,
+              [menu]: {
+                add: !allChecked,
+                edit: !allChecked,
+                delete: !allChecked,
+              },
+            },
+          }
+        : role
+    );
+    setRoles(updatedRoles);
+    const updatedRole = updatedRoles.find((role) => role.id === selectedRole.id);
+    setSelectedRole(updatedRole);
+    setSelectAll(
+      sidebarMenus.every((m) =>
+        Object.values(updatedRole.permissions[m.toLowerCase()]).every(Boolean)
+      )
+    );
   };
-  const handleEditClick = (group) => {
-    setEditingGroup(group);
-    formik.setValues({
-      VCode: group.VCode,
-      VName: group.VName,
-      SortOrder: group.SortOrder,
-      GroupID: group.GroupID,
-      UID: group.UID,
-      CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
-    });
+
+  // Toggle all permissions for all menus
+  const handleSelectAll = () => {
+    const newSelectAll = !selectAll;
+    setSelectAll(newSelectAll);
+    const updatedRoles = roles.map((role) =>
+      role.id === selectedRole.id
+        ? {
+            ...role,
+            permissions: sidebarMenus.reduce(
+              (acc, menu) => ({
+                ...acc,
+                [menu.toLowerCase()]: {
+                  add: newSelectAll,
+                  edit: newSelectAll,
+                  delete: newSelectAll,
+                },
+              }),
+              {}
+            ),
+          }
+        : role
+    );
+    setRoles(updatedRoles);
+    const updatedRole = updatedRoles.find((role) => role.id === selectedRole.id);
+    setSelectedRole(updatedRole);
   };
-  document.title = "Role Rights | EMS";
+
+  document.title = "Roles with Permissions | EMS";
+
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
-                <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
-                    title="Role Rights"
-                    onCancel={formik.resetForm}
-                  />
-                  <CardBody className="card-body">
-                    <div className="live-preview">
-                      <Row className="gy-4">
-                        <Col xxl={3} md={4}>
-                          <div>
-                            <Label htmlFor="name" className="form-label">
-                              Name
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="name"
-                              placeholder="Code"
-                              {...formik.getFieldProps("name")}
-                            />
-                            {formik.touched.name && formik.errors.name ? (
-                              <div className="text-danger">
-                                {formik.errors.name}
+                <PreviewCardHeader title="Roles with Permissions" />
+                <CardBody className="card-body">
+                  <FormGroup className="mb-5 col-3">
+                    <Label for="roleSelect">Select Role</Label>
+                    <Input
+                      type="select"
+                      id="roleSelect"
+                      value={selectedRole.id}
+                      onChange={handleRoleSelect}
+                    >
+                      {roles.map((role) => (
+                        <option key={role.id} value={role.id}>
+                          {role.name}
+                        </option>
+                      ))}
+                    </Input>
+                  </FormGroup>
+                  <div className="table-responsive table-card mb-1">
+                    <table
+                      className="table align-middle table-nowrap table-striped table-sm"
+                      id="rolePermissionsTable"
+                    >
+                      <thead className="table-light">
+                        <tr>
+                          <th>Menu</th>
+                          <th>Add</th>
+                          <th>Edit</th>
+                          <th>Delete</th>
+                          <th>
+                            <div className="form-check" dir="ltr">
+                              <Input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="selectAllPermissions"
+                                checked={selectAll}
+                                onChange={handleSelectAll}
+                              />
+                              <Label
+                                className="form-check-label"
+                                htmlFor="selectAllPermissions"
+                                style={{ marginLeft: "8px" }}
+                              >
+                                Select All
+                              </Label>
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="list form-check-all">
+                        {sidebarMenus.map((menu) => (
+                          <tr key={menu}>
+                            <td>{menu}</td>
+                            <td>
+                              <Input
+                                type="checkbox"
+                                checked={selectedRole.permissions[menu.toLowerCase()].add}
+                                onChange={() =>
+                                  handlePermissionChange(menu.toLowerCase(), "add")
+                                }
+                              />
+                            </td>
+                            <td>
+                              <Input
+                                type="checkbox"
+                                checked={selectedRole.permissions[menu.toLowerCase()].edit}
+                                onChange={() =>
+                                  handlePermissionChange(menu.toLowerCase(), "edit")
+                                }
+                              />
+                            </td>
+                            <td>
+                              <Input
+                                type="checkbox"
+                                checked={selectedRole.permissions[menu.toLowerCase()].delete}
+                                onChange={() =>
+                                  handlePermissionChange(menu.toLowerCase(), "delete")
+                                }
+                              />
+                            </td>
+                            <td>
+                              <div className="form-check" dir="ltr">
+                                <Input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  checked={Object.values(
+                                    selectedRole.permissions[menu.toLowerCase()]
+                                  ).every(Boolean)}
+                                  onChange={() =>
+                                    handleSelectAllForMenu(menu.toLowerCase())
+                                  }
+                                />
+                                <Label
+                                  className="form-check-label"
+                                  style={{ marginLeft: "8px" }}
+                                >
+                                  Select All
+                                </Label>
                               </div>
-                            ) : null}
-                          </div>
-                        </Col>
-                        <Col xxl={3} md={4}>
-                          <div>
-                            <Label htmlFor="SortOrder" className="form-label">
-                              Sort Order
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="SortOrder"
-                              placeholder="Sort Order"
-                              {...formik.getFieldProps("SortOrder")}
-                            />
-                            {formik.touched.SortOrder &&
-                            formik.errors.SortOrder ? (
-                              <div className="text-danger">
-                                {formik.errors.SortOrder}
-                              </div>
-                            ) : null}
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check form-switch " dir="ltr">
-                            <Input
-                              type="checkbox"
-                              className="form-check-input"
-                              id="IsActive"
-                              defaultChecked=""
-                              {...formik.getFieldProps("IsActive")}
-                              checked={formik.values.IsActive}
-                            />
-                            <Label className="form-check-label" for="IsActive">
-                              IsActive
-                            </Label>
-                          </div>
-                        </Col>
-                      </Row>
-                    </div>
-                  </CardBody>
-                </Form>
-              </Card>
-            </Col>
-            <Col lg={12}>
-              <Card>
-                <CardBody>
-                  <div className="Location-table" id="customerList">
-                    <Row className="g-4 mb-4">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-
-                    <div className="table-responsive table-card mb-1">
-                      <table
-                        className="table align-middle  table-nowrap table-striped table-sm "
-                        id="customerTable"
-                      >
-                        <thead className="table-light">
-                          <tr>
-                            <th className="" data-sort="name">
-                              Name
-                            </th>
-                            <th className="" data-sort="action">
-                              Action
-                            </th>
+                            </td>
                           </tr>
-                        </thead>
-                        <tbody className="list form-check-all">
-                          {attendanceCode?.length > 0 ? (
-                            attendanceCode.map((group, index) => (
-                              <tr key={group.VID}>
-                                <td>{group.VCode}</td>
-                                <td>{group.VName}</td>
-                                <td>
-                                  {attendanceGroup?.data?.find(
-                                    (groupItem) =>
-                                      groupItem.VID === group.GroupID
-                                  )?.VName || "N/A"}
-                                </td>
-                                <td>
-                                  <div className="d-flex gap-2">
-                                    <div className="edit ">
-                                      <Button
-                                        className="btn btn-soft-info"
-                                        onClick={() => handleEditClick(group)}
-                                      >
-                                        <i className="bx bx-edit"></i>
-                                      </Button>
-                                    </div>
-                                    <div className="delete">
-                                      <Button
-                                        className="btn btn-soft-danger"
-                                        onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }
-                                      >
-                                        <i className="ri-delete-bin-2-line"></i>
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="8" className="text-center">
-                                No Role Right found.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-end">
-                      <div className="pagination-wrap hstack gap-2">
-                        <Link
-                          className="page-item pagination-prev disabled"
-                          to="#"
-                        >
-                          Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
-                          Next
-                        </Link>
-                      </div>
-                    </div>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </CardBody>
               </Card>
@@ -307,11 +253,6 @@ const RoleRights = () => {
           </Row>
         </Container>
       </div>
-      <DeleteModal
-        show={deleteModal}
-        onCloseClick={() => setDeleteModal(!deleteModal)}
-        onDeleteClick={handleDeleteConfirm}
-      />
     </React.Fragment>
   );
 };
