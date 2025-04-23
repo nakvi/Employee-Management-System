@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Define a custom async thunk to fetch data from an API
-const API_ENDPOINT = "http://192.168.18.57:8001/ems/shift/";
+const API_ENDPOINT = "http://192.168.18.58:8001/ems/shift/";
 
 export const getShift= createAsyncThunk(
   "Shift/getShift",
@@ -64,6 +64,7 @@ export const submitShift = createAsyncThunk(
 export const updateShift= createAsyncThunk(
   "Shift/updateShift",
   async (groupData, { rejectWithValue }) => {
+    console.log("d",groupData);
     try {
       const response = await fetch(`${API_ENDPOINT}`, {
         method: "PUT",
@@ -78,7 +79,8 @@ export const updateShift= createAsyncThunk(
       }
       const responseData = await response.json();
       toast.success("Shift updated successfully!");
-      return responseData.data; // Assuming the updated data is in 'data'
+      return responseData.data || responseData;
+      // return responseData.data; // Assuming the updated data is in 'data'
     } catch (error) {
       toast.error("Failed to update Shift. Please try again!");
       return rejectWithValue(error.message);

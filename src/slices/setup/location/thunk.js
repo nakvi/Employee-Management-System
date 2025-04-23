@@ -34,16 +34,52 @@ export const getLocation = createAsyncThunk(
   }
 );
 // Submit Location
+// export const submitLocation = createAsyncThunk(
+//   "Location/submitLocation",
+//   async (payload, { rejectWithValue }) => {
+//     try {
+//       const response = await fetch(API_ENDPOINT, {
+//         method: "POST",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify(payload),
+//       });
+
+//       if (!response.ok) {
+//         throw new Error(`HTTP error! Status: ${response.status}`);
+//       }
+
+//       const data = await response.json();
+//       toast.success(data.message || "Location added successfully!");
+//       return data.data; // Return the newly created Designation
+//     } catch (error) {
+//       toast.error("Failed to add Location. Please try again!");
+//       return rejectWithValue(error.message);
+//     }
+//   }
+// );
+// Submit Location with image
 export const submitLocation = createAsyncThunk(
   "Location/submitLocation",
   async (payload, { rejectWithValue }) => {
     try {
+      const formData = new FormData();
+      
+      // Append all fields to formData
+      for (const key in payload) {
+        if (key === 'Logo' && payload[key]) {
+          // Append the file if it exists
+          formData.append(key, payload[key]);
+        } else {
+          // Append other fields
+          formData.append(key, payload[key]);
+        }
+      }
+
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
+        body: formData, // No Content-Type header needed for FormData
       });
 
       if (!response.ok) {
@@ -52,7 +88,7 @@ export const submitLocation = createAsyncThunk(
 
       const data = await response.json();
       toast.success(data.message || "Location added successfully!");
-      return data.data; // Return the newly created Designation
+      return data.data;
     } catch (error) {
       toast.error("Failed to add Location. Please try again!");
       return rejectWithValue(error.message);

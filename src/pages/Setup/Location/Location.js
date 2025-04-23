@@ -30,6 +30,7 @@ const Location = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null); // For previewing selected image
   // Access Redux state
   const { loading, error, location } = useSelector((state) => state.Location);
   // Fetch data on component mount
@@ -84,8 +85,17 @@ const Location = () => {
         dispatch(submitLocation(transformedValues));
       }
       formik.resetForm();
+      setImagePreview(null); // Reset image preview
     },
   });
+  // Handle file input change
+  const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      formik.setFieldValue("Logo", file); // Set file in Formik
+      setImagePreview(URL.createObjectURL(file)); // Create preview URL
+    }
+  };
   // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
@@ -112,6 +122,7 @@ const Location = () => {
       CompanyID: group.CompanyID,
       IsActive: group.IsActive == true,
     });
+    setImagePreview(group.Logo || null); // Show existing image if available
   };
   document.title = "Location | EMS";
   return (
@@ -123,7 +134,10 @@ const Location = () => {
           <Row>
             <Col lg={12}>
               <Card>
-                <Form onSubmit={formik.handleSubmit}>
+                <Form
+                  onSubmit={formik.handleSubmit}
+                  encType="multipart/form-data"
+                >
                   <PreviewCardHeader
                     title="Location"
                     onCancel={formik.resetForm}
@@ -257,7 +271,18 @@ const Location = () => {
                               className="form-control-sm"
                               type="file"
                               id="formFile"
+                              accept="image/*"
+                              onChange={handleFileChange}
                             />
+                            {imagePreview && (
+                              <div className="mt-2">
+                                <img
+                                  src={imagePreview}
+                                  alt="Preview"
+                                  className="avatar-md rounded"
+                                />
+                              </div>
+                            )}
                           </div>
                         </Col>
                         <Col xxl={2} md={2} className="mt-4">
@@ -341,7 +366,7 @@ const Location = () => {
                                 <td>{group.Address}</td>
                                 <td>{group.AddressUrdu}</td>
                                 <td>
-                                  <div className="d-flex gap-2 align-items-center">
+                                  {/* <div className="d-flex gap-2 align-items-center">
                                     <div className="flex-shrink-0">
                                       <img
                                         src={avtarImage3}
@@ -349,7 +374,18 @@ const Location = () => {
                                         className="avatar-xs rounded-circle"
                                       />
                                     </div>
-                                  </div>
+                                  </div> */}
+                                  <td>
+                                    <div className="d-flex gap-2 align-items-center">
+                                      <div className="flex-shrink-0">
+                                        <img
+                                          src={group.Logo || avtarImage3} // Use the uploaded image if available
+                                          alt=""
+                                          className="avatar-xs rounded-circle"
+                                        />
+                                      </div>
+                                    </div>
+                                  </td>
                                 </td>
                                 <td>
                                   <div className="d-flex gap-2">
