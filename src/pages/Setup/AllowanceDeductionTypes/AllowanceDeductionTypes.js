@@ -73,7 +73,6 @@ const AllowanceDeductionTypes = () => {
         .min(3, "Title at least must be 3 characters "),
       CatID: Yup.string().required("Category is required."),
       GroupID: Yup.string().required(" Group is required."),
-
       SortOrder: Yup.number()
         .typeError("Sort Order must be a number.")
         .required("Sort Order is required."),
@@ -437,7 +436,7 @@ const AllowanceDeductionTypes = () => {
                             <th className="" data-sort="deptGroup">
                               Group
                             </th>
-                            
+
                             <th className="" data-sort="action">
                               Action
                             </th>
@@ -461,7 +460,6 @@ const AllowanceDeductionTypes = () => {
                                       groupItem.VID === group.GroupID
                                   )?.VName || "N/A"}
                                 </td>
-                                
 
                                 <td>
                                   <div className="d-flex gap-2">

@@ -48,7 +48,7 @@ const Designation = () => {
       SortOrder: 0,
       GroupID: "0",
       DefaultSalary: 0,
-      LocationID: "",
+      LocationID: "-1",
       CompanyID: "1",
       UID: "1",
       IsActive: false,
@@ -80,9 +80,9 @@ const Designation = () => {
         IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
       };
       // Remove LocationID if it's "-1" (default/unselected)
-    if (transformedValues.LocationID === -1) {
-      transformedValues.LocationID === "";
-    }
+      if (transformedValues.LocationID === "-1") {
+        transformedValues.LocationID = "-1"; // Fix incorrect assignment
+      }
       if (editingGroup) {
         dispatch(
           updateDesignation({ ...transformedValues, VID: editingGroup.VID })

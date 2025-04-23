@@ -30,7 +30,6 @@ const Company = () => {
     AddressUrdu1: "",
     AddressUrdu2: "",
     SortOrder: 0,
-    Logo: null,
     UID: "1",
     IsActive: false,
   });
@@ -54,7 +53,6 @@ const Company = () => {
         AddressUrdu1: companyData.AddressUrdu1 || "",
         AddressUrdu2: companyData.AddressUrdu2 || "",
         SortOrder: companyData.SortOrder || 0,
-        Logo: companyData.Logo || null,
         UID: companyData.UID || "1",
         IsActive: companyData.IsActive == true, // Convert integer to boolean
       });
