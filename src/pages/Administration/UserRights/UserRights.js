@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import {
   Button,
   Card,
@@ -8,130 +8,168 @@ import {
   Row,
   Input,
   Label,
-  Form,
+  FormGroup,
 } from "reactstrap";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
-import { useFormik } from "formik";
-import * as Yup from "yup";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  getRoleRight,
+} from "../../../slices/administration/rolesRight/thunk";
+import {
+  getRole,
+} from "../../../slices/administration/roles/thunk";
+import {
+  getPagePermission,
+  updatePagePermission,
+} from "../../../slices/administration/pagePermission/thunk";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 
-const UserRights = () => {
+const UserRights = forwardRef((props, ref) => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [editingRights, setEditingRights] = useState(null);
-  const [selectedRole, setSelectedRole] = useState("Admin"); // Default selected role
+  const [selectedRoleId, setSelectedRoleId] = useState("");
   const [checkedRoles, setCheckedRoles] = useState({});
+  const { loading, error, role } = useSelector((state) => state.Role);
+  const { roleRight } = useSelector((state) => state.RoleRight);
+  const { pagePermission } = useSelector((state) => state.PagePermission);
 
-  // Dummy roles for select box
-  const dummyRoles = ["Admin", "User", "Guest"];
+  const permissionTypes = ["view", "insert", "update", "delete", "backdate", "print"];
+  const [permissions, setPermissions] = useState({});
 
-  // Roles for the sidebar table
-  const roles = ["ACCOUNTS", "ADMIN", "EMPLOYEE", "HR", "SHOP"];
-
-  // Sample pages data
-  const pages = [
-    { name: "MFileLogin", permissions: { View: true, Insert: true, Update: false, Delete: false, Backdate: false, Print: false } },
-    { name: "MFileChangePassword", permissions: { View: true, Insert: true, Update: false, Delete: false, Backdate: false, Print: false } },
-    { name: "MSetupSP1", permissions: { View: true, Insert: true, Update: false, Delete: false, Backdate: false, Print: false } },
-    { name: "MSetupLocation", permissions: { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false } },
-    { name: "MSetupDepartmentGroup", permissions: { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false } },
-  ];
-
-  // Filtered pages for the second table
-  const filteredPages = [
-    { name: "MFileChangePassword", permissions: { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false } },
-    { name: "MSetupSP1", permissions: { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false } },
-    { name: "MSetupLocation", permissions: { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false } },
-  ];
-
-  // Dummy user rights data mapped to dummyRoles
-  const userRights = dummyRoles.map((role) => ({
-    roleName: role,
-    pages: pages.map((page) => ({
-      pageName: page.name,
-      permissions: {
-        View: role === "Admin" ? page.permissions.View : role === "User" ? false : false,
-        Insert: role === "Admin" ? page.permissions.Insert : role === "User" ? false : false,
-        Update: role === "Admin" ? page.permissions.Update : role === "User" ? false : false,
-        Delete: role === "Admin" ? page.permissions.Delete : role === "User" ? false : false,
-        Backdate: role === "Admin" ? page.permissions.Backdate : role === "User" ? false : false,
-        Print: role === "Admin" ? page.permissions.Print : role === "User" ? false : false,
-      },
-    })),
-  }));
-
-  const filteredUserRights = dummyRoles.map((role) => ({
-    roleName: role,
-    pages: filteredPages.map((page) => ({
-      pageName: page.name,
-      permissions: {
-        View: role === "Admin" ? page.permissions.View : role === "User" ? true : false,
-        Insert: role === "Admin" ? page.permissions.Insert : role === "User" ? true : false,
-        Update: role === "Admin" ? page.permissions.Update : role === "User" ? true : false,
-        Delete: role === "Admin" ? page.permissions.Delete : role === "User" ? true : false,
-        Backdate: role === "Admin" ? page.permissions.Backdate : role === "User" ? true : false,
-        Print: role === "Admin" ? page.permissions.Print : role === "User" ? true : false,
-      },
-    })),
-  }));
-
-  // Initialize checkedRoles state based on roles
+  // Fetch roles, role rights, and page permissions
   useEffect(() => {
-    const initialCheckedRoles = roles.reduce((acc, role) => {
-      acc[role] = role === "ADMIN"; // Default ADMIN as checked
-      return acc;
-    }, {});
-    setCheckedRoles(initialCheckedRoles);
-  }, []);
-
-  useEffect(() => {
-    // Placeholder for API calls
-    // dispatch(getUserRoles());
-    // dispatch(getUserRights());
+    dispatch(getRole());
+    dispatch(getRoleRight());
+    dispatch(getPagePermission());
   }, [dispatch]);
 
-  const formik = useFormik({
-    initialValues: {
-      roleName: selectedRole || "",
-      pages: pages.reduce((acc, page) => {
-        acc[page.name] = { View: false, Insert: false, Update: false, Delete: false, Backdate: false, Print: false };
-        return acc;
-      }, {}),
-    },
-    validationSchema: Yup.object({
-      roleName: Yup.string().required("Role Name is required."),
-    }),
-    onSubmit: (values) => {
-      if (editingRights) {
-        dispatch(updateUserRights({ ...values, roleId: editingRights.roleId }));
-        setEditingRights(null);
-      }
-      formik.resetForm();
-    },
-  });
-
-  const handleRoleSelect = (role) => {
-    setSelectedRole(role);
-    formik.setFieldValue("roleName", role);
-    const selectedRoleData = userRights.find((r) => r.roleName === role);
-    if (selectedRoleData) {
-      formik.setValues({
-        roleName: role,
-        pages: selectedRoleData.pages.reduce((acc, page) => {
-          acc[page.pageName] = { ...page.permissions };
-          return acc;
-        }, {}),
-      });
+  // Set default role
+  useEffect(() => {
+    if (role.length > 0 && !selectedRoleId) {
+      setSelectedRoleId(role[0].VID);
     }
+  }, [role]);
+
+  // Initialize checkedRoles based on roles
+  useEffect(() => {
+    if (role.length > 0) {
+      const initialCheckedRoles = role.reduce((acc, r) => {
+        acc[r.VID] = r.VName === "ADMIN"; // Default ADMIN as checked
+        return acc;
+      }, {});
+      setCheckedRoles(initialCheckedRoles);
+    }
+  }, [role]);
+
+  // Update permissions based on selected role
+  useEffect(() => {
+    if (selectedRoleId && roleRight?.length > 0 && pagePermission?.length > 0) {
+      const rolePermissions = {};
+
+      roleRight.forEach((page) => {
+        const pageId = page.VID;
+        const matchingPerm = pagePermission.find(
+          (perm) =>
+            String(perm.PageID) === String(pageId) &&
+            String(perm.RoleID) === String(selectedRoleId)
+        );
+
+        rolePermissions[pageId] = {
+          view: matchingPerm?.IsView === 1,
+          insert: matchingPerm?.IsInsert === 1,
+          update: matchingPerm?.IsUpdate === 1,
+          delete: matchingPerm?.IsDelete === 1,
+          backdate: matchingPerm?.IsBackdate === 1,
+          print: matchingPerm?.IsPrint === 1,
+        };
+      });
+
+      setPermissions(rolePermissions);
+    } else {
+      setPermissions({});
+    }
+  }, [selectedRoleId, roleRight, pagePermission]);
+
+  const handleRoleSelect = (e) => {
+    setSelectedRoleId(e.target.value);
   };
 
-  const handleCheckboxChange = (role) => {
+  const handleCheckboxChange = (roleId) => {
     setCheckedRoles((prev) => ({
       ...prev,
-      [role]: !prev[role],
+      [roleId]: !prev[roleId],
     }));
+  };
+
+  const handlePermissionChange = (pageId, permission) => {
+    setPermissions((prev) => {
+      const updatedPermissions = { ...prev };
+      const pagePermissions = updatedPermissions[pageId] || {};
+
+      if (permission === "view") {
+        const newValue = !pagePermissions.view;
+        updatedPermissions[pageId] = {
+          view: newValue,
+          insert: newValue,
+          update: newValue,
+          delete: newValue,
+          backdate: newValue,
+          print: newValue,
+        };
+      } else {
+        updatedPermissions[pageId] = {
+          ...pagePermissions,
+          [permission]: !pagePermissions[permission],
+        };
+      }
+
+      return updatedPermissions;
+    });
+  };
+
+  const handleSave = async (event) => {
+    event?.preventDefault();
+    try {
+      const permissionsToSave = Object.keys(permissions).map((pageId) => {
+        const perm = permissions[pageId];
+        return {
+          VID: Array.isArray(pagePermission)
+            ? pagePermission.find(
+                (p) =>
+                  String(p.PageID) === String(pageId) &&
+                  String(p.RoleID) === String(selectedRoleId)
+              )?.VID || 0
+            : 0,
+          RoleID: parseInt(selectedRoleId),
+          PageID: parseInt(pageId),
+          IsView: perm.view ? 1 : 0,
+          IsInsert: perm.insert ? 1 : 0,
+          IsUpdate: perm.update ? 1 : 0,
+          IsDelete: perm.delete ? 1 : 0,
+          IsBackdate: perm.backdate ? 1 : 0,
+          IsPrint: perm.print ? 1 : 0,
+          IsActive: 1,
+          UID: "1",
+          CompanyID: "1",
+        };
+      });
+
+      const updatePromises = permissionsToSave.map((perm) =>
+        dispatch(updatePagePermission(perm)).unwrap()
+      );
+      await Promise.all(updatePromises);
+
+      dispatch(getPagePermission());
+      toast.success("All permissions saved successfully!");
+
+      if (props.onCancel) props.onCancel();
+    } catch (error) {
+      console.error("Save failed:", error);
+      toast.error("Failed to save permissions. Please try again!");
+    }
   };
 
   const handleDeleteClick = (id) => {
@@ -141,261 +179,197 @@ const UserRights = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      // Implement delete logic if needed
       // dispatch(deleteUserRights(deleteId));
     }
     setDeleteModal(false);
   };
 
+  useImperativeHandle(ref, () => ({
+    handleSave,
+    toggle: () => {
+      if (props.onCancel) props.onCancel();
+    },
+  }));
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
+
   document.title = "User Rights | EMS";
+
+  // Filter pages for the second table (example logic, adjust as needed)
+  const filteredRoleRight = roleRight.filter((page) =>
+    ["MFileChangePassword", "MSetupSP1", "MSetupLocation"].includes(page.VName)
+  );
 
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* Role Select Box */}
-          <Row className="mb-3">
-            <Col md={3}>
-              <Label htmlFor="roleSelect" className="form-label">
-                Select User
-              </Label>
-              <Input
-                type="select"
-                className="form-select form-select-sm"
-                id="roleSelect"
-                value={selectedRole}
-                onChange={(e) => handleRoleSelect(e.target.value)}
-              >
-                {dummyRoles.map((role, index) => (
-                  <option key={index} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </Input>
-            </Col>
-          </Row>
+          <ToastContainer />
+          <form onSubmit={handleSave}>
+            {/* Role Select Box */}
+            <Row className="mb-3">
+              <Col md={3}>
+                <Label htmlFor="roleSelect" className="form-label">
+                  Select User
+                </Label>
+                <Input
+                  type="select"
+                  className="form-select form-select-sm"
+                  id="roleSelect"
+                  value={selectedRoleId}
+                  onChange={handleRoleSelect}
+                >
+                  {role.map((r) => (
+                    <option key={r.VID} value={r.VID}>
+                      {r.VName}
+                    </option>
+                  ))}
+                </Input>
+              </Col>
+            </Row>
 
-          <Row>
-            {/* Left Sidebar for Roles with Table Structure */}
-            <Col md={4} lg={3}>
-              <Card>
-                <CardBody>
-                  <div className="table-responsive">
-                    <table className="table table-sm table-bordered align-middle">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Roles Name</th>
-                          <th>Select</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {roles.map((role, index) => (
-                          <tr key={index}>
-                            <td>
-                              <Button
-                                color={selectedRole === role ? "primary" : "light"}
-                                className="w-100 text-start"
-                                // onClick={() => handleRoleSelect(role)}
-                              >
-                                {role}
-                              </Button>
-                            </td>
-                            <td className="text-center">
-                              <Input
-                                type="checkbox"
-                                checked={checkedRoles[role] || false}
-                                onChange={() => handleCheckboxChange(role)}
-                              />
-                            </td>
+            <Row>
+              {/* Left Sidebar for Roles with Table Structure */}
+              <Col md={4} lg={3}>
+                <Card>
+                  <CardBody>
+                    <div className="table-responsive">
+                      <table className="table table-sm table-bordered align-middle">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Roles Name</th>
+                            <th>Select</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
+                        </thead>
+                        <tbody>
+                          {role.map((r) => (
+                            <tr key={r.VID}>
+                              <td>
+                                <Button
+                                  color={selectedRoleId === r.VID ? "primary" : "light"}
+                                  className="w-100 text-start"
+                                  onClick={() => setSelectedRoleId(r.VID)}
+                                >
+                                  {r.VName}
+                                </Button>
+                              </td>
+                              <td className="text-center">
+                                <Input
+                                  type="checkbox"
+                                  checked={checkedRoles[r.VID] || false}
+                                  onChange={() => handleCheckboxChange(r.VID)}
+                                />
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardBody>
+                </Card>
+              </Col>
 
-            {/* Right Section */}
-            <Col md={8} lg={9}>
-              {/* Top Portion: Role Selection Form */}
-              <Card>
-                <Form onSubmit={formik.handleSubmit}>
+              {/* Right Section */}
+              <Col md={8} lg={9}>
+                {/* Top Portion: Role Selection Form */}
+                <Card>
                   <PreviewCardHeader
                     title="User Rights"
-                    onCancel={formik.resetForm}
+                    onCancel={props.onCancel}
                   />
-                </Form>
-              </Card>
+                </Card>
 
-              {/* First Table: Permissions for Selected Role */}
-              <Card>
-                <CardBody>
-                  <div className="table-responsive table-card mb-1">
-                    <table className="table align-middle table-nowrap table-striped table-sm">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Page Name</th>
-                          <th>View</th>
-                          <th>Insert</th>
-                          <th>Update</th>
-                          <th>Delete</th>
-                          <th>Backdate</th>
-                          <th>Print</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {userRights
-                          .find((role) => role.roleName === selectedRole)
-                          ?.pages.map((page, index) => (
-                            <tr key={index}>
-                              <td>{page.pageName}</td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.View}
-                                  onChange={() => {
-                                    // Update permissions logic (to be implemented with real API)
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Insert}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Update}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Delete}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Backdate}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Print}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
+                {/* First Table: Permissions for Selected Role */}
+                <Card>
+                  <CardBody>
+                    <div className="table-responsive table-card mb-1">
+                      <table className="table align-middle table-nowrap table-striped table-sm">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Page Name</th>
+                            {permissionTypes.map((perm) => (
+                              <th key={perm}>{perm.charAt(0).toUpperCase() + perm.slice(1)}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {roleRight?.length > 0 ? (
+                            Array.from(new Map(roleRight.map((item) => [item.VID, item])).values()).map((page) => (
+                              <tr key={page.VID}>
+                                <td>{page.VName || `Page ${page.VID}`}</td>
+                                {permissionTypes.map((perm) => (
+                                  <td key={perm}>
+                                    <Input
+                                      type="checkbox"
+                                      checked={permissions[page.VID]?.[perm] || false}
+                                      onChange={() => handlePermissionChange(page.VID, perm)}
+                                      disabled={!selectedRoleId}
+                                    />
+                                  </td>
+                                ))}
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={7} className="text-center">
+                                No menu items available
                               </td>
                             </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardBody>
-              </Card>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardBody>
+                </Card>
 
-              {/* Second Table: Filtered Permissions */}
-              <Card>
-                <CardBody>
-                  <div className="table-responsive table-card mb-1">
-                    <table className="table align-middle table-nowrap table-sm">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Page Name</th>
-                          <th>View</th>
-                          <th>Insert</th>
-                          <th>Update</th>
-                          <th>Delete</th>
-                          <th>Backdate</th>
-                          <th>Print</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredUserRights
-                          .find((role) => role.roleName === selectedRole)
-                          ?.pages.map((page, index) => (
-                            <tr key={index}>
-                              <td>{page.pageName}</td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.View}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Insert}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Update}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Delete}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Backdate}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="checkbox"
-                                  checked={page.permissions.Print}
-                                  onChange={() => {
-                                    // Update permissions logic
-                                  }}
-                                />
+                {/* Second Table: Filtered Permissions */}
+                <Card>
+                  <CardBody>
+                    <div className="table-responsive table-card mb-1">
+                      <table className="table align-middle table-nowrap table-sm">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Page Name</th>
+                            {permissionTypes.map((perm) => (
+                              <th key={perm}>{perm.charAt(0).toUpperCase() + perm.slice(1)}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredRoleRight?.length > 0 ? (
+                            filteredRoleRight.map((page) => (
+                              <tr key={page.VID}>
+                                <td>{page.VName || `Page ${page.VID}`}</td>
+                                {permissionTypes.map((perm) => (
+                                  <td key={perm}>
+                                    <Input
+                                      type="checkbox"
+                                      checked={permissions[page.VID]?.[perm] || false}
+                                      onChange={() => handlePermissionChange(page.VID, perm)}
+                                      disabled={!selectedRoleId}
+                                    />
+                                  </td>
+                                ))}
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={7} className="text-center">
+                                No filtered menu items available
                               </td>
                             </tr>
-                          ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardBody>
-              </Card>
-            </Col>
-          </Row>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardBody>
+                </Card>
+              </Col>
+            </Row>
+          </form>
         </Container>
       </div>
       <DeleteModal
@@ -405,6 +379,6 @@ const UserRights = () => {
       />
     </React.Fragment>
   );
-};
+});
 
 export default UserRights;

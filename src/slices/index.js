@@ -92,9 +92,11 @@ import EmployeeReducer from "./employee/employee/reducer";
 import LoanDisbursementReducer from "./employee/loanDisbursement/reducer";
 import SalaryIncrementReducer from "./employee/salaryIncrement/reducer";
 
-
-
-
+// Administration
+import RolesReducer from "./administration/roles/reducer";
+import RolesRightReducer from "./administration/rolesRight/reducer";
+import PagePermissionReducer from "./administration/pagePermission/reducer";
+import UserReducer  from "./administration/userManagement/reducer";
 
 
 
@@ -150,8 +152,10 @@ const rootReducer = combineReducers({
     Employee: EmployeeReducer,
     LoanDisbursement: LoanDisbursementReducer, 
     SalaryIncrement: SalaryIncrementReducer,  // Here is my work 01/23/2025
-
-
+    Role: RolesReducer, // Here is my work 01/23/2025
+    RoleRight: RolesRightReducer, // Here is my work 01/23/2025
+    PagePermission: PagePermissionReducer, // Here is my work 01/23/2025
+    User: UserReducer, // Here is my work 01/23/2025
 });
 
 export default rootReducer;

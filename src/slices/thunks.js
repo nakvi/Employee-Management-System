@@ -91,5 +91,8 @@ export * from "./setup/holidayType/thunk";
 export * from "./employee/employee/thunk";
 export * from "./employee/loanDisbursement/thunk";
 export * from "./employee/salaryIncrement/thunk";
-
-
+// Administration
+export * from "./administration/roles/thunk";
+export * from "./administration/rolesRight/thunk";
+export * from "./administration/pagePermission/thunk";
+export * from "./administration/userManagement/thunk";

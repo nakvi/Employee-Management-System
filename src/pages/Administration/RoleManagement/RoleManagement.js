@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import {
   Button,
   Card,
@@ -14,101 +14,75 @@ import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { useDispatch, useSelector } from "react-redux";
 import DeleteModal from "../../../Components/Common/DeleteModal";
+import {
+  getRole,
+  submitRole,
+  updateRole,
+  deleteRole,
+} from "../../../slices/administration/roles/thunk";
+
 
 // Dummy data for roles
-const initialRoles = [
-  {
-    VID: 1,
-    VName: "Admin",
-    SortOrder: 1,
-    GroupID: "-1",
-    CompanyID: "1",
-    UID: "1",
-    IsActive: 1,
-  },
-  {
-    VID: 2,
-    VName: "User",
-    SortOrder: 2,
-    GroupID: "-1",
-    CompanyID: "1",
-    UID: "1",
-    IsActive: 0,
-  },
-];
-
 const RoleManagement = () => {
-  const [roles, setRoles] = useState(initialRoles);
+  const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
+
+  // Access Redux state
+  const { loading, error, role } = useSelector((state) => state.Role);
+  // Fetch data on component mount
+  useEffect(() => {
+    dispatch(getRole());
+  }, [dispatch]);
 
   // Formik form setup
   const formik = useFormik({
     initialValues: {
       VName: "",
-      SortOrder: 0,
-      GroupID: "-1",
-      CompanyID: "1",
-      UID: "1",
       IsActive: false,
+      UID: "1",
+      CompanyID: "1",
     },
     validationSchema: Yup.object({
       VName: Yup.string()
-        .required("Role name is required.")
-        .min(3, "Role name must be at least 3 characters")
-        .max(30, "Role name must be less than 30 characters"),
+        .required("Title is required.")
+        .min(3, "Title at least must be 3 characters "),
       IsActive: Yup.boolean(),
     }),
     onSubmit: (values) => {
+      // Add your form submission logic here
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0,
-        GroupID: values.GroupID === "-1" ? "" : values.GroupID,
+        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
       };
-
       if (editingGroup) {
-        // Update existing role
-        setRoles(
-          roles.map((role) =>
-            role.VID === editingGroup.VID
-              ? { ...transformedValues, VID: editingGroup.VID }
-              : role
-          )
-        );
-        setEditingGroup(null);
+        console.log("Editing Group", transformedValues);
+        dispatch(updateRole({ ...transformedValues, VID: editingGroup.VID }));
+        setEditingGroup(null); // Reset after submission
       } else {
-        // Add new role
-        const newRole = {
-          ...transformedValues,
-          VID: roles.length + 1, // Simple ID generation
-        };
-        setRoles([...roles, newRole]);
+        dispatch(submitRole(transformedValues));
       }
       formik.resetForm();
     },
   });
-
-  // Handle delete
+  // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
   };
-
   const handleDeleteConfirm = () => {
-    setRoles(roles.filter((role) => role.VID !== deleteId));
+    if (deleteId) {
+      dispatch(deleteRole(deleteId));
+    }
     setDeleteModal(false);
-    setDeleteId(null);
   };
-
-  // Handle edit
   const handleEditClick = (group) => {
     setEditingGroup(group);
     formik.setValues({
       VName: group.VName,
-      SortOrder: group.SortOrder,
-      GroupID: group.GroupID || "-1",
       UID: group.UID,
       CompanyID: group.CompanyID,
       IsActive: group.IsActive === 1,
@@ -121,6 +95,8 @@ const RoleManagement = () => {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
+        {loading && <p>Loading...</p>}
+        {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
@@ -206,8 +182,8 @@ const RoleManagement = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          {roles.length > 0 ? (
-                            roles.map((group) => (
+                          {role.length > 0 ? (
+                            role.map((group) => (
                               <tr key={group.VID}>
                                 <td>{group.VName}</td>
                                 <td>
