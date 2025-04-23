@@ -31,13 +31,15 @@ const UserManagement = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
-  const formRef = useRef(null);
+  const formRef = useRef(null); // Ref to trigger form submission
 
+  // Access Redux state with fallback
   const { loading = false, error = null, users = [] } = useSelector((state) => state.User || {});
   const { role = [] } = useSelector((state) => state.Role || {});
   const { company = {} } = useSelector((state) => state.Company || {});
   const { location = [] } = useSelector((state) => state.Location || {});
 
+  // Custom styles for react-select
   const customStyles = {
     multiValueLabel: (provided) => ({
       ...provided,
@@ -45,6 +47,7 @@ const UserManagement = () => {
     }),
   };
 
+  // Convert role, location, and company data to react-select options
   const roleOptions = role?.length > 0
     ? role.map((r) => ({ value: r.VName, label: r.VName }))
     : [];
@@ -55,6 +58,15 @@ const UserManagement = () => {
     ? company.data.map((comp) => ({ value: comp.VName, label: comp.VName }))
     : [];
 
+  // Debug logs
+  useEffect(() => {
+    console.log("Users:", users);
+    console.log("Roles:", roleOptions);
+    console.log("Locations:", locationOptions);
+    console.log("Companies:", companyOptions);
+  }, [users, role, location, company]);
+
+  // Fetch data on mount
   useEffect(() => {
     dispatch(getUser());
     dispatch(getRole());
@@ -62,6 +74,7 @@ const UserManagement = () => {
     dispatch(getLocation());
   }, [dispatch]);
 
+  // Formik setup
   const formik = useFormik({
     initialValues: {
       employeeType: "",
@@ -81,6 +94,7 @@ const UserManagement = () => {
       isManager: false,
     },
     validationSchema: Yup.object({
+    //   employeeType: Yup.string().required("Employee Type is required"),
       employee: Yup.string().required("Employee is required"),
       fullName: Yup.string().required("Full Name is required"),
       login: Yup.string().required("User Login is required"),
@@ -91,6 +105,9 @@ const UserManagement = () => {
       isManager: Yup.boolean(),
     }),
     onSubmit: (values) => {
+      console.log("Form submitted with values:", values);
+
+      // Transform form values to match API payload
       const payload = {
         Userfullname: values.fullName,
         Userlogin: values.login,
@@ -108,6 +125,8 @@ const UserManagement = () => {
         locations: values.locations,
       };
 
+      console.log("Submitting payload:", payload);
+
       if (editingUser) {
         dispatch(updateUser({ ...payload, UserID: editingUser.UserID }));
         setEditingUser(null);
@@ -115,7 +134,26 @@ const UserManagement = () => {
         dispatch(submitUser(payload));
       }
 
-      formik.resetForm();
+      // Reset form
+      formik.resetForm({
+        values: {
+          employeeType: "",
+          employee: "",
+          fullName: "",
+          login: "",
+          password: "",
+          roles: [],
+          locations: [],
+          company: [],
+          loginExpiry: "18/04/2025",
+          isActive: false,
+          allowAudit: false,
+          allowActual: false,
+          isAdmin: false,
+          adminReportRights: false,
+          isManager: false,
+        },
+      });
     },
   });
 
@@ -133,26 +171,16 @@ const UserManagement = () => {
 
   const handleEditClick = (user) => {
     setEditingUser(user);
-    const selectedRoles = Array.isArray(user.roles) 
-      ? user.roles.map(role => roleOptions.find(option => option.value === role) || { value: role, label: role })
-      : [];
-    const selectedLocations = Array.isArray(user.locations)
-      ? user.locations.map(loc => locationOptions.find(option => option.value === loc) || { value: loc, label: loc })
-      : [];
-    const selectedCompanies = Array.isArray(user.company)
-      ? user.company.map(comp => companyOptions.find(option => option.value === comp) || { value: comp, label: comp })
-      : [];
-
     formik.setValues({
-      employeeType: user.EmployeeType || "",
-      employee: user.EmployeeID ? `${user.EmployeeID}:${user.Userfullname || ''}:Hr` : "",
+      employeeType: "",
+      employee: user.EmployeeID || "",
       fullName: user.Userfullname || "",
       login: user.Userlogin || "",
       password: user.Userpassword || "",
-      roles: selectedRoles.map(r => r.value),
-      locations: selectedLocations.map(l => l.value),
-      company: selectedCompanies.map(c => c.value),
-      loginExpiry: user.LoginExpiry || "18/06/2025",
+      roles: Array.isArray(user.roles) ? user.roles : [],
+      locations: Array.isArray(user.locations) ? user.locations : [],
+      company: [],
+      loginExpiry: "18/04/2025",
       isActive: user.IsActive === 1,
       allowAudit: user.AllowAudit === 1,
       allowActual: user.AllowActual === 1,
@@ -162,6 +190,7 @@ const UserManagement = () => {
     });
   };
 
+  // Handle save action from PreviewCardHeader
   const handleSave = () => {
     if (formRef.current) {
       formRef.current.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
@@ -182,13 +211,50 @@ const UserManagement = () => {
                 <PreviewCardHeader
                   title="User Management"
                   onCancel={() => {
-                    formik.resetForm();
+                    formik.resetForm({
+                      values: {
+                        employeeType: "",
+                        employee: "",
+                        fullName: "",
+                        login: "",
+                        password: "",
+                        roles: [],
+                        locations: [],
+                        company: [],
+                        loginExpiry: "18/04/2025",
+                        isActive: false,
+                        allowAudit: false,
+                        allowActual: false,
+                        isAdmin: false,
+                        adminReportRights: false,
+                        isManager: false,
+                      },
+                    });
                     setEditingUser(null);
                   }}
                 />
                 <CardBody className="card-body">
                   <div className="live-preview">
+                    {/* First Row: E-Type, Employee, Full Name, Login, Password */}
                     <Row className="gy-4">
+                      {/* <Col xxl={3} md={3}>
+                        <div className="mb-3">
+                          <Label htmlFor="employeeTypeInput" className="form-label">
+                            Employee Type
+                          </Label>
+                          <Input
+                            type="text"
+                            className="form-control form-control-sm"
+                            name="employeeType"
+                            id="employeeTypeInput"
+                            onChange={formik.handleChange}
+                            value={formik.values.employeeType}
+                          />
+                          {formik.touched.employeeType && formik.errors.employeeType ? (
+                            <div className="text-danger">{formik.errors.employeeType}</div>
+                          ) : null}
+                        </div>
+                      </Col> */}
                       <Col xxl={3} md={3}>
                         <div className="mb-3">
                           <Label htmlFor="employeeInput" className="form-label">
@@ -266,6 +332,7 @@ const UserManagement = () => {
                       </Col>
                     </Row>
 
+                    {/* Second Row: Roles, Locations, Company */}
                     <Row className="gy-4">
                       <Col xxl={4} md={4}>
                         <div className="mb-3">
@@ -280,10 +347,10 @@ const UserManagement = () => {
                               formik.values.roles.includes(option.value)
                             )}
                             onChange={(selectedOptions) => {
-                              formik.setFieldValue(
-                                "roles",
-                                selectedOptions.map((option) => option.value)
-                              );
+                              const selectedValues = selectedOptions
+                                ? selectedOptions.map((option) => option.value)
+                                : [];
+                              formik.setFieldValue("roles", selectedValues);
                             }}
                             placeholder="Select roles..."
                             classNamePrefix="select"
@@ -308,10 +375,10 @@ const UserManagement = () => {
                               formik.values.locations.includes(option.value)
                             )}
                             onChange={(selectedOptions) => {
-                              formik.setFieldValue(
-                                "locations",
-                                selectedOptions.map((option) => option.value)
-                              );
+                              const selectedValues = selectedOptions
+                                ? selectedOptions.map((option) => option.value)
+                                : [];
+                              formik.setFieldValue("locations", selectedValues);
                             }}
                             placeholder="Select locations..."
                             classNamePrefix="select"
@@ -335,10 +402,10 @@ const UserManagement = () => {
                               formik.values.company.includes(option.value)
                             )}
                             onChange={(selectedOptions) => {
-                              formik.setFieldValue(
-                                "company",
-                                selectedOptions.map((option) => option.value)
-                              );
+                              const selectedValues = selectedOptions
+                                ? selectedOptions.map((option) => option.value)
+                                : [];
+                              formik.setFieldValue("company", selectedValues);
                             }}
                             placeholder="Select companies..."
                             classNamePrefix="select"
@@ -351,6 +418,7 @@ const UserManagement = () => {
                       </Col>
                     </Row>
 
+                    {/* Third Row: Login Expiry, Active, Allow Audit, Allow Actual, Is Admin, Admin Report Rights, Is Manager */}
                     <Row className="gy-4">
                       <Col xxl={2} md={2}>
                         <div className="mb-3">

@@ -1,81 +1,71 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { getUser, submitUser, updateUser, deleteUser } from "./thunk";
+import { getUser,submitUser,updateUser,deleteUser } from "./thunk";
 
 export const initialState = {
   users: [],
   loading: false,
   error: null,
 };
-
 const UserSlice = createSlice({
   name: "UserSlice",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // Fetch Users
     builder
       .addCase(getUser.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.error = null; // Clear error on new request
       })
       .addCase(getUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = action.payload;
+        state.users = action.payload; // Update data with the fetched payload
       })
       .addCase(getUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Something went wrong";
+        state.error = action.error.message || "Something went wrong"; // Update error state
       });
-
-    // Submit User
+    // Handle submit Grade
     builder
       .addCase(submitUser.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(submitUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = Array.isArray(action.payload)
-          ? [...state.users, ...action.payload]
-          : [...state.users, action.payload];
+        // Add the new designation to the existing array
+        state.role = [...state.role, action.payload];
       })
       .addCase(submitUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to add user.";
+        state.error = action.payload; // Set error message
       });
-
-    // Update User
+    // Update reducer logic
     builder
-      .addCase(updateUser.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(updateUser.fulfilled, (state, action) => {
-        state.loading = false;
-        state.users = state.users.map((user) =>
-          user.UserID === action.payload.UserID ? action.payload : user
+        const updatedGroup = action.payload;
+        state.role = state.role.map((group) =>
+          group.VID === updatedGroup.VID ? updatedGroup : group
         );
+        state.loading = false;
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to update user.";
+        // state.error = action.payload || "Failed to update department group.";
       });
-
-    // Delete User
+    // Handle deletegrade
     builder
       .addCase(deleteUser.pending, (state) => {
         state.loading = true;
-        state.error = null;
       })
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.loading = false;
-        state.users = state.users.filter((user) => user.UserID !== action.payload);
+        state.role = state.role.filter(
+          (group) => group.VID !== action.payload // Compare with VID
+        );
       })
       .addCase(deleteUser.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to delete user.";
+        state.error = action.payload || "Failed to delete user group.";
       });
   },
 });
-
 export default UserSlice.reducer;
