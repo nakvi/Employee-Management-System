@@ -91,6 +91,10 @@ import HolidayTypeReducer from "./setup/holidayType/reducer";
 import EmployeeReducer from "./employee/employee/reducer";
 import LoanDisbursementReducer from "./employee/loanDisbursement/reducer";
 import SalaryIncrementReducer from "./employee/salaryIncrement/reducer";
+import EmployeeLocationTransferReducer from "./employee/employeeTransfer/reducer";
+import EmployeeType from "./employee/employeeType/reducer";
+import ReligionReducer from "./employee/religion/reducer";
+import GenderReducer from "./employee/gender/reducer";
 
 // Administration
 import RolesReducer from "./administration/roles/reducer";
@@ -151,7 +155,11 @@ const rootReducer = combineReducers({
     // Employee
     Employee: EmployeeReducer,
     LoanDisbursement: LoanDisbursementReducer, 
-    SalaryIncrement: SalaryIncrementReducer,  // Here is my work 01/23/2025
+    SalaryIncrement: SalaryIncrementReducer,  
+    EmployeeLocationTransfer:EmployeeLocationTransferReducer,
+    EmployeeType:EmployeeReducer,
+    Religion:ReligionReducer,
+    Gender:GenderReducer,
     Role: RolesReducer, // Here is my work 01/23/2025
     RoleRight: RolesRightReducer, // Here is my work 01/23/2025
     PagePermission: PagePermissionReducer, // Here is my work 01/23/2025

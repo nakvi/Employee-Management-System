@@ -10,7 +10,7 @@ export const initialState = {
 
 // Create slice
 const DesignationSlice = createSlice({
-  name: "Designation",
+  name: "DesignationSlice",
   initialState,
   reducers: {}, // No additional reducers needed
   extraReducers: (builder) => {

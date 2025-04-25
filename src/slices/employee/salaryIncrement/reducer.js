@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { getSalaryIncrement, submitSalaryIncrement, updateSalaryIncrement, deleteSalaryIncrement } from "./thunk";
-import { act } from "react";
+
 export const initialState = {
   salaryIncrement: [],
   loading: false,
@@ -18,7 +18,7 @@ const SalaryIncrementSlice = createSlice({
        })
        .addCase(getSalaryIncrement.fulfilled, (state, action) => {
          state.loading = false;
-         state.grade = action.payload; // Update data with the fetched payload
+         state.salaryIncrement = action.payload; // Update data with the fetched payload
        })
        .addCase(getSalaryIncrement.rejected, (state, action) => {
          state.loading = false;

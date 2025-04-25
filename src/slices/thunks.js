@@ -91,6 +91,11 @@ export * from "./setup/holidayType/thunk";
 export * from "./employee/employee/thunk";
 export * from "./employee/loanDisbursement/thunk";
 export * from "./employee/salaryIncrement/thunk";
+export * from "./employee/employeeTransfer/thunk";
+export * from "./employee/employeeType/thunk";
+export * from "./employee/religion/thunk";
+export * from "./employee/gender/thunk";
+
 // Administration
 export * from "./administration/roles/thunk";
 export * from "./administration/rolesRight/thunk";

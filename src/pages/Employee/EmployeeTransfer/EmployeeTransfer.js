@@ -11,37 +11,63 @@ import {
   Form,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { format } from "date-fns";
+import {
+  getEmployeeLocationTransfer,
+  submitEmployeeLocationTransfer,
+  updateEmployeeLocationTransfer,
+  deleteEmployeeLocationTransfer,
+} from "../../../slices/employee/employeeTransfer/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getEmployeeType } from "../../../slices/thunks";
 
 const EmployeeTransfer = () => {
+  const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState("");
-useEffect(() => {
-  const today = new Date().toISOString().split("T")[0]; 
-  setSelectedDate(today);
-}, []);
+  // get Employee Transfor
+  const { loading, error, employeeLocationTransfer } = useSelector(
+    (state) => state.EmployeeLocationTransfer
+  );
+  const { location } = useSelector((state) => state.Location);
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    dispatch(getEmployeeLocationTransfer());
+  }, [dispatch]);
+  // set date in input feilds
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setSelectedDate(today);
+  }, []);
+  const formatDate = (dateString) => {
+    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+  };
   const getMinDate = () => {
     const today = new Date();
-    return today.toISOString().split("T")[0]; 
+    return today.toISOString().split("T")[0];
   };
-  document.title = "Employee Transfer | EMS";
+  document.title = "Employee Location Transfer | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form>
                   <PreviewCardHeader
-                    title="Employee Transfer"
+                    title="Employee Location Transfer"
                     // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                      <Col xxl={2} md={2}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -96,24 +122,39 @@ useEffect(() => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              New Location
+                            <Label htmlFor="LocationID" className="form-label">
+                              Location
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              name="LocationID"
+                              id="LocationID"
+                              className="form-select form-select-sm"
+                              // value={formik.values.LocationID} // Bind to Formik state
+                              // onChange={formik.handleChange} // Handle changes
+                              // onBlur={formik.handleBlur} // Track field blur
                             >
-                              <option value="">---Select--- </option>
-                              <option value="Choices1" disabled>Lahore</option>
-                              <option value="Choices2" >Islamabad</option>
+                              <option value="-1">---Select---</option>
+                              {location?.length > 0 ? (
+                                location.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No location available
+                                </option>
+                              )}
                             </select>
+                            {/* {formik.touched.LocationID &&
+                            formik.errors.LocationID ? (
+                              <div className="text-danger">
+                                {formik.errors.LocationID}
+                              </div>
+                            ) : null} */}
                           </div>
                         </Col>
-                        
+
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
@@ -181,27 +222,47 @@ useEffect(() => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          <tr>
-                            <td>001:Sir Amir:Hr</td>
-                            <td>Lahore</td>
-                            <td>Karachi</td>
-                            <td>02/02/2025</td>
-                            <td>Ok</td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <div className="edit ">
-                                  <Button className="btn btn-soft-info">
-                                    <i className="bx bx-edit"></i>
-                                  </Button>
-                                </div>
-                                <div className="delete">
-                                  <Button className="btn btn-soft-danger">
-                                    <i className="ri-delete-bin-2-line"></i>
-                                  </Button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
+                          {employeeLocationTransfer?.length > 0 ? (
+                            employeeLocationTransfer.map((group, index) => (
+                              <tr key={group.VID}>
+                                <td>{group.VCode}</td>
+                                <td>
+                                  {location?.find(
+                                    (groupItem) =>
+                                      groupItem.VID === group.LocationID
+                                  )?.VName || ""}
+                                </td>
+                                <td>
+                                  {location?.find(
+                                    (groupItem) =>
+                                      groupItem.VID === group.LocationID
+                                  )?.VName || ""}
+                                </td>
+                                <td>{formatDate(group.VDate)}</td>
+                                <td>Ok</td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <div className="edit ">
+                                      <Button className="btn btn-soft-info">
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button className="btn btn-soft-danger">
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="8" className="text-center">
+                                No Employee Location Transfer found.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                       <div className="noresult" style={{ display: "none" }}>
