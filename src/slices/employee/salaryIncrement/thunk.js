@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 // Define an Endpoint of API
-const API_ENDPOINT = "http://192.168.18.57:8001/ems/salaryIncrement/";
+const API_ENDPOINT = "http://192.168.18.58:8001/ems/salaryIncrement/";
 
 export const getSalaryIncrement = createAsyncThunk("salaryIncrement/getSalaryIncrement",
   async (_, { rejectWithValue }) => {

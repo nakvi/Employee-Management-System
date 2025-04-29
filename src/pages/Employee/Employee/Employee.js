@@ -11,10 +11,193 @@ import {
   Form,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import avatar1 from "../../../assets/images/users/avatar-11.png";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import {
+  getEmployee,
+  submitEmployee,
+  updateEmployee,
+  deleteEmployee,
+} from "../../../slices/employee/employee/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getDesignation } from "../../../slices/setup/designation/thunk";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getReligion } from "../../../slices/employee/religion/thunk";
+import { getGrade } from "../../../slices/setup/grade/thunk";
+import { getGender } from "../../../slices/employee/gender/thunk";
 const Employee = () => {
+  const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState("");
+  const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
+
+  // Access Redux state
+  const { loading, error, employee } = useSelector((state) => state.Employee);
+  const { location } = useSelector((state) => state.Location);
+  const { department } = useSelector((state) => state.Department);
+  const { designation } = useSelector((state) => state.Designation);
+  const { religion } = useSelector((state) => state.Religion);
+  const { grade } = useSelector((state) => state.Grade);
+  const { gender } = useSelector((state) => state.Gender);
+
+  // Fetch data on component mount
+  useEffect(() => {
+    dispatch(getEmployee());
+    dispatch(getLocation());
+    dispatch(getDesignation());
+    dispatch(getDepartment());
+    dispatch(getReligion());
+    dispatch(getGrade());
+    dispatch(getGender());
+  }, [dispatch]);
+  // Formik form setup
+  const formik = useFormik({
+    initialValues: {
+      EmpID: 1,
+      ETypeID: 2,
+      LocationID: 5,
+      EmpCode: "EMP001",
+      AccCode: "ACC1001",
+      MachineCode: "MC001",
+      EName: " Ali Khan",
+      FName: "Ahmed Khan",
+      DeptID: 3,
+      DesgID: 4,
+      HODID: 101,
+      DOB: "1990-05-20T00:00:00",
+      DOJ: "2015-03-01T00:00:00",
+      DOJAct: "2015-03-01T00:00:00",
+      HireType: "Permanent",
+      JobType: "Full-time",
+      OffDay1: 6,
+      OffDay2: 7,
+      ShiftID: 1,
+      NIC: "35202-1234567-1",
+      BasicSalary: "50000",
+      ActualSalary: "55000",
+      ManagerSalary: 0,
+      IncomeTax: "2000",
+      HaveOT: true,
+      HaveOTAct: true,
+      HaveOTOFF: true,
+      ReplacementOf: 0,
+      IsBank: true,
+      BankAccountNo: "1234567890",
+      CompanyBankID: "10",
+      IsActive: false,
+      IsactiveAct: 1,
+      DOL: "1900-01-01T00:00:00",
+      DOLAct: "1900-01-01T00:00:00",
+      LeftRemarks: "",
+      GradeID: 2,
+      ProbitionStatus: "Completed",
+      ProbitionDate: "2015-09-01T00:00:00",
+      CellPhone: "03001234567",
+      IcePhone: "03111234567",
+      Address: "House No. 123, City A",
+      AddressPermanent: "Village B, District C",
+      Bloodgroup: "B+",
+      EOBINo: "EOBI12345",
+      EOBINoAct: "EOBI12345",
+      SSNo: "SS001",
+      LifeInsuranceNo: "LI12345",
+      IsGroupInsurance: true,
+      MartialStatus: "Single",
+      IsPFundEntitled: true,
+      PFundEntitledDate: "2016-01-01T00:00:00",
+      IsPFund: true,
+      PFAmount: "5000",
+      IsPessi: true,
+      PessiDate: "2016-01-01T00:00:00",
+      Gender: "Male",
+      ReligionID: 1,
+      IsExempt: false,
+      IsShiftEmployee: true,
+      IsShiftEmployeeAct: true,
+      ExemptLate: false,
+      ExemptMinuts: 0,
+      Education: "BS Computer Science",
+      ENameUrdu: " علی خان",
+      FNameUrdu: " احمد خان",
+      AddressUrdu: " گھر نمبر 123، شہر اے",
+      DesignationTitle: "Software Engineer",
+      OldCode: "EMP_OLD_01",
+      MotherName: "Fatima",
+      NextToKin: "Hassan",
+      IsTransport: true,
+      TransportDate: "2020-01-01T00:00:00",
+      TransportRoute: "Route 5",
+      TransportLocation: " Stop A",
+      IsManager: false,
+      IsShowForAudit: true,
+      IsStopSalary: false,
+      OTRate: 2,
+      OTRateOFF: 1,
+      NICExpairy: "2030-01-01T00:00:00",
+      BusDeduction: true,
+      BlackList: false,
+      UID: 1010,
+      Tranzdatetime: "2025-04-23T14:00:00",
+      CompanyID: 1,
+    },
+
+    validationSchema: Yup.object({
+      VCode: Yup.string()
+        .required("Code is required.")
+        .min(3, "Code must be at least 3 characters ")
+        .max(10, "Code must be less then 10 characters"),
+      VName: Yup.string()
+        .required("Title is required.")
+        .min(3, "Title at least must be 3 characters "),
+
+      TimeIn: Yup.number().required("Time In is required."),
+      TimeOut: Yup.number().required("Time Out is required."),
+      RestTimeFrom: Yup.number().required("Rest From is required."),
+      RestTimeTo: Yup.number().required("Rest To is required."),
+      WorkingHrs: Yup.number().required("Working Hours are required."),
+      RelaxTime: Yup.number().required("Relax Time is required."),
+      MinAttTime: Yup.number().required("Min Time is required."),
+      MinHDTime: Yup.number().required("Min Half-Day Time is required."),
+
+      // TimeInRamazan: Yup.number().required("Time In (Ramazan) is required."),
+      // TimeOutRamazan: Yup.number().required("Time Out (Ramazan) is required."),
+      // RestTimeFromRamazan: Yup.number().required("Rest From (Ramazan) is required."),
+      // RestTimeToRamazan: Yup.number().required("Rest To (Ramazan) is required."),
+      // WorkingHrsRamazan: Yup.number().required("Working Hours (Ramazan) are required."),
+      // RelaxTimeRamazan: Yup.number().required("Relax Time (Ramazan) is required."),
+      // MinAttTimeRamazan: Yup.number().required("Min Time (Ramazan) is required."),
+      // MinHDTimeRamazan: Yup.number().required("Min Half-Day Time (Ramazan) is required."),
+      IsRoster: Yup.boolean(),
+      IsSecurity: Yup.boolean(),
+      SaturdayHalfTime: Yup.boolean(),
+      LocationID: Yup.number().required("Location is required."),
+      IsActive: Yup.boolean(),
+    }),
+
+    onSubmit: (values) => {
+      const transformedValues = {
+        ...values,
+        IsActive: values.IsActive ? 1 : 0,
+        IsRoster: values.IsRoster ? 1 : 0,
+        IsSecurity: values.IsSecurity ? 1 : 0,
+        SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
+      };
+      if (editingGroup) {
+        console.log("Editing Group", transformedValues);
+
+        dispatch(
+          updateEmployee({ ...transformedValues, VID: editingGroup.VID })
+        );
+        setEditingGroup(null); // Reset after submission
+      } else {
+        dispatch(submitEmployee(transformedValues));
+      }
+      formik.resetForm();
+    },
+  });
+  // set date format
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
@@ -28,8 +211,8 @@ const Employee = () => {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
@@ -61,33 +244,52 @@ const Employee = () => {
 
                             {/* Location */}
                             <Col xxl={2} md={3}>
-                              <div>
+                              <div className="mb-3">
                                 <Label
-                                  htmlFor="location"
+                                  htmlFor="LocationID"
                                   className="form-label"
                                 >
                                   Location
                                 </Label>
                                 <select
+                                  name="LocationID"
+                                  id="LocationID"
                                   className="form-select form-select-sm"
-                                  id="location"
+                                  value={formik.values.LocationID} // Bind to Formik state
+                                  onChange={formik.handleChange} // Handle changes
+                                  onBlur={formik.handleBlur} // Track field blur
                                 >
-                                  <option value="">--- Select ---</option>
-                                  <option value="lahore">Lahore</option>
-                                  <option value="islamabad">Islamabad</option>
+                                  <option value="-1">---Select---</option>
+                                  {location?.length > 0 ? (
+                                    location.map((group) => (
+                                      <option key={group.VID} value={group.VID}>
+                                        {group.VName}
+                                      </option>
+                                    ))
+                                  ) : (
+                                    <option value="0" disabled>
+                                      No location available
+                                    </option>
+                                  )}
                                 </select>
+                                {formik.touched.LocationID &&
+                                formik.errors.LocationID ? (
+                                  <div className="text-danger">
+                                    {formik.errors.LocationID}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
                             {/* Emp Code */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="empCode" className="form-label">
+                                <Label htmlFor="EmpCode" className="form-label">
                                   Emp Code
                                 </Label>
                                 <Input
                                   type="text"
                                   className="form-control-sm"
-                                  id="empCode"
+                                  id="EmpCode"
                                   placeholder="Emp Code"
                                   disabled
                                   value="039"
@@ -114,51 +316,66 @@ const Employee = () => {
                             {/* Name */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="name" className="form-label">
+                                <Label htmlFor="EName" className="form-label">
                                   Name
                                 </Label>
                                 <Input
                                   type="text"
                                   className="form-control-sm"
-                                  id="name"
+                                  id="EName"
                                   placeholder="Name"
+                                  {...formik.getFieldProps("EName")}
                                 />
+                                {formik.touched.EName && formik.errors.EName ? (
+                                  <div className="text-danger">
+                                    {formik.errors.EName}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
                             {/* Father Name */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label
-                                  htmlFor="fatherName"
-                                  className="form-label"
-                                >
+                                <Label htmlFor="FName" className="form-label">
                                   Father Name
                                 </Label>
                                 <Input
                                   type="text"
                                   className="form-control-sm"
-                                  id="fatherName"
+                                  id="FName"
                                   placeholder="Father Name"
+                                  {...formik.getFieldProps("FName")}
                                 />
+                                {formik.touched.FName && formik.errors.FName ? (
+                                  <div className="text-danger">
+                                    {formik.errors.FName}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
                             {/* Department */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label
-                                  htmlFor="department"
-                                  className="form-label"
-                                >
+                                <Label htmlFor="DeptID" className="form-label">
                                   Department
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
-                                  id="department"
+                                  id="DeptID"
                                 >
-                                  <option value="">--- Select ---</option>
-                                  <option value="it">IT</option>
-                                  <option value="hr">HR</option>
+                                  <option value="-1">---Select---</option>
+                                  {department?.length > 0 ? (
+                                    department.map((group) => (
+                                      <option key={group.VID} value={group.VID}>
+                                        {group.VName}
+                                      </option>
+                                    ))
+                                  ) : (
+                                    <option value="0" disabled>
+                                      No Department available
+                                    </option>
+                                  )}
                                 </select>
                               </div>
                             </Col>
@@ -166,19 +383,25 @@ const Employee = () => {
                             {/* Designation */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label
-                                  htmlFor="designation"
-                                  className="form-label"
-                                >
+                                <Label htmlFor="DesgID" className="form-label">
                                   Designation
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
-                                  id="designation"
+                                  id="DesgID"
                                 >
-                                  <option value="">--- Select ---</option>
-                                  <option value="frontend">Frontend</option>
-                                  <option value="backend">Backend</option>
+                                  <option value="-1">---Select---</option>
+                                  {designation?.length > 0 ? (
+                                    designation.map((group) => (
+                                      <option key={group.VID} value={group.VID}>
+                                        {group.VName}
+                                      </option>
+                                    ))
+                                  ) : (
+                                    <option value="0" disabled>
+                                      No Designation available
+                                    </option>
+                                  )}
                                 </select>
                               </div>
                             </Col>
@@ -212,20 +435,22 @@ const Employee = () => {
                                   className="form-control-sm"
                                   id="dob"
                                   value="2025-02-04"
+                                  {...formik.getFieldProps("DOB")}
                                 />
                               </div>
                             </Col>
                             {/* DOJ */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="doj" className="form-label">
+                                <Label htmlFor="DOJ" className="form-label">
                                   DOJ
                                 </Label>
                                 <Input
                                   type="date"
                                   className="form-control-sm"
-                                  id="doj"
+                                  id="DOJ"
                                   value="2025-02-04"
+                                  {...formik.getFieldProps("DOJ")}
                                 />
                               </div>
                             </Col>
@@ -236,7 +461,7 @@ const Employee = () => {
                                   htmlFor="designation"
                                   className="form-label"
                                 >
-                                  Replace Off
+                                  Shift
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -252,18 +477,20 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label
-                                  htmlFor="designation"
+                                  htmlFor="HireType"
                                   className="form-label"
                                 >
                                   Hire Type
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
-                                  id="designation"
+                                  id="HireType"
                                 >
                                   <option value="">--- Select ---</option>
-                                  <option value="frontend">Frontend</option>
-                                  <option value="backend">Backend</option>
+                                  <option value="Contractual">
+                                    Contractual
+                                  </option>
+                                  <option value="Permanent">Permanent</option>
                                 </select>
                               </div>
                             </Col>
@@ -274,16 +501,14 @@ const Employee = () => {
                                   htmlFor="designation"
                                   className="form-label"
                                 >
-                                  Job Type
+                                  Replace off
                                 </Label>
-                                <select
-                                  className="form-select form-select-sm"
-                                  id="designation"
-                                >
-                                  <option value="">--- Select ---</option>
-                                  <option value="frontend">Frontend</option>
-                                  <option value="backend">Backend</option>
-                                </select>
+                                <Input
+                                  type="text"
+                                  className="form-control-sm"
+                                  id="empCode"
+                                  placeholder="NIC"
+                                />
                               </div>
                             </Col>
                             {/* Off Day- 1*/}
@@ -361,7 +586,10 @@ const Employee = () => {
                         </Col>
                         {/* Here is Second */}
                       </Row>
-                      <Row className="gy-4 mt-2 p-1" style={{ border: "2px dotted lightgray" }}>
+                      <Row
+                        className="gy-4 mt-2 p-1"
+                        style={{ border: "2px dotted lightgray" }}
+                      >
                         {/* Shift */}
                         <Col xxl={2} md={2}>
                           <div>
@@ -381,14 +609,15 @@ const Employee = () => {
                         {/* Emp Code */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="empCode" className="form-label">
+                            <Label htmlFor="NIC" className="form-label">
                               NIC
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="empCode"
+                              id="NIC"
                               placeholder="NIC"
+                              {...formik.getFieldProps("NIC")}
                             />
                           </div>
                         </Col>
@@ -396,14 +625,15 @@ const Employee = () => {
                         {/* Name */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="name" className="form-label">
+                            <Label htmlFor="BasicSalary" className="form-label">
                               Salary
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               className="form-control-sm"
-                              id="name"
-                              placeholder="Salary "
+                              id="BasicSalary"
+                              placeholder="00 "
+                              {...formik.getFieldProps("BasicSalary")}
                             />
                           </div>
                         </Col>
@@ -411,36 +641,36 @@ const Employee = () => {
                         {/* Monthly Tax */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="name" className="form-label">
+                            <Label htmlFor="IncomeTax" className="form-label">
                               Monthly Tax
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="name"
+                              id="IncomeTax"
                               placeholder="0.01 "
+                              {...formik.getFieldProps("IncomeTax")}
                             />
                           </div>
                         </Col>
 
                         {/* Have OverTime */}
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="HaveOT">
                             Have OverTime
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="HaveOT"
+                              {...formik.getFieldProps("HaveOT")}
+                              checked={formik.values.HaveOT}
                             />
                           </span>
                         </Col>
-                       {/* Grade*/}
-                       <Col xxl={2} md={2}>
+                        {/* Grade*/}
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="designation" className="form-label">
                               Grade
@@ -449,39 +679,51 @@ const Employee = () => {
                               className="form-select form-select-sm"
                               id="designation"
                             >
-                              <option value="">--- Select ---</option>
-                              <option value="frontend">Frontend</option>
-                              <option value="backend">Backend</option>
+                              <option value="-1">---Select---</option>
+                              {grade?.length > 0 ? (
+                                grade.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No grade available
+                                </option>
+                              )}
                             </select>
                           </div>
                         </Col>
                         {/*   IsBank Grid */}
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="IsBank">
                             IsBank
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsBank"
+                              {...formik.getFieldProps("IsBank")}
+                              checked={formik.values.IsBank}
                             />
                           </span>
                         </Col>
                         {/* Bank Account */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="eType" className="form-label">
+                            <Label
+                              htmlFor="BankAccountNo"
+                              className="form-label"
+                            >
                               Bank Account
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="doj"
+                              id="BankAccountNo"
                               placeholder="Bank Account"
+                              {...formik.getFieldProps("BankAccountNo")}
                             />
                           </div>
                         </Col>
@@ -502,17 +744,16 @@ const Employee = () => {
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="IsActive">
                             IsActive
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsActive"
+                              {...formik.getFieldProps("IsActive")}
+                              checked={formik.values.IsActive}
                             />
                           </span>
                         </Col>
@@ -549,17 +790,16 @@ const Employee = () => {
                         </Col>
                         {/* Is Empt grid*/}
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="IsExempt">
                             IsExempt
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsExempt"
+                              {...formik.getFieldProps("IsExempt")}
+                              checked={formik.values.IsExempt}
                             />
                           </span>
                         </Col>
@@ -581,26 +821,29 @@ const Employee = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="doj" className="form-label">
+                            <Label
+                              htmlFor="ProbitionDate"
+                              className="form-label"
+                            >
                               Probition Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="doj"
+                              id="ProbitionDate"
                               value="2025-02-04"
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="email" className="form-label">
+                            <Label htmlFor="CellPhone" className="form-label">
                               Contact
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="CellPhone"
                               placeholder="Contact"
                             />
                           </div>
@@ -608,13 +851,13 @@ const Employee = () => {
                         {/* Address */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="contact" className="form-label">
-                             Present Address
+                            <Label htmlFor="Address" className="form-label">
+                              Present Address
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="Address"
                               placeholder="Address"
                             />
                           </div>
@@ -622,14 +865,18 @@ const Employee = () => {
                         {/* Address */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="contact" className="form-label">
+                            <Label
+                              htmlFor="AddressPermanent"
+                              className="form-label"
+                            >
                               Permanent Address
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
-                              placeholder="Address"
+                              id="AddressPermanent"
+                              placeholder="Permanent Address"
+                              {...formik.getFieldProps("AddressPermanent")}
                             />
                           </div>
                         </Col>
@@ -652,47 +899,52 @@ const Employee = () => {
                         {/* EOBI*/}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
+                            <Label htmlFor="EOBINo" className="form-label">
                               EOBI No
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
-                              placeholder="EOBI No"
+                              id="EOBINo"
+                              {...formik.getFieldProps("EOBINo")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
+                            <Label htmlFor="SSNo" className="form-label">
                               SS No
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="SSNo"
                               placeholder="SS No"
+                              {...formik.getFieldProps("SSNo")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
+                            <Label
+                              htmlFor="LifeInsuranceNo"
+                              className="form-label"
+                            >
                               Life Insurance No
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="LifeInsuranceNo"
                               placeholder="Life Insurance No"
+                              {...formik.getFieldProps("LifeInsuranceNo")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
-                            for="SaturdayHalfTime"
+                            for="IsGroupInsurance"
                           >
                             IsGroupInsurance
                           </Label>
@@ -700,7 +952,9 @@ const Employee = () => {
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsGroupInsurance"
+                              {...formik.getFieldProps("IsGroupInsurance")}
+                              checked={formik.values.IsGroupInsurance}
                             />
                           </span>
                         </Col>
@@ -723,7 +977,7 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
-                            for="SaturdayHalfTime"
+                            for="IsPFundEntitled"
                           >
                             IsPFundEntitled
                           </Label>
@@ -731,75 +985,79 @@ const Employee = () => {
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsPFundEntitled"
+                              {...formik.getFieldProps("IsPFundEntitled")}
+                              checked={formik.values.IsPFundEntitled}
                             />
                           </span>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="doj" className="form-label">
+                            <Label
+                              htmlFor="PFundEntitledDate"
+                              className="form-label"
+                            >
                               PFundEntitled Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="doj"
+                              id="PFundEntitledDate"
                               value="2025-02-04"
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="IsPFund">
                             IsPFund
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsPFund"
+                              {...formik.getFieldProps("IsPFund")}
+                              checked={formik.values.IsPFund}
                             />
                           </span>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
+                            <Label htmlFor="PFAmount" className="form-label">
                               PF Amount
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="contact"
+                              id="PFAmount"
                               placeholder="00"
+                              {...formik.getFieldProps("PFAmount")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="IsPessi">
                             IsPessi
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsPessi"
+                              {...formik.getFieldProps("IsPessi")}
+                              checked={formik.values.IsPessi}
                             />
                           </span>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="doj" className="form-label">
+                            <Label htmlFor="PessiDate" className="form-label">
                               Pessi Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="doj"
+                              id="PessiDate"
                               value="2025-02-04"
                             />
                           </div>
@@ -808,42 +1066,60 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="Gender" className="form-label">
-                             Gender
+                              Gender
                             </Label>
                             <select
                               className="form-select form-select-sm"
                               id="Gender"
                             >
-                              <option value="">--- Select ---</option>
-                              <option value="frontend">Frontend</option>
-                              <option value="backend">Backend</option>
+                                <option value="-1">---Select---</option>
+                              {gender?.length > 0 ? (
+                                gender.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No gender available
+                                </option>
+                              )}
                             </select>
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="Gender" className="form-label">
-                            Religion
+                              Religion
                             </Label>
                             <select
                               className="form-select form-select-sm"
                               id="Gender"
                             >
-                              <option value="">--- Select ---</option>
-                              <option value="frontend">Frontend</option>
-                              <option value="backend">Backend</option>
+                                 <option value="-1">---Select---</option>
+                              {religion?.length > 0 ? (
+                                religion.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No religion available
+                                </option>
+                              )}
                             </select>
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Old Code
+                            <Label htmlFor="OldCode" className="form-label">
+                              Old Code
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="OldCode"
                               placeholder="5535"
                               disabled
                             />
@@ -852,7 +1128,7 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
-                            for="SaturdayHalfTime"
+                            for="IsShiftEmployee"
                           >
                             IsShift Employee
                           </Label>
@@ -860,32 +1136,37 @@ const Employee = () => {
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsShiftEmployee"
+                              {...formik.getFieldProps("IsShiftEmployee")}
+                              checked={formik.values.IsShiftEmployee}
                             />
                           </span>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Exempt Late
+                            <Label htmlFor="ExemptLate" className="form-label">
+                              Exempt Late
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="contact"
+                              id="ExemptLate"
                               placeholder="00"
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Exempt Minuts
+                            <Label
+                              htmlFor="ExemptMinuts"
+                              className="form-label"
+                            >
+                              Exempt Minuts
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="contact"
+                              id="ExemptMinuts"
                               placeholder="00"
                             />
                           </div>
@@ -893,178 +1174,200 @@ const Employee = () => {
                         {/* Education Grid */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Education
+                            <Label htmlFor="Education" className="form-label">
+                              Education
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="Education"
                               placeholder="Education"
+                              {...formik.getFieldProps("Education")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Education Urdu
+                            <Label htmlFor="ENameUrdu" className="form-label">
+                              Education Urdu
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="ENameUrdu"
                               placeholder="Education Urdu"
+                              {...formik.getFieldProps("ENameUrdu")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Father Name Urdu
+                            <Label htmlFor="FNameUrdu" className="form-label">
+                              Father Name Urdu
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="FNameUrdu"
                               placeholder="Father Name Urdu"
+                              {...formik.getFieldProps("FNameUrdu")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Address Urdu
+                            <Label htmlFor="AddressUrdu" className="form-label">
+                              Address Urdu
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="AddressUrdu"
                               placeholder="Address Urdu"
+                              {...formik.getFieldProps("AddressUrdu")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Designation Title
+                            <Label
+                              htmlFor="DesignationTitle"
+                              className="form-label"
+                            >
+                              Designation Title
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="DesignationTitle"
                               placeholder="Designation Title"
+                              {...formik.getFieldProps("DesignationTitle")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="IsManager">
                             IsManager
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsManager"
+                              {...formik.getFieldProps("IsPFund")}
+                              checked={formik.values.IsPFund}
                             />
                           </span>
                         </Col>
                         {/* Mother Name Grid */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            Mother Name
+                            <Label htmlFor="MotherName" className="form-label">
+                              Mother Name
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="MotherName"
                               placeholder="Mother Name"
+                              {...formik.getFieldProps("MotherName")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
-                            NextTo Kin
+                            <Label htmlFor="NextToKin" className="form-label">
+                              NextTo Kin
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="contact"
+                              id="NextToKin"
                               placeholder="NextTo Kin"
+                              {...formik.getFieldProps("NextToKin")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="SaturdayHalfTime"
-                          >
+                          <Label className="form-check-label" for="IsTransport">
                             IsTransport
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsTransport"
+                              {...formik.getFieldProps("IsTransport")}
+                              checked={formik.values.IsTransport}
                             />
                           </span>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="doj" className="form-label">
-                            Transport Date
+                            <Label
+                              htmlFor="TransportDate"
+                              className="form-label"
+                            >
+                              Transport Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="doj"
+                              id="TransportDate"
                               value="2025-02-04"
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="doj" className="form-label">
-                            Transport Route
+                            <Label
+                              htmlFor="TransportRoute"
+                              className="form-label"
+                            >
+                              Transport Route
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="doj"
+                              id="TransportRoute"
                               placeholder="Transport Route"
+                              {...formik.getFieldProps("TransportRoute")}
                             />
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="doj" className="form-label">
-                            Transport Location
+                            <Label
+                              htmlFor="TransportLocation"
+                              className="form-label"
+                            >
+                              Transport Location
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="doj"
+                              id="TransportLocation"
                               placeholder="Transport Location"
+                              {...formik.getFieldProps("TransportLocation")}
                             />
                           </div>
                         </Col>
                       </Row>
                       {/* Third Row */}
-                      <Row className="gy-4 mt-2 p-1" style={{ border: "2px dotted lightgray" }}>
+                      <Row
+                        className="gy-4 mt-2 p-1"
+                        style={{ border: "2px dotted lightgray" }}
+                      >
                         <Col xxl={2} md={2}>
                           <div className="form-check mb-2 mt-2 ">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsShowForAudit"
                             />
                             <Label
                               className="form-check-label"
-                              for="SaturdayHalfTime"
+                              for="IsShowForAudit"
                             >
                               IsShowFor Audit
                             </Label>
@@ -1075,11 +1378,12 @@ const Employee = () => {
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="IsStopSalary"
+                              {...formik.getFieldProps("IsStopSalary")}
                             />
                             <Label
                               className="form-check-label"
-                              for="SaturdayHalfTime"
+                              for="IsStopSalary"
                             >
                               IsStopSalary
                             </Label>
@@ -1091,6 +1395,7 @@ const Employee = () => {
                               className="form-check-input"
                               type="checkbox"
                               id="SaturdayHalfTime"
+                              {...formik.getFieldProps("IsTransport")}
                             />
                             <Label
                               className="form-check-label"
@@ -1105,12 +1410,10 @@ const Employee = () => {
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="OTRate"
+                              {...formik.getFieldProps("OTRate")}
                             />
-                            <Label
-                              className="form-check-label"
-                              for="SaturdayHalfTime"
-                            >
+                            <Label className="form-check-label" for="OTRate">
                               OTRate
                             </Label>
                           </div>
@@ -1120,12 +1423,10 @@ const Employee = () => {
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="SaturdayHalfTime"
+                              id="OTRateOFF"
+                              {...formik.getFieldProps("OTRateOFF")}
                             />
-                            <Label
-                              className="form-check-label"
-                              for="SaturdayHalfTime"
-                            >
+                            <Label className="form-check-label" for="OTRateOFF">
                               OTRateOFF
                             </Label>
                           </div>

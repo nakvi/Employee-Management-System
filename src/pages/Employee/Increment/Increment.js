@@ -12,13 +12,115 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import {
+  getSalaryIncrement,
+  submitSalaryIncrement,
+  updateSalaryIncrement,
+  deleteSalaryIncrement,
+} from "../../../slices/thunks";
+import { useDispatch, useSelector } from "react-redux";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { format } from "date-fns";
+import DeleteModal from "../../../Components/Common/DeleteModal";
 
 const Increment = () => {
+  const dispatch = useDispatch();
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
+  const [editingGroup, setEditingGroup] = useState(null);
+  
+  // get salary increament
+  const { loading, error, salaryIncrement } = useSelector(
+    (state) => state.SalaryIncrement
+  );
+  useEffect(() => {
+    dispatch(getSalaryIncrement());
+  }, [dispatch]);
+  // Formik form setup
+  const formik = useFormik({
+    initialValues: {
+      VName: "",
+      DateFrom: "",
+      DateTo: "",
+      CurrentSalary:"",
+      IncrementAmount:"",
+      IncrementSpecial:"",
+      IncrementPromotional:"",
+      FirstAmount:"",
+      CompanyID: "1",
+      UID: "1",
+      IsActive: false,
+    },
+    validationSchema: Yup.object({
+      // VName: Yup.string()
+      //   .required("Title is required.")
+      //   .min(3, "Title at least must be 3 characters "),
+      // DateFrom: Yup.date()
+      //   .required("Start date is required.")
+      //   .max(
+      //     Yup.ref("DateTo"),
+      //     "Start date must be earlier than or the same as the end date"
+      //   ),
+      // DateTo: Yup.date()
+      //   .required("End date is required.")
+      //   .min(
+      //     Yup.ref("DateFrom"),
+      //     "End date must be later than or the same as the start date"
+      //   ),
+      IsActive: Yup.boolean(),
+    }),
+    onSubmit: (values) => {
+      // Add your form submission logic here
+      const transformedValues = {
+        ...values,
+        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+      };
+      if (editingGroup) {
+        console.log("Editing Group", transformedValues);
+        dispatch(
+          updateSalaryIncrement({ ...transformedValues, VID: editingGroup.VID })
+        );
+        setEditingGroup(null); // Reset after submission
+      } else {
+        dispatch(submitSalaryIncrement(transformedValues));
+      }
+      formik.resetForm();
+    },
+  });
+  const handleEditClick = (group) => {
+    setEditingGroup(group);
+    const formatDateForInput = (dateString) => {
+      return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
+    }; 
+    formik.setValues({
+      DateFrom: formatDateForInput(group.DateFrom),
+      DateTo: formatDateForInput(group.DateTo),
+      VName: group.VName,
+      UID: group.UID,
+      CompanyID: group.CompanyID,
+      IsActive: group.IsActive === 1,
+    });
+  };
+  // Delete Data
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      dispatch(deleteSalaryIncrement(deleteId));
+    }
+    setDeleteModal(false);
+  };
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
   }, []);
+  const formatDate = (dateString) => {
+    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+  };
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -28,12 +130,12 @@ const Increment = () => {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
+                <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                     title="Increment"
                     // onCancel={formik.resetForm}
@@ -57,7 +159,7 @@ const Increment = () => {
                             </select>
                           </div>
                         </Col>
-                        
+
                         <Col xxl={2} md={4}>
                           <div className="mb-3">
                             <Label
@@ -79,22 +181,29 @@ const Increment = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="DateFrom" className="form-label">
+                            <Label htmlFor="VDate" className="form-label">
                               Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="DateFrom"
+                              id="VDate"
+                              {...formik.getFieldProps("VDate")}
+
                               min={getMinDate()} // Prevent past dates
                               value={selectedDate}
                             />
+                               {formik.touched.VDate && formik.errors.VDate ? (
+                              <div className="text-danger">
+                                {formik.errors.VDate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
-                             Effective Date 
+                              Effective Date
                             </Label>
                             <Input
                               type="date"
@@ -102,7 +211,14 @@ const Increment = () => {
                               id="DateFrom"
                               min={getMinDate()} // Prevent past dates
                               value={selectedDate}
+                              {...formik.getFieldProps("DateFrom")}
+
                             />
+                               {formik.touched.DateFrom && formik.errors.DateFrom ? (
+                              <div className="text-danger">
+                                {formik.errors.DateFrom}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -122,54 +238,81 @@ const Increment = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
-                               Amount
+                            <Label htmlFor="IncrementAmount" className="form-label">
+                              Amount
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
+                              id="IncrementAmount"
                               placeholder="00"
+                              {...formik.getFieldProps("IncrementAmount")}
+
                             />
+                               {formik.touched.IncrementAmount && formik.errors.IncrementAmount ? (
+                              <div className="text-danger">
+                                {formik.errors.IncrementAmount}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
-                            Special
+                            <Label htmlFor="IncrementSpecial" className="form-label">
+                              Special
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
+                              id="IncrementSpecial"
                               placeholder="00"
+                              {...formik.getFieldProps("IncrementSpecial")}
                             />
+                               {formik.touched.IncrementSpecial && formik.errors.IncrementSpecial ? (
+                              <div className="text-danger">
+                                {formik.errors.IncrementSpecial}
+                              </div>
+                            ) : null}
                           </div>
+                          
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="IncrementPromotional" className="form-label">
                               Promotional
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
+                              id="IncrementPromotional"
                               placeholder="000"
+                              {...formik.getFieldProps("IncrementPromotional")}
                             />
+                               {formik.touched.IncrementPromotional && formik.errors.IncrementPromotional ? (
+                              <div className="text-danger">
+                                {formik.errors.IncrementPromotional}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="FirstAmount" className="form-label">
                               First Amount
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
+                              id="FirstAmount"
                               placeholder="000"
+                              {...formik.getFieldProps("FirstAmount")}
+
                             />
+                               {formik.touched.FirstAmount && formik.errors.FirstAmount ? (
+                              <div className="text-danger">
+                                {formik.errors.FirstAmount}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                       </Row>
@@ -215,30 +358,47 @@ const Increment = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          <tr>
-                            <td>001:Sir Amir:Hr</td>
-                            <td>02/02/2025</td>
-                            <td>02/02/2025</td>
-                            <td>5000</td>
-                            <td>1000</td>
-                            <td>1000</td>
-                            <td>1200</td>
-                            <td>100</td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <div className="edit ">
-                                  <Button className="btn btn-soft-info">
-                                    <i className="bx bx-edit"></i>
-                                  </Button>
-                                </div>
-                                <div className="delete">
-                                  <Button className="btn btn-soft-danger">
-                                    <i className="ri-delete-bin-2-line"></i>
-                                  </Button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
+                          {salaryIncrement?.length > 0 ? (
+                            salaryIncrement.map((group, index) => (
+                              <tr key={group.VID}>
+                                <td>{group.VName}</td>
+                                <td>{formatDate(group.VDate)}</td>
+                                <td>{formatDate(group.DateFrom)}</td>
+                                <td>{group.CurrentSalary}</td>
+                                <td>{group.IncrementAmount}</td>
+                                <td>{group.IncrementSpecial}</td>
+                                <td>{group.IncrementPromotional}</td>
+                                <td>{group.FirstAmount}</td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <div className="edit ">
+                                      <Button className="btn btn-soft-info"
+                                       onClick={() => handleEditClick(group)}
+                                       >
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="8" className="text-center">
+                                No Salary Increment found.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                       <div className="noresult" style={{ display: "none" }}>
@@ -279,6 +439,11 @@ const Increment = () => {
           </Row>
         </Container>
       </div>
+      <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };
