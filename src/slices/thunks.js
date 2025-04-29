@@ -96,3 +96,6 @@ export * from "./administration/roles/thunk";
 export * from "./administration/rolesRight/thunk";
 export * from "./administration/pagePermission/thunk";
 export * from "./administration/userManagement/thunk";
+export * from "./administration/secUserCompany/thunk";
+export * from "./administration/secUserLocation/thunk";
+export * from "./administration/secUserRole/thunk";

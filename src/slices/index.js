@@ -97,9 +97,9 @@ import RolesReducer from "./administration/roles/reducer";
 import RolesRightReducer from "./administration/rolesRight/reducer";
 import PagePermissionReducer from "./administration/pagePermission/reducer";
 import UserReducer  from "./administration/userManagement/reducer";
-
-
-
+import SecUserCompanyReducer from "./administration/secUserCompany/reducer";
+import SecUserLocationReducer from "./administration/secUserLocation/reducer";
+import SecUserRoleReducer from "./administration/secUserRole/reducer";
 
 
 
@@ -156,6 +156,9 @@ const rootReducer = combineReducers({
     RoleRight: RolesRightReducer, // Here is my work 01/23/2025
     PagePermission: PagePermissionReducer, // Here is my work 01/23/2025
     User: UserReducer, // Here is my work 01/23/2025
+    SecUserCompany: SecUserCompanyReducer, // Here is my work 01/23/2025
+    SecUserLocation: SecUserLocationReducer, // Here is my work 01/23/2025
+    SecUserRole: SecUserRoleReducer, // Here is my work 01/23/2025
 });
 
 export default rootReducer;

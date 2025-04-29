@@ -22,6 +22,14 @@ import {
   getPagePermission,
   updatePagePermission,
 } from "../../../slices/administration/pagePermission/thunk";
+import {
+  getUser,
+} from "../../../slices/administration/userManagement/thunk";
+import {
+  getSecUserRole,
+  submitSecUserRole,
+  deleteSecUserRole,
+} from "../../../slices/administration/secUserRole/thunk";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import DeleteModal from "../../../Components/Common/DeleteModal";
@@ -30,78 +38,148 @@ const UserRights = forwardRef((props, ref) => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState(null); // This is UserID
   const [checkedRoles, setCheckedRoles] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
   const { loading, error, role } = useSelector((state) => state.Role);
+  const { users = [] } = useSelector((state) => state.User || {});
   const { roleRight } = useSelector((state) => state.RoleRight);
   const { pagePermission } = useSelector((state) => state.PagePermission);
+  const { secUserRole } = useSelector((state) => state.SecUserRole || {});
 
-  const permissionTypes = ["view", "insert", "update", "delete", "backdate", "print"];
+  const permissionTypes = ['view', 'insert', 'update', 'delete', 'backdate', 'print'];
   const [permissions, setPermissions] = useState({});
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Fetch roles, role rights, and page permissions
+  // Fetch initial data
   useEffect(() => {
-    dispatch(getRole());
-    dispatch(getRoleRight());
-    dispatch(getPagePermission());
+    const fetchInitialData = async () => {
+      await dispatch(getRole());
+      await dispatch(getUser());
+      await dispatch(getRoleRight());
+      await dispatch(getSecUserRole());
+    };
+    fetchInitialData();
   }, [dispatch]);
 
-  // Set default role
+  // Set default user and fetch permissions when data is loaded
   useEffect(() => {
-    if (role.length > 0 && !selectedRoleId) {
-      setSelectedRoleId(role[0].VID);
+    if (isInitialLoad && users.length > 0) {
+      const firstUserId = users[0].UserID;
+      setSelectedRoleId(firstUserId);
+      dispatch(getPagePermission(firstUserId));
+      setIsInitialLoad(false);
     }
-  }, [role]);
+  }, [users, dispatch, isInitialLoad]);
 
-  // Initialize checkedRoles based on roles
+  // Fetch permissions when selectedRoleId changes
   useEffect(() => {
-    if (role.length > 0) {
+    if (selectedRoleId && !isInitialLoad) {
+      dispatch(getPagePermission(selectedRoleId));
+    }
+  }, [selectedRoleId, dispatch, isInitialLoad]);
+
+  // Initialize checkedRoles based on selected user and secUserRole
+  useEffect(() => {
+    if (role.length > 0 && secUserRole?.length > 0 && selectedRoleId) {
       const initialCheckedRoles = role.reduce((acc, r) => {
-        acc[r.VID] = r.VName === "ADMIN"; // Default ADMIN as checked
+        const isRoleAssigned = secUserRole.some(
+          (userRole) =>
+            String(userRole.UserID) === String(selectedRoleId) &&
+            String(userRole.RoleID) === String(r.VID)
+        );
+        acc[r.VID] = isRoleAssigned;
+        return acc;
+      }, {});
+      setCheckedRoles(initialCheckedRoles);
+    } else if (role.length > 0) {
+      const initialCheckedRoles = role.reduce((acc, r) => {
+        acc[r.VID] = false;
         return acc;
       }, {});
       setCheckedRoles(initialCheckedRoles);
     }
-  }, [role]);
+  }, [role, secUserRole, selectedRoleId]);
 
-  // Update permissions based on selected role
+  // Update permissions based on selected user and their roles
   useEffect(() => {
-    if (selectedRoleId && roleRight?.length > 0 && pagePermission?.length > 0) {
+    if (selectedRoleId && roleRight?.length > 0 && pagePermission?.length > 0 && secUserRole?.length > 0) {
+      const userRoles = secUserRole
+        .filter((ur) => String(ur.UserID) === String(selectedRoleId))
+        .map((ur) => String(ur.RoleID));
+
       const rolePermissions = {};
 
       roleRight.forEach((page) => {
         const pageId = page.VID;
-        const matchingPerm = pagePermission.find(
-          (perm) =>
-            String(perm.PageID) === String(pageId) &&
-            String(perm.RoleID) === String(selectedRoleId)
-        );
+        const pagePerms = { view: false, insert: false, update: false, delete: false, backdate: false, print: false };
 
-        rolePermissions[pageId] = {
-          view: matchingPerm?.IsView === 1,
-          insert: matchingPerm?.IsInsert === 1,
-          update: matchingPerm?.IsUpdate === 1,
-          delete: matchingPerm?.IsDelete === 1,
-          backdate: matchingPerm?.IsBackdate === 1,
-          print: matchingPerm?.IsPrint === 1,
-        };
+        userRoles.forEach((roleId) => {
+          const matchingPerm = pagePermission.find(
+            (perm) => String(perm.PageID) === String(pageId) && String(perm.RoleID) === String(roleId)
+          );
+          if (matchingPerm) {
+            pagePerms.view = pagePerms.view || matchingPerm.IsView === 1;
+            pagePerms.insert = pagePerms.insert || matchingPerm.IsInsert === 1;
+            pagePerms.update = pagePerms.update || matchingPerm.IsUpdate === 1;
+            pagePerms.delete = pagePerms.delete || matchingPerm.IsDelete === 1;
+            pagePerms.backdate = pagePerms.backdate || matchingPerm.IsBackdate === 1;
+            pagePerms.print = pagePerms.print || matchingPerm.IsPrint === 1;
+          }
+        });
+
+        rolePermissions[pageId] = pagePerms;
       });
 
       setPermissions(rolePermissions);
     } else {
       setPermissions({});
     }
-  }, [selectedRoleId, roleRight, pagePermission]);
+  }, [selectedRoleId, roleRight, pagePermission, secUserRole]);
 
   const handleRoleSelect = (e) => {
-    setSelectedRoleId(e.target.value);
+    const newRoleId = e.target.value;
+    setSelectedRoleId(newRoleId);
   };
 
-  const handleCheckboxChange = (roleId) => {
+  const handleCheckboxChange = async (roleId) => {
+    const isChecked = !checkedRoles[roleId];
     setCheckedRoles((prev) => ({
       ...prev,
-      [roleId]: !prev[roleId],
+      [roleId]: isChecked,
     }));
+
+    try {
+      if (isChecked) {
+        const userRoleData = {
+          UserID: parseInt(selectedRoleId),
+          RoleID: parseInt(roleId),
+          IsActive: 1,
+          UID: "1",
+          CompanyID: "1",
+        };
+        await dispatch(submitSecUserRole(userRoleData)).unwrap();
+        toast.success("Role assigned successfully!");
+      } else {
+        const userRole = secUserRole.find(
+          (ur) =>
+            String(ur.UserID) === String(selectedRoleId) &&
+            String(ur.RoleID) === String(roleId)
+        );
+        if (userRole) {
+          await dispatch(deleteSecUserRole(userRole.VID)).unwrap();
+          toast.success("Role removed successfully!");
+        }
+      }
+      dispatch(getSecUserRole());
+    } catch (error) {
+      console.error("Failed to update role assignment:", error);
+      toast.error("Failed to update role. Please try again!");
+      setCheckedRoles((prev) => ({
+        ...prev,
+        [roleId]: !isChecked,
+      }));
+    }
   };
 
   const handlePermissionChange = (pageId, permission) => {
@@ -109,7 +187,7 @@ const UserRights = forwardRef((props, ref) => {
       const updatedPermissions = { ...prev };
       const pagePermissions = updatedPermissions[pageId] || {};
 
-      if (permission === "view") {
+      if (permission === 'view') {
         const newValue = !pagePermissions.view;
         updatedPermissions[pageId] = {
           view: newValue,
@@ -132,43 +210,79 @@ const UserRights = forwardRef((props, ref) => {
 
   const handleSave = async (event) => {
     event?.preventDefault();
+    if (!selectedRoleId) {
+      toast.error("Please select a user first");
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      const permissionsToSave = Object.keys(permissions).map((pageId) => {
+      const userRoles = secUserRole
+        .filter((ur) => String(ur.UserID) === String(selectedRoleId))
+        .map((ur) => String(ur.RoleID));
+
+      if (userRoles.length === 0) {
+        toast.error("No roles assigned to this user");
+        return;
+      }
+
+      const permissionsToSave = [];
+      Object.keys(permissions).forEach((pageId) => {
         const perm = permissions[pageId];
-        return {
-          VID: Array.isArray(pagePermission)
-            ? pagePermission.find(
-                (p) =>
-                  String(p.PageID) === String(pageId) &&
-                  String(p.RoleID) === String(selectedRoleId)
-              )?.VID || 0
-            : 0,
-          RoleID: parseInt(selectedRoleId),
-          PageID: parseInt(pageId),
-          IsView: perm.view ? 1 : 0,
-          IsInsert: perm.insert ? 1 : 0,
-          IsUpdate: perm.update ? 1 : 0,
-          IsDelete: perm.delete ? 1 : 0,
-          IsBackdate: perm.backdate ? 1 : 0,
-          IsPrint: perm.print ? 1 : 0,
-          IsActive: 1,
-          UID: "1",
-          CompanyID: "1",
-        };
+        userRoles.forEach((roleId) => {
+          const existingPerm = pagePermission.find(
+            (p) => String(p.PageID) === String(pageId) && String(p.RoleID) === String(roleId)
+          );
+
+          permissionsToSave.push({
+            VID: existingPerm?.VID || 0,
+            RoleID: parseInt(roleId),
+            PageID: parseInt(pageId),
+            IsView: perm.view ? 1 : 0,
+            IsInsert: perm.insert ? 1 : 0,
+            IsUpdate: perm.update ? 1 : 0,
+            IsDelete: perm.delete ? 1 : 0,
+            IsBackdate: perm.backdate ? 1 : 0,
+            IsPrint: perm.print ? 1 : 0,
+            IsActive: 1,
+            UID: "1",
+            CompanyID: "1",
+          });
+        });
       });
 
-      const updatePromises = permissionsToSave.map((perm) =>
-        dispatch(updatePagePermission(perm)).unwrap()
-      );
+      const changedPermissions = permissionsToSave.filter((perm) => {
+        const existing = pagePermission.find(
+          (p) => String(p.PageID) === String(perm.PageID) && String(p.RoleID) === String(perm.RoleID)
+        );
+        if (!existing) return true;
+        return (
+          existing.IsView !== perm.IsView ||
+          existing.IsInsert !== perm.IsInsert ||
+          existing.IsUpdate !== perm.IsUpdate ||
+          existing.IsDelete !== perm.IsDelete ||
+          existing.IsBackdate !== perm.IsBackdate ||
+          existing.IsPrint !== perm.IsPrint
+        );
+      });
+
+      if (changedPermissions.length === 0) {
+        toast.info("No changes to save");
+        return;
+      }
+
+      const updatePromises = changedPermissions.map((perm) => dispatch(updatePagePermission(perm)).unwrap());
       await Promise.all(updatePromises);
 
-      dispatch(getPagePermission());
-      toast.success("All permissions saved successfully!");
+      dispatch(getPagePermission(selectedRoleId));
+      toast.success(`${changedPermissions.length} permission(s) updated successfully!`);
 
       if (props.onCancel) props.onCancel();
     } catch (error) {
       console.error("Save failed:", error);
-      toast.error("Failed to save permissions. Please try again!");
+      toast.error(error.message || "Failed to save permissions. Please try again!");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -177,12 +291,19 @@ const UserRights = forwardRef((props, ref) => {
     setDeleteModal(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deleteId) {
-      // Implement delete logic if needed
-      // dispatch(deleteUserRights(deleteId));
+      try {
+        await dispatch(deleteSecUserRole(deleteId)).unwrap();
+        toast.success("User role deleted successfully!");
+        dispatch(getSecUserRole());
+      } catch (error) {
+        console.error("Delete failed:", error);
+        toast.error("Failed to delete user role. Please try again!");
+      }
     }
     setDeleteModal(false);
+    setDeleteId(null);
   };
 
   useImperativeHandle(ref, () => ({
@@ -198,7 +319,6 @@ const UserRights = forwardRef((props, ref) => {
 
   document.title = "User Rights | EMS";
 
-  // Filter pages for the second table (example logic, adjust as needed)
   const filteredRoleRight = roleRight.filter((page) =>
     ["MFileChangePassword", "MSetupSP1", "MSetupLocation"].includes(page.VName)
   );
@@ -209,7 +329,6 @@ const UserRights = forwardRef((props, ref) => {
         <Container fluid>
           <ToastContainer />
           <form onSubmit={handleSave}>
-            {/* Role Select Box */}
             <Row className="mb-3">
               <Col md={3}>
                 <Label htmlFor="roleSelect" className="form-label">
@@ -219,20 +338,24 @@ const UserRights = forwardRef((props, ref) => {
                   type="select"
                   className="form-select form-select-sm"
                   id="roleSelect"
-                  value={selectedRoleId}
+                  value={selectedRoleId || ""}
                   onChange={handleRoleSelect}
+                  disabled={users.length === 0}
                 >
-                  {role.map((r) => (
-                    <option key={r.VID} value={r.VID}>
-                      {r.VName}
-                    </option>
-                  ))}
+                  {users.length === 0 ? (
+                    <option value="">Loading users...</option>
+                  ) : (
+                    users.map((u) => (
+                      <option key={u.UserID} value={u.UserID}>
+                        {u.Userfullname}
+                      </option>
+                    ))
+                  )}
                 </Input>
               </Col>
             </Row>
 
             <Row>
-              {/* Left Sidebar for Roles with Table Structure */}
               <Col md={4} lg={3}>
                 <Card>
                   <CardBody>
@@ -245,26 +368,36 @@ const UserRights = forwardRef((props, ref) => {
                           </tr>
                         </thead>
                         <tbody>
-                          {role.map((r) => (
-                            <tr key={r.VID}>
-                              <td>
-                                <Button
-                                  color={selectedRoleId === r.VID ? "primary" : "light"}
-                                  className="w-100 text-start"
-                                  onClick={() => setSelectedRoleId(r.VID)}
-                                >
-                                  {r.VName}
-                                </Button>
-                              </td>
-                              <td className="text-center">
-                                <Input
-                                  type="checkbox"
-                                  checked={checkedRoles[r.VID] || false}
-                                  onChange={() => handleCheckboxChange(r.VID)}
-                                />
+                          {role.length > 0 ? (
+                            role.map((r) => (
+                              <tr key={r.VID}>
+                                <td>
+                                  <Button
+                                    color={checkedRoles[r.VID] ? "primary" : "light"}
+                                    className="w-100 text-start"
+                                    onClick={() => handleCheckboxChange(r.VID)}
+                                    disabled={!selectedRoleId}
+                                  >
+                                    {r.VName}
+                                  </Button>
+                                </td>
+                                <td className="text-center">
+                                  <Input
+                                    type="checkbox"
+                                    checked={checkedRoles[r.VID] || false}
+                                    onChange={() => handleCheckboxChange(r.VID)}
+                                    disabled={!selectedRoleId}
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={2} className="text-center">
+                                {loading ? "Loading roles..." : "No roles available"}
                               </td>
                             </tr>
-                          ))}
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -272,9 +405,7 @@ const UserRights = forwardRef((props, ref) => {
                 </Card>
               </Col>
 
-              {/* Right Section */}
               <Col md={8} lg={9}>
-                {/* Top Portion: Role Selection Form */}
                 <Card>
                   <PreviewCardHeader
                     title="User Rights"
@@ -282,7 +413,6 @@ const UserRights = forwardRef((props, ref) => {
                   />
                 </Card>
 
-                {/* First Table: Permissions for Selected Role */}
                 <Card>
                   <CardBody>
                     <div className="table-responsive table-card mb-1">
@@ -306,7 +436,7 @@ const UserRights = forwardRef((props, ref) => {
                                       type="checkbox"
                                       checked={permissions[page.VID]?.[perm] || false}
                                       onChange={() => handlePermissionChange(page.VID, perm)}
-                                      disabled={!selectedRoleId}
+                                      disabled={!selectedRoleId || isSaving}
                                     />
                                   </td>
                                 ))}
@@ -315,7 +445,7 @@ const UserRights = forwardRef((props, ref) => {
                           ) : (
                             <tr>
                               <td colSpan={7} className="text-center">
-                                No menu items available
+                                {loading ? "Loading menu items..." : "No menu items available"}
                               </td>
                             </tr>
                           )}
@@ -325,7 +455,6 @@ const UserRights = forwardRef((props, ref) => {
                   </CardBody>
                 </Card>
 
-                {/* Second Table: Filtered Permissions */}
                 <Card>
                   <CardBody>
                     <div className="table-responsive table-card mb-1">
@@ -349,7 +478,7 @@ const UserRights = forwardRef((props, ref) => {
                                       type="checkbox"
                                       checked={permissions[page.VID]?.[perm] || false}
                                       onChange={() => handlePermissionChange(page.VID, perm)}
-                                      disabled={!selectedRoleId}
+                                      disabled={!selectedRoleId || isSaving}
                                     />
                                   </td>
                                 ))}
@@ -358,7 +487,7 @@ const UserRights = forwardRef((props, ref) => {
                           ) : (
                             <tr>
                               <td colSpan={7} className="text-center">
-                                No filtered menu items available
+                                {loading ? "Loading filtered menu items..." : "No filtered menu items available"}
                               </td>
                             </tr>
                           )}
@@ -367,6 +496,23 @@ const UserRights = forwardRef((props, ref) => {
                     </div>
                   </CardBody>
                 </Card>
+
+                <div className="text-end mb-3">
+                  <Button 
+                    type="submit" 
+                    color="primary" 
+                    disabled={isSaving || !selectedRoleId}
+                  >
+                    {isSaving ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-1"></span>
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Permissions"
+                    )}
+                  </Button>
+                </div>
               </Col>
             </Row>
           </form>
@@ -374,7 +520,7 @@ const UserRights = forwardRef((props, ref) => {
       </div>
       <DeleteModal
         show={deleteModal}
-        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onCloseClick={() => setDeleteModal(false)}
         onDeleteClick={handleDeleteConfirm}
       />
     </React.Fragment>

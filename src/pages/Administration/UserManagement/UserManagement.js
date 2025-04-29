@@ -1,14 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Button,
-  Card,
-  CardBody,
-  Col,
-  Container,
-  Row,
-  Input,
-  Label,
-} from "reactstrap";
+import { Button, Card, CardBody, Col, Container, Row, Input, Label } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
@@ -21,6 +12,24 @@ import {
   updateUser,
   deleteUser,
 } from "../../../slices/administration/userManagement/thunk";
+import {
+  getSecUserCompany,
+  submitSecUserCompany,
+  updateSecUserCompany,
+  deleteSecUserCompany,
+} from "../../../slices/administration/secUserCompany/thunk";
+import {
+  getSecUserLocation,
+  submitSecUserLocation,
+  updateSecUserLocation,
+  deleteSecUserLocation,
+} from "../../../slices/administration/secUserLocation/thunk";
+import {
+  getSecUserRole,
+  submitSecUserRole,
+  updateSecUserRole,
+  deleteSecUserRole,
+} from "../../../slices/administration/secUserRole/thunk";
 import { getRole } from "../../../slices/administration/roles/thunk";
 import { getCompany } from "../../../slices/setup/company/thunk";
 import { getLocation } from "../../../slices/setup/location/thunk";
@@ -31,12 +40,19 @@ const UserManagement = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [submissionError, setSubmissionError] = useState(null);
   const formRef = useRef(null);
 
   const { loading = false, error = null, users = [] } = useSelector((state) => state.User || {});
-  const { role = [] } = useSelector((state) => state.Role || {});
-  const { company = {} } = useSelector((state) => state.Company || {});
+  const { role = [] } = useSelector((state) => {
+    console.log('Redux state:', state); // Debug state
+    return state.Role || {};
+  });
+  const { company = { data: [] } } = useSelector((state) => state.Company || {});
   const { location = [] } = useSelector((state) => state.Location || {});
+  const { secUserCompany = [] } = useSelector((state) => state.SecUserCompany || {});
+  const { secUserLocation = [] } = useSelector((state) => state.SecUserLocation || {});
+  const { secUserRole = [] } = useSelector((state) => state.SecUserRole || {});
 
   const customStyles = {
     multiValueLabel: (provided) => ({
@@ -45,14 +61,10 @@ const UserManagement = () => {
     }),
   };
 
-  const roleOptions = role?.length > 0
-    ? role.map((r) => ({ value: r.VName, label: r.VName }))
-    : [];
-  const locationOptions = location?.length > 0
-    ? location.map((loc) => ({ value: loc.VName, label: loc.VName }))
-    : [];
-  const companyOptions = company?.data?.length > 0
-    ? company.data.map((comp) => ({ value: comp.VName, label: comp.VName }))
+  const roleOptions = role && Array.isArray(role) ? role.map((r) => ({ value: r.VName, label: r.VName, VID: r.VID })) : [];
+  const locationOptions = location && Array.isArray(location) ? location.map((loc) => ({ value: loc.VName, label: loc.VName, VID: loc.VID })) : [];
+  const companyOptions = company?.data && Array.isArray(company.data)
+    ? company.data.map((comp) => ({ value: { VName: comp.VName, VID: comp.VID }, label: comp.VName }))
     : [];
 
   useEffect(() => {
@@ -60,6 +72,9 @@ const UserManagement = () => {
     dispatch(getRole());
     dispatch(getCompany());
     dispatch(getLocation());
+    dispatch(getSecUserCompany());
+    dispatch(getSecUserLocation());
+    dispatch(getSecUserRole());
   }, [dispatch]);
 
   const formik = useFormik({
@@ -88,10 +103,25 @@ const UserManagement = () => {
       roles: Yup.array().min(1, "At least one role is required"),
       locations: Yup.array().min(1, "At least one location is required"),
       company: Yup.array().min(1, "At least one company is required"),
-      isManager: Yup.boolean(),
     }),
-    onSubmit: (values) => {
-      const payload = {
+    onSubmit: async (values, { setSubmitting }) => {
+      const companyIds = Array.isArray(values.company)
+        ? values.company.map((comp) => comp.VID).filter((id) => id)
+        : [];
+      const roleIds = Array.isArray(values.roles)
+        ? values.roles.map((roleName) => {
+            const roleOption = roleOptions.find((r) => r.value === roleName);
+            return roleOption ? roleOption.VID : null;
+          }).filter((id) => id)
+        : [];
+      const locationIds = Array.isArray(values.locations)
+        ? values.locations.map((locName) => {
+            const loc = locationOptions.find((l) => l.value === locName);
+            return loc ? loc.VID : null;
+          }).filter((id) => id)
+        : [];
+
+      const userPayload = {
         Userfullname: values.fullName,
         Userlogin: values.login,
         Userpassword: values.password,
@@ -103,19 +133,139 @@ const UserManagement = () => {
         IsSystemAdmin: values.adminReportRights ? 1 : 0,
         IsActive: values.isActive ? 1 : 0,
         UID: 1,
-        CompanyID: values.company.length > 0 ? 1 : 1,
+        CompanyID: companyIds[0] || 1,
         roles: values.roles,
         locations: values.locations,
       };
 
-      if (editingUser) {
-        dispatch(updateUser({ ...payload, UserID: editingUser.UserID }));
-        setEditingUser(null);
-      } else {
-        dispatch(submitUser(payload));
-      }
+      let userId;
+      try {
+        setSubmissionError(null);
+        if (editingUser) {
+          const updateResponse = await dispatch(updateUser({ ...userPayload, UserID: editingUser.UserID }));
+          if (updateResponse.error) throw new Error(updateResponse.payload?.message || "Failed to update user");
+          userId = editingUser.UserID;
 
-      formik.resetForm();
+          // Handle secUserCompany updates
+          const existingCompanies = secUserCompany.filter((suc) => suc.UserID === userId);
+          for (const existing of existingCompanies) {
+            if (!companyIds.includes(existing.CompanyID)) {
+              await dispatch(deleteSecUserCompany(existing.ID));
+            }
+          }
+          for (const companyId of companyIds) {
+            const existingRecord = existingCompanies.find((ec) => ec.CompanyID === companyId);
+            if (!existingRecord) {
+              await dispatch(submitSecUserCompany({ UserID: userId, CompanyID: companyId, UID: 1, IsActive: 1 }));
+            } else if (existingRecord.IsActive !== 1) {
+              await dispatch(updateSecUserCompany({ ID: existingRecord.ID, UserID: userId, CompanyID: companyId, UID: 1, IsActive: 1 }));
+            }
+          }
+
+          // Handle secUserRole updates
+          const existingRoles = secUserRole.filter((sur) => sur.UserID === userId);
+          for (const existing of existingRoles) {
+            if (!roleIds.includes(existing.RoleID)) {
+              await dispatch(deleteSecUserRole(existing.ID));
+            }
+          }
+          for (const roleId of roleIds) {
+            const existingRecord = existingRoles.find((er) => er.RoleID === roleId);
+            if (!existingRecord) {
+              await dispatch(submitSecUserRole({ 
+                UserID: userId, 
+                RoleID: roleId, 
+                UID: 1, 
+                IsActive: 1, 
+                CompanyID: companyIds[0] || null 
+              }));
+            } else if (existingRecord.IsActive !== 1) {
+              await dispatch(updateSecUserRole({ 
+                ID: existingRecord.ID, 
+                UserID: userId, 
+                RoleID: roleId, 
+                UID: 1, 
+                IsActive: 1, 
+                CompanyID: companyIds[0] || null 
+              }));
+            }
+          }
+
+          // Handle secUserLocation updates
+          const existingLocations = secUserLocation.filter((sul) => sul.UserID === userId);
+          for (const existing of existingLocations) {
+            if (!locationIds.includes(existing.LocationID)) {
+              await dispatch(deleteSecUserLocation(existing.ID));
+            }
+          }
+          for (const locationId of locationIds) {
+            const existingRecord = existingLocations.find((el) => el.LocationID === locationId);
+            if (!existingRecord) {
+              await dispatch(submitSecUserLocation({ 
+                UserID: userId, 
+                LocationID: locationId, 
+                UID: 1, 
+                IsActive: 1, 
+                CompanyID: companyIds[0] || null 
+              }));
+            } else if (existingRecord.IsActive !== 1) {
+              await dispatch(updateSecUserLocation({ 
+                ID: existingRecord.ID, 
+                UserID: userId, 
+                LocationID: locationId, 
+                UID: 1, 
+                IsActive: 1, 
+                CompanyID: companyIds[0] || null 
+              }));
+            }
+          }
+        } else {
+          const submitResponse = await dispatch(submitUser(userPayload));
+          if (submitResponse.error) throw new Error(submitResponse.payload?.message || "Failed to create user");
+          userId = submitResponse.payload?.UserID;
+          if (userId) {
+            // Create secUserCompany records
+            for (const companyId of companyIds) {
+              await dispatch(submitSecUserCompany({ UserID: userId, CompanyID: companyId, UID: 1, IsActive: 1 }));
+            }
+            // Create secUserRole records
+            for (const roleId of roleIds) {
+              await dispatch(submitSecUserRole({ 
+                UserID: userId, 
+                RoleID: roleId, 
+                UID: 1, 
+                IsActive: 1, 
+                CompanyID: companyIds[0] || null 
+              }));
+            }
+            // Create secUserLocation records
+            for (const locationId of locationIds) {
+              await dispatch(submitSecUserLocation({ 
+                UserID: userId, 
+                LocationID: locationId, 
+                UID: 1, 
+                IsActive: 1, 
+                CompanyID: companyIds[0] || null 
+              }));
+            }
+          } else {
+            throw new Error("Failed to create user: No UserID returned");
+          }
+        }
+
+        await Promise.all([
+          dispatch(getUser()),
+          dispatch(getSecUserCompany()),
+          dispatch(getSecUserRole()),
+          dispatch(getSecUserLocation())
+        ]);
+        formik.resetForm();
+        setEditingUser(null);
+      } catch (error) {
+        setSubmissionError(error.message || "Failed to save user data");
+      } finally {
+        setSubmitting(false);
+      }
     },
   });
 
@@ -124,24 +274,65 @@ const UserManagement = () => {
     setDeleteModal(true);
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (deleteId) {
-      dispatch(deleteUser(deleteId));
+      try {
+        const userCompanies = secUserCompany.filter((suc) => suc.UserID === deleteId);
+        for (const uc of userCompanies) {
+          await dispatch(deleteSecUserCompany(uc.ID));
+        }
+        const userRoles = secUserRole.filter((sur) => sur.UserID === deleteId);
+        for (const ur of userRoles) {
+          await dispatch(deleteSecUserRole(ur.ID));
+        }
+        const userLocations = secUserLocation.filter((sul) => sul.UserID === deleteId);
+        for (const ul of userLocations) {
+          await dispatch(deleteSecUserLocation(ul.ID));
+        }
+        await dispatch(deleteUser(deleteId));
+        await Promise.all([
+          dispatch(getUser()),
+          dispatch(getSecUserCompany()),
+          dispatch(getSecUserRole()),
+          dispatch(getSecUserLocation())
+        ]);
+      } catch (error) {
+        setSubmissionError("Failed to delete user");
+      }
     }
     setDeleteModal(false);
   };
 
   const handleEditClick = (user) => {
+    if (!user || !user.UserID) return;
     setEditingUser(user);
-    const selectedRoles = Array.isArray(user.roles) 
-      ? user.roles.map(role => roleOptions.find(option => option.value === role) || { value: role, label: role })
-      : [];
-    const selectedLocations = Array.isArray(user.locations)
-      ? user.locations.map(loc => locationOptions.find(option => option.value === loc) || { value: loc, label: loc })
-      : [];
-    const selectedCompanies = Array.isArray(user.company)
-      ? user.company.map(comp => companyOptions.find(option => option.value === comp) || { value: comp, label: comp })
-      : [];
+
+    // Map roles from secUserRole
+    const userRoles = secUserRole
+      .filter((sur) => sur.UserID === user.UserID && sur.IsActive === 1)
+      .map((sur) => {
+        const roleOption = roleOptions.find((r) => r.VID === sur.RoleID);
+        return roleOption ? { value: roleOption.value, label: roleOption.label } : null;
+      })
+      .filter((role) => role);
+
+    // Map locations from secUserLocation
+    const userLocations = secUserLocation
+      .filter((sul) => sul.UserID === user.UserID && sul.IsActive === 1)
+      .map((sul) => {
+        const loc = locationOptions.find((l) => l.VID === sul.LocationID);
+        return loc ? { value: loc.value, label: loc.label } : null;
+      })
+      .filter((loc) => loc);
+
+    // Map companies from secUserCompany
+    const userCompanies = secUserCompany
+      .filter((suc) => suc.UserID === user.UserID && suc.IsActive === 1)
+      .map((suc) => {
+        const comp = company.data.find((c) => c.VID === suc.CompanyID);
+        return comp ? { value: { VName: comp.VName, VID: comp.VID }, label: comp.VName } : null;
+      })
+      .filter((comp) => comp);
 
     formik.setValues({
       employeeType: user.EmployeeType || "",
@@ -149,9 +340,9 @@ const UserManagement = () => {
       fullName: user.Userfullname || "",
       login: user.Userlogin || "",
       password: user.Userpassword || "",
-      roles: selectedRoles.map(r => r.value),
-      locations: selectedLocations.map(l => l.value),
-      company: selectedCompanies.map(c => c.value),
+      roles: userRoles.map((r) => r.value),
+      locations: userLocations.map((l) => l.value),
+      company: userCompanies.map((c) => c.value),
       loginExpiry: user.LoginExpiry || "18/06/2025",
       isActive: user.IsActive === 1,
       allowAudit: user.AllowAudit === 1,
@@ -162,12 +353,6 @@ const UserManagement = () => {
     });
   };
 
-  const handleSave = () => {
-    if (formRef.current) {
-      formRef.current.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-    }
-  };
-
   document.title = "User Management | EMS";
 
   return (
@@ -175,6 +360,7 @@ const UserManagement = () => {
       <Container fluid>
         {loading && <p>Loading...</p>}
         {error && <p className="text-danger">{error}</p>}
+        {submissionError && <p className="text-danger">{submissionError}</p>}
         <Row>
           <Col lg={12}>
             <Card>
@@ -184,6 +370,7 @@ const UserManagement = () => {
                   onCancel={() => {
                     formik.resetForm();
                     setEditingUser(null);
+                    setSubmissionError(null);
                   }}
                 />
                 <CardBody className="card-body">
@@ -265,7 +452,6 @@ const UserManagement = () => {
                         </div>
                       </Col>
                     </Row>
-
                     <Row className="gy-4">
                       <Col xxl={4} md={4}>
                         <div className="mb-3">
@@ -276,14 +462,9 @@ const UserManagement = () => {
                             id="rolesInput"
                             isMulti
                             options={roleOptions}
-                            value={roleOptions.filter((option) =>
-                              formik.values.roles.includes(option.value)
-                            )}
+                            value={roleOptions.filter((option) => formik.values.roles.includes(option.value))}
                             onChange={(selectedOptions) => {
-                              formik.setFieldValue(
-                                "roles",
-                                selectedOptions.map((option) => option.value)
-                              );
+                              formik.setFieldValue("roles", selectedOptions.map((option) => option.value));
                             }}
                             placeholder="Select roles..."
                             classNamePrefix="select"
@@ -304,14 +485,9 @@ const UserManagement = () => {
                             id="locationsInput"
                             isMulti
                             options={locationOptions}
-                            value={locationOptions.filter((option) =>
-                              formik.values.locations.includes(option.value)
-                            )}
+                            value={locationOptions.filter((option) => formik.values.locations.includes(option.value))}
                             onChange={(selectedOptions) => {
-                              formik.setFieldValue(
-                                "locations",
-                                selectedOptions.map((option) => option.value)
-                              );
+                              formik.setFieldValue("locations", selectedOptions.map((option) => option.value));
                             }}
                             placeholder="Select locations..."
                             classNamePrefix="select"
@@ -332,13 +508,10 @@ const UserManagement = () => {
                             isMulti
                             options={companyOptions}
                             value={companyOptions.filter((option) =>
-                              formik.values.company.includes(option.value)
+                              Array.isArray(formik.values.company) && formik.values.company.some((comp) => comp?.VID === option.value.VID)
                             )}
                             onChange={(selectedOptions) => {
-                              formik.setFieldValue(
-                                "company",
-                                selectedOptions.map((option) => option.value)
-                              );
+                              formik.setFieldValue("company", selectedOptions.map((option) => option.value));
                             }}
                             placeholder="Select companies..."
                             classNamePrefix="select"
@@ -350,7 +523,6 @@ const UserManagement = () => {
                         </div>
                       </Col>
                     </Row>
-
                     <Row className="gy-4">
                       <Col xxl={2} md={2}>
                         <div className="mb-3">
@@ -472,22 +644,14 @@ const UserManagement = () => {
                     <Col className="col-sm">
                       <div className="d-flex justify-content-sm-end">
                         <div className="search-box ms-2">
-                          <input
-                            type="text"
-                            className="form-control-sm search"
-                            placeholder=""
-                          />
+                          <input type="text" className="form-control-sm search" placeholder="" />
                           <i className="ri-search-line search-icon"></i>
                         </div>
                       </div>
                     </Col>
                   </Row>
-
                   <div className="table-responsive table-card mb-1">
-                    <table
-                      className="table align-middle table-nowrap table-striped table-sm"
-                      id="customerTable"
-                    >
+                    <table className="table align-middle table-nowrap table-striped table-sm" id="customerTable">
                       <thead className="table-light">
                         <tr>
                           <th data-sort="fullName">Full Name</th>
@@ -500,33 +664,63 @@ const UserManagement = () => {
                         </tr>
                       </thead>
                       <tbody className="list form-check-all">
-                        {users.length > 0 ? (
-                          users.map((user) => (
-                            <tr key={user.UserID}>
-                              <td>{user.Userfullname || "N/A"}</td>
-                              <td>{user.Userlogin || "N/A"}</td>
-                              <td>{Array.isArray(user.roles) ? user.roles.join(", ") : "No Roles"}</td>
-                              <td>{Array.isArray(user.locations) ? user.locations.join(", ") : "No Locations"}</td>
-                              <td>{user.CompanyID || "N/A"}</td>
-                              <td>{user.IsActive === 1 ? "Active" : "Inactive"}</td>
-                              <td>
-                                <div className="d-flex gap-2">
-                                  <Button
-                                    className="btn btn-soft-info btn-sm"
-                                    onClick={() => handleEditClick(user)}
-                                  >
-                                    <i className="bx bx-edit"></i>
-                                  </Button>
-                                  <Button
-                                    className="btn btn-soft-danger btn-sm"
-                                    onClick={() => handleDeleteClick(user.UserID)}
-                                  >
-                                    <i className="ri-delete-bin-2-line"></i>
-                                  </Button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
+                        {Array.isArray(users) && users.length > 0 ? (
+                          users
+                            .filter((user) => user && typeof user === "object" && user.UserID)
+                            .map((user) => {
+                              // Map roles for display
+                              const userRoles = secUserRole
+                                .filter((sur) => sur.UserID === user.UserID && sur.IsActive === 1)
+                                .map((sur) => {
+                                  const roleItem = role.find((r) => r.VID === sur.RoleID);
+                                  return roleItem ? roleItem.VName : null;
+                                })
+                                .filter((name) => name)
+                                .join(", ") || "No Roles";
+
+                              // Map locations for display
+                              const userLocations = secUserLocation
+                                .filter((sul) => sul.UserID === user.UserID && sul.IsActive === 1)
+                                .map((sul) => {
+                                  const loc = location.find((l) => l.VID === sul.LocationID);
+                                  return loc ? loc.VName : null;
+                                })
+                                .filter((name) => name)
+                                .join(", ") || "No Locations";
+
+                              // Map companies for display
+                              const userCompanies = Array.isArray(secUserCompany)
+                                ? secUserCompany
+                                    .filter((suc) => suc.UserID === user.UserID && suc.IsActive === 1)
+                                    .map((suc) => {
+                                      const comp = Array.isArray(company.data) ? company.data.find((c) => c.VID === suc.CompanyID) : null;
+                                      return comp ? comp.VName : null;
+                                    })
+                                    .filter((name) => name)
+                                    .join(", ") || "No Companies"
+                                : "No Companies";
+
+                              return (
+                                <tr key={user.UserID}>
+                                  <td>{user.Userfullname || "N/A"}</td>
+                                  <td>{user.Userlogin || "N/A"}</td>
+                                  <td>{userRoles}</td>
+                                  <td>{userLocations}</td>
+                                  <td>{userCompanies}</td>
+                                  <td>{user.IsActive === 1 ? "Active" : "Inactive"}</td>
+                                  <td>
+                                    <div className="d-flex gap-2">
+                                      <Button className="btn btn-soft-info btn-sm" onClick={() => handleEditClick(user)}>
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                      <Button className="btn btn-soft-danger btn-sm" onClick={() => handleDeleteClick(user.UserID)}>
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
                         ) : (
                           <tr>
                             <td colSpan="7" className="text-center">
@@ -537,13 +731,9 @@ const UserManagement = () => {
                       </tbody>
                     </table>
                   </div>
-
                   <div className="d-flex justify-content-end">
                     <div className="pagination-wrap hstack gap-2">
-                      <Link
-                        className="page-item pagination-prev disabled"
-                        to="#"
-                      >
+                      <Link className="page-item pagination-prev disabled" to="#">
                         Previous
                       </Link>
                       <ul className="pagination listjs-pagination mb-0"></ul>
@@ -557,11 +747,7 @@ const UserManagement = () => {
             </Card>
           </Col>
         </Row>
-        <DeleteModal
-          show={deleteModal}
-          onCloseClick={() => setDeleteModal(false)}
-          onDeleteClick={handleDeleteConfirm}
-        />
+        <DeleteModal show={deleteModal} onCloseClick={() => setDeleteModal(false)} onDeleteClick={handleDeleteConfirm} />
       </Container>
     </div>
   );

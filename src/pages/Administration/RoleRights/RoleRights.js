@@ -19,6 +19,7 @@ import {
 } from "../../../slices/administration/roles/thunk";
 import {
   getPagePermission,
+  createPagePermission,
   updatePagePermission,
 } from "../../../slices/administration/pagePermission/thunk";
 import { toast, ToastContainer } from "react-toastify";
@@ -34,43 +35,68 @@ const RoleRights = forwardRef((props, ref) => {
   const permissionTypes = ["view", "insert", "update", "delete", "backdate", "print"];
   const [permissions, setPermissions] = useState({});
 
+  // Fetch roles and role rights on mount
   useEffect(() => {
     dispatch(getRole());
     dispatch(getRoleRight());
-    dispatch(getPagePermission());
   }, [dispatch]);
 
+  // Set the first role as default
   useEffect(() => {
     if (role.length > 0 && !selectedRoleId) {
       setSelectedRoleId(role[0].VID);
     }
   }, [role]);
 
+  // Fetch permissions whenever the selected role changes
   useEffect(() => {
-    if (selectedRoleId && roleRight?.length > 0 && pagePermission?.length > 0) {
-      const rolePermissions = {};
+    if (selectedRoleId) {
+      dispatch(getPagePermission(selectedRoleId));
+    }
+  }, [dispatch, selectedRoleId]);
 
+  // Update permissions state based on fetched data
+  useEffect(() => {
+    console.log("pagePermission:", pagePermission);
+    const permissionData = pagePermission?.data || [];
+    if (selectedRoleId && roleRight?.length > 0 && Array.isArray(permissionData)) {
+      const rolePermissions = {};
       roleRight.forEach((page) => {
         const pageId = page.VID;
-        const matchingPerm = pagePermission.find(
+        // Ensure type consistency by converting to numbers
+        const matchingPerm = permissionData.find(
           (perm) =>
-            String(perm.PageID) === String(pageId) &&
-            String(perm.RoleID) === String(selectedRoleId)
+            Number(perm.PageID) === Number(pageId) &&
+            Number(perm.RoleID) === Number(selectedRoleId)
         );
-
         rolePermissions[pageId] = {
-          view: matchingPerm?.IsView === 1,
-          insert: matchingPerm?.IsInsert === 1,
-          update: matchingPerm?.IsUpdate === 1,
-          delete: matchingPerm?.IsDelete === 1,
-          backdate: matchingPerm?.IsBackdate === 1,
-          print: matchingPerm?.IsPrint === 1,
+          view: matchingPerm?.IsView === 1 || false,
+          insert: matchingPerm?.IsInsert === 1 || false,
+          update: matchingPerm?.IsUpdate === 1 || false,
+          delete: matchingPerm?.IsDelete === 1 || false,
+          backdate: matchingPerm?.IsBackdate === 1 || false,
+          print: matchingPerm?.IsPrint === 1 || false,
         };
       });
-
+      console.log("Updated permissions state after role change:", rolePermissions);
       setPermissions(rolePermissions);
     } else {
-      setPermissions({});
+      // Initialize permissions for all pages as unchecked if no data exists
+      const rolePermissions = {};
+      if (roleRight?.length > 0) {
+        roleRight.forEach((page) => {
+          rolePermissions[page.VID] = {
+            view: false,
+            insert: false,
+            update: false,
+            delete: false,
+            backdate: false,
+            print: false,
+          };
+        });
+      }
+      console.log("Initialized permissions state (no data):", rolePermissions);
+      setPermissions(rolePermissions);
     }
   }, [selectedRoleId, roleRight, pagePermission]);
 
@@ -82,7 +108,6 @@ const RoleRights = forwardRef((props, ref) => {
     setPermissions((prev) => {
       const updatedPermissions = { ...prev };
       const pagePermissions = updatedPermissions[pageId] || {};
-
       if (permission === "view") {
         const newValue = !pagePermissions.view;
         updatedPermissions[pageId] = {
@@ -99,7 +124,7 @@ const RoleRights = forwardRef((props, ref) => {
           [permission]: !pagePermissions[permission],
         };
       }
-
+      console.log("Permissions after change:", updatedPermissions);
       return updatedPermissions;
     });
   };
@@ -107,16 +132,24 @@ const RoleRights = forwardRef((props, ref) => {
   const handleSave = async (event) => {
     event?.preventDefault();
     try {
+      console.log("pagePermission in handleSave:", pagePermission);
+      const permissionData = pagePermission?.data || [];
+      if (!Array.isArray(permissionData)) {
+        console.warn("permissionData is not an array:", permissionData);
+        toast.warn("Permission data is invalid. Saving with default IDs.");
+      }
+
       const permissionsToSave = Object.keys(permissions).map((pageId) => {
         const perm = permissions[pageId];
+        const existingPerm = Array.isArray(permissionData)
+          ? permissionData.find(
+              (p) =>
+                Number(p.PageID) === Number(pageId) &&
+                Number(p.RoleID) === Number(selectedRoleId)
+            )
+          : null;
         return {
-          VID: Array.isArray(pagePermission)
-            ? pagePermission.find(
-                (p) =>
-                  String(p.PageID) === String(pageId) &&
-                  String(p.RoleID) === String(selectedRoleId)
-              )?.VID || 0
-            : 0,
+          id: existingPerm?.VID || 0, // Rename VID to id to match backend expectation
           RoleID: parseInt(selectedRoleId),
           PageID: parseInt(pageId),
           IsView: perm.view ? 1 : 0,
@@ -131,15 +164,33 @@ const RoleRights = forwardRef((props, ref) => {
         };
       });
 
-      const updatePromises = permissionsToSave.map((perm) =>
-        dispatch(updatePagePermission(perm)).unwrap()
-      );
-      await Promise.all(updatePromises);
+      console.log("permissionsToSave:", permissionsToSave);
 
-      dispatch(getPagePermission());
-      toast.success("All permissions saved successfully!");
+      const savePromises = permissionsToSave.map(async (perm) => {
+        try {
+          const action = perm.id === 0 ? createPagePermission : updatePagePermission;
+          const payload = { ...perm };
+          if (perm.id === 0) {
+            delete payload.id;
+          }
+          const result = await dispatch(action(payload)).unwrap();
+          return { success: true, pageId: perm.PageID, result };
+        } catch (error) {
+          console.error("Failed to save permission for PageID", perm.PageID, ":", error);
+          return { success: false, pageId: perm.PageID, error };
+        }
+      });
 
-      if (props.onCancel) props.onCancel();
+      const results = await Promise.all(savePromises);
+      const failedSaves = results.filter((r) => !r.success);
+      if (failedSaves.length > 0) {
+        toast.error(`Failed to save permissions for ${failedSaves.length} pages.`);
+      } else {
+        toast.success("All permissions saved successfully!");
+      }
+
+      // Refetch permissions for the selected role after saving
+      await dispatch(getPagePermission(selectedRoleId));
     } catch (error) {
       console.error("Save failed:", error);
       toast.error("Failed to save permissions. Please try again!");
@@ -158,6 +209,10 @@ const RoleRights = forwardRef((props, ref) => {
   }, [error]);
 
   document.title = "Roles with Permissions | EMS";
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <React.Fragment>
@@ -185,6 +240,9 @@ const RoleRights = forwardRef((props, ref) => {
                         ))}
                       </Input>
                     </FormGroup>
+                    {Object.keys(permissions).length === 0 && selectedRoleId && (
+                      <div className="text-center mb-3">No permissions found for this role.</div>
+                    )}
                     <div className="table-responsive table-card mb-1">
                       <table className="table align-middle table-nowrap table-striped table-sm">
                         <thead className="table-light">
