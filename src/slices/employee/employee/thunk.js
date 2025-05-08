@@ -1,9 +1,10 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import config from "../../../config"; // ✅ correct
 // Define an Endpoint of API
-const API_ENDPOINT = "http://192.168.18.58:8001/ems/employee/";
+// const API_ENDPOINT = "http://192.168.18.65:8001/ems/employee/";
+const API_ENDPOINT = `${config.api.API_URL}employee/`;
 
 export const getEmployee = createAsyncThunk("employee/geteEmployee",
   async (_, { rejectWithValue }) => {

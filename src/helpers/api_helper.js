@@ -1,9 +1,14 @@
-import axios from "axios";
-import { api } from "../config";
+// import axios from "axios";
+// import { api } from "../config";
 
-// default
-axios.defaults.baseURL = api.API_URL;
-// content typeauthHeader
+// // default
+// axios.defaults.baseURL = api.API_URL;
+// // content typeauthHeader
+// axios.defaults.headers.post["Content-Type"] = "application/json";
+import axios from "axios";
+import config from "../config"; // ✅ default import
+
+axios.defaults.baseURL = config.api.API_URL;
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
 // content type
