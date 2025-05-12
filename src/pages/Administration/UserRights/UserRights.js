@@ -38,7 +38,7 @@ const UserRights = forwardRef((props, ref) => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [selectedRoleId, setSelectedRoleId] = useState(null); // This is UserID
+  const [selectedRoleId, setSelectedRoleId] = useState(null);
   const [checkedRoles, setCheckedRoles] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const { loading, error, role } = useSelector((state) => state.Role);
@@ -101,41 +101,34 @@ const UserRights = forwardRef((props, ref) => {
     }
   }, [role, secUserRole, selectedRoleId]);
 
-  // Update permissions based on selected user and their roles
+  // Update permissions based on selected user
   useEffect(() => {
-    if (selectedRoleId && roleRight?.length > 0 && pagePermission?.length > 0 && secUserRole?.length > 0) {
-      const userRoles = secUserRole
-        .filter((ur) => String(ur.UserID) === String(selectedRoleId))
-        .map((ur) => String(ur.RoleID));
-
+    if (selectedRoleId && roleRight?.length > 0 && pagePermission?.length > 0) {
       const rolePermissions = {};
 
       roleRight.forEach((page) => {
         const pageId = page.VID;
-        const pagePerms = { view: false, insert: false, update: false, delete: false, backdate: false, print: false };
+        const matchingPerm = pagePermission.find(
+          (perm) =>
+            String(perm.PageID) === String(pageId) &&
+            String(perm.RoleID) === String(selectedRoleId)
+        );
 
-        userRoles.forEach((roleId) => {
-          const matchingPerm = pagePermission.find(
-            (perm) => String(perm.PageID) === String(pageId) && String(perm.RoleID) === String(roleId)
-          );
-          if (matchingPerm) {
-            pagePerms.view = pagePerms.view || matchingPerm.IsView === 1;
-            pagePerms.insert = pagePerms.insert || matchingPerm.IsInsert === 1;
-            pagePerms.update = pagePerms.update || matchingPerm.IsUpdate === 1;
-            pagePerms.delete = pagePerms.delete || matchingPerm.IsDelete === 1;
-            pagePerms.backdate = pagePerms.backdate || matchingPerm.IsBackdate === 1;
-            pagePerms.print = pagePerms.print || matchingPerm.IsPrint === 1;
-          }
-        });
-
-        rolePermissions[pageId] = pagePerms;
+        rolePermissions[pageId] = {
+          view: matchingPerm?.IsView === 1,
+          insert: matchingPerm?.IsInsert === 1,
+          update: matchingPerm?.IsUpdate === 1,
+          delete: matchingPerm?.IsDelete === 1,
+          backdate: matchingPerm?.IsBackdate === 1,
+          print: matchingPerm?.IsPrint === 1,
+        };
       });
 
       setPermissions(rolePermissions);
     } else {
       setPermissions({});
     }
-  }, [selectedRoleId, roleRight, pagePermission, secUserRole]);
+  }, [selectedRoleId, roleRight, pagePermission]);
 
   const handleRoleSelect = (e) => {
     const newRoleId = e.target.value;
@@ -217,45 +210,42 @@ const UserRights = forwardRef((props, ref) => {
 
     setIsSaving(true);
     try {
-      const userRoles = secUserRole
-        .filter((ur) => String(ur.UserID) === String(selectedRoleId))
-        .map((ur) => String(ur.RoleID));
-
-      if (userRoles.length === 0) {
-        toast.error("No roles assigned to this user");
-        return;
-      }
-
-      const permissionsToSave = [];
-      Object.keys(permissions).forEach((pageId) => {
+      const permissionsToSave = Object.keys(permissions).map((pageId) => {
         const perm = permissions[pageId];
-        userRoles.forEach((roleId) => {
-          const existingPerm = pagePermission.find(
-            (p) => String(p.PageID) === String(pageId) && String(p.RoleID) === String(roleId)
-          );
+        
+        const existingPerm = Array.isArray(pagePermission) 
+          ? pagePermission.find(
+              (p) =>
+                String(p.PageID) === String(pageId) &&
+                String(p.RoleID) === String(selectedRoleId)
+            )
+          : null;
 
-          permissionsToSave.push({
-            VID: existingPerm?.VID || 0,
-            RoleID: parseInt(roleId),
-            PageID: parseInt(pageId),
-            IsView: perm.view ? 1 : 0,
-            IsInsert: perm.insert ? 1 : 0,
-            IsUpdate: perm.update ? 1 : 0,
-            IsDelete: perm.delete ? 1 : 0,
-            IsBackdate: perm.backdate ? 1 : 0,
-            IsPrint: perm.print ? 1 : 0,
-            IsActive: 1,
-            UID: "1",
-            CompanyID: "1",
-          });
-        });
+        return {
+          VID: existingPerm?.VID || 0,
+          RoleID: parseInt(selectedRoleId),
+          PageID: parseInt(pageId),
+          IsView: perm.view ? 1 : 0,
+          IsInsert: perm.insert ? 1 : 0,
+          IsUpdate: perm.update ? 1 : 0,
+          IsDelete: perm.delete ? 1 : 0,
+          IsBackdate: perm.backdate ? 1 : 0,
+          IsPrint: perm.print ? 1 : 0,
+          IsActive: 1,
+          UID: "1",
+          CompanyID: "1",
+        };
       });
 
-      const changedPermissions = permissionsToSave.filter((perm) => {
-        const existing = pagePermission.find(
-          (p) => String(p.PageID) === String(perm.PageID) && String(p.RoleID) === String(perm.RoleID)
-        );
+      const changedPermissions = permissionsToSave.filter(perm => {
+        const existing = Array.isArray(pagePermission)
+          ? pagePermission.find(
+              p => String(p.PageID) === String(perm.PageID) && 
+                   String(p.RoleID) === String(perm.RoleID))
+          : null;
+        
         if (!existing) return true;
+        
         return (
           existing.IsView !== perm.IsView ||
           existing.IsInsert !== perm.IsInsert ||
@@ -271,7 +261,9 @@ const UserRights = forwardRef((props, ref) => {
         return;
       }
 
-      const updatePromises = changedPermissions.map((perm) => dispatch(updatePagePermission(perm)).unwrap());
+      const updatePromises = changedPermissions.map((perm) =>
+        dispatch(updatePagePermission(perm)).unwrap()
+      );
       await Promise.all(updatePromises);
 
       dispatch(getPagePermission(selectedRoleId));
