@@ -283,7 +283,10 @@ const DepartmentGroup = () => {
   };
   
   const isEditMode = editingGroup !== null;
-
+  const handleCancel = () => {
+  formik.resetForm();
+  setEditingGroup(null); // This resets the title to "Add Department Group"
+};
   return (
     <React.Fragment>
       <div className="page-content">
@@ -296,7 +299,7 @@ const DepartmentGroup = () => {
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                   title={isEditMode ? "Edit Department Group" : "Add Department Group"}
-                  onCancel={formik.resetForm}
+                  onCancel={handleCancel}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
