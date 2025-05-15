@@ -15,6 +15,12 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { CSVLink } from "react-csv";
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
 import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import { deleteRamazan, getRamazan, submitRamazan, updateRamazan } from "../../../slices/thunks";
@@ -137,6 +143,125 @@ const Ramazan = () => {
     setEditingGroup(null);
   };
 
+  const exportToExcel = () => {
+  const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Ramazan");
+  XLSX.writeFile(workbook, "Ramazan.xlsx");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Ramazan Dates Report", 105, 15, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
+
+    const headers = [["Title", "Date From", "Date To"]];
+    const data = (filteredData || []).map(row => [
+      row.VName,
+      formatDate(row.DateFrom),
+      formatDate(row.DateTo),
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 30,
+      margin: { top: 30 },
+      styles: { cellPadding: 4, fontSize: 10, valign: "middle", halign: "left" },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 10, fontStyle: "bold", halign: "center" },
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(
+          `Page ${data.pageCount}`,
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" }
+        );
+      }
+    });
+
+    doc.save(`Ramazan_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const exportToWord = () => {
+    const data = filteredData || [];
+    const tableRows = [];
+
+    // Add header row
+    if (data.length > 0) {
+      const headerCells = [
+        "Title", "Date From", "Date To"
+      ].map(key =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: key,
+                  bold: true,
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+          width: { size: 100 / 3, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: headerCells }));
+    }
+
+    // Add data rows
+    data.forEach(row => {
+      const rowCells = [
+        row.VName,
+        formatDate(row.DateFrom),
+        formatDate(row.DateTo),
+      ].map(value =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: String(value ?? ""),
+                  size: 18,
+                }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+          ],
+          width: { size: 100 / 3, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Ramazan Dates",
+              heading: "Heading1",
+            }),
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, "Ramazan.docx");
+    });
+  };
   // DataTable columns
   const columns = [
     { name: "Title", selector: (row) => row.VName, sortable: true },
@@ -292,7 +417,18 @@ const Ramazan = () => {
               <Card>
                 <CardBody>
                   <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                    <div></div>
+                     <div className="d-flex flex-wrap gap-2 mb-2">
+                      <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
+                      <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
+                      <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
+                      <CSVLink
+                        data={filteredData || []}
+                        filename="ramazan.csv"
+                        className="btn btn-sm btn-secondary"
+                      >
+                        Export to CSV
+                      </CSVLink>
+                    </div>
                     <div>
                       <input
                         type="text"
