@@ -421,10 +421,10 @@ const exportToWord = () => {
       },
     };
       const isEditMode = editingGroup !== null;
-  const handleCancel = () => {
-  formik.resetForm();
-  setEditingGroup(null); // This resets the title to "Add Department Group"
-};
+      const handleCancel = () => {
+      formik.resetForm();
+      setEditingGroup(null); // This resets the title to "Add Department Group"
+    };
   return (
     <React.Fragment>
       <div className="page-content">
