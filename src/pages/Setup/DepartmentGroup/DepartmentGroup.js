@@ -21,6 +21,8 @@ import autoTable from "jspdf-autotable";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import DeleteModal from "../../../Components/Common/DeleteModal";
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
 import {
   getDepartmentGroup,
   submitDepartmentGroup,
@@ -218,6 +220,87 @@ const DepartmentGroup = () => {
     }
   };
 
+  // Export to Word
+  const exportToWord = () => {
+    const data = departmentGroup?.data || [];
+
+    const tableRows = [];
+
+    // Add header row
+    if (data.length > 0) {
+      const headerCells = Object.keys(data[0]).map(key =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: key,
+                  bold: true,
+                  size: 20, // 12pt font
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+          width: {
+            size: 100 / Object.keys(data[0]).length,
+            type: WidthType.PERCENTAGE,
+          },
+        })
+      );
+      tableRows.push(new TableRow({ children: headerCells }));
+    }
+
+    // Add data rows
+    data.forEach(item => {
+      const rowCells = Object.values(item).map(value =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: String(value ?? ""),
+                  size: 18, // 11pt font
+                }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+          ],
+          width: {
+            size: 100 / Object.keys(item).length,
+            type: WidthType.PERCENTAGE,
+          },
+        })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Department Groups",
+              heading: "Heading1", // Bigger title
+            }),
+            new Table({
+              rows: tableRows,
+              width: {
+                size: 100,
+                type: WidthType.PERCENTAGE,
+              },
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, "DepartmentGroups.docx");
+    });
+  };
+
+
   const columns = [
     {
       name: "Code",
@@ -254,6 +337,7 @@ const DepartmentGroup = () => {
       ),
     },
   ];
+  
   const customStyles = {
     table: {
       style: {
@@ -300,6 +384,7 @@ const DepartmentGroup = () => {
                   <PreviewCardHeader
                   title={isEditMode ? "Edit Department Group" : "Add Department Group"}
                   onCancel={handleCancel}
+                  isEditMode={isEditMode}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -414,11 +499,12 @@ const DepartmentGroup = () => {
                 <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
                   <div className="d-flex flex-wrap gap-2 mb-2">
                     <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
+                    <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
                     <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
                     <CSVLink
                       data={departmentGroup?.data || []}
                       filename="DepartmentGroups.csv"
-                      className="btn btn-sm btn-primary"
+                      className="btn btn-sm btn-secondary"
                     >
                       Export to CSV
                     </CSVLink>
@@ -439,6 +525,8 @@ const DepartmentGroup = () => {
                     columns={columns}
                     data={filteredData}
                     pagination
+                    paginationPerPage={100} 
+                    paginationRowsPerPageOptions={[100, 200, 500]} 
                     highlightOnHover
                     responsive
                     customStyles={customStyles}
