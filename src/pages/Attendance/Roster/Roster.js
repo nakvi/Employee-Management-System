@@ -12,8 +12,21 @@ import {
   CardHeader,
 } from "reactstrap";
 import PreviewCardHeader4 from "../../../Components/Common/PreviewCardHeader4";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+
 const Roster = () => {
   document.title = "Roster | EMS";
+  const dispatch = useDispatch();
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -42,8 +55,11 @@ const Roster = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -61,15 +77,18 @@ const Roster = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                               Month
+                              Month
                             </Label>
                             <Input
                               type="date"
@@ -81,7 +100,7 @@ const Roster = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                               Date From
+                              Date From
                             </Label>
                             <Input
                               type="date"
@@ -93,7 +112,7 @@ const Roster = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
-                               Date To
+                              Date To
                             </Label>
                             <Input
                               type="date"

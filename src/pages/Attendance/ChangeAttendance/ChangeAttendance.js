@@ -12,9 +12,24 @@ import {
   CardHeader,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 const ChangeAttendance = () => {
+  const dispatch = useDispatch();
   document.title = "Change Attendance | EMS";
+
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  useEffect(() => {
+      dispatch(getDepartment());
+      dispatch(getEmployeeType());
+    }, [dispatch]);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   return (
     <React.Fragment>
       <div className="page-content">
@@ -43,12 +58,17 @@ const ChangeAttendance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
+                              {/* <option value="Choices1">Staf</option>
+                              <option value="Choices2">Worker</option> */}
                             </select>
                           </div>
                         </Col>
-                        <Col xxl={2} md={4}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -62,8 +82,13 @@ const ChangeAttendance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
+                              {/* <option value="Choices1">Staf</option>
+                              <option value="Choices2">Worker</option> */}
                             </select>
                           </div>
                         </Col>

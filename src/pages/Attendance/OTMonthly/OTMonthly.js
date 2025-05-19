@@ -13,8 +13,32 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
+import { useDispatch, useSelector } from "react-redux";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getDesignation } from "../../../slices/setup/designation/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getAttendanceEntry } from "../../../slices/Attendance/AttendanceEntry/thunk";
+
 const OTMonthly = () => {
   document.title = "O/T Monthly | EMS";
+
+  const dispatch = useDispatch();
+
+   // Get data from Redux store
+    const { location = [] } = useSelector((state) => state.Location || {});
+    const { department = {} } = useSelector((state) => state.Department || {});
+    const departmentList = department.data || [];
+    const { designation = [] } = useSelector((state) => state.Designation || {});
+    const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  
+    useEffect(() => {
+      dispatch(getLocation());
+      dispatch(getDepartment());
+      dispatch(getDesignation());
+      dispatch(getEmployeeType());
+    }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -43,8 +67,11 @@ const OTMonthly = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -62,8 +89,11 @@ const OTMonthly = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {location.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -81,8 +111,11 @@ const OTMonthly = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -100,8 +133,11 @@ const OTMonthly = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {designation.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>

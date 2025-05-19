@@ -1,7 +1,7 @@
 import React from 'react';
-import { CardHeader, Button } from 'reactstrap';
+import { CardHeader, Input, Label, Button } from 'reactstrap';
 
-const PreviewCardHeader2 = ({ title, onFetch }) => {
+const PreviewCardHeader2 = ({ title, onFetch, onSave, onCancel, disabled }) => {
   return (
     <React.Fragment>
       <CardHeader className="align-items-center d-flex py-2">
@@ -11,21 +11,25 @@ const PreviewCardHeader2 = ({ title, onFetch }) => {
             color="success"
             className="add-btn me-1 py-1"
             id="create-btn"
-            onClick={onFetch} // Call the passed onFetch function
+            onClick={onFetch}
+            disabled={disabled}
           >
             <i className="align-bottom me-1"></i>Fetch
           </Button>
           <Button
-            type="submit"
             color="success"
             className="add-btn me-1 py-1"
-            id="create-btn"
+            id="save-btn"
+            onClick={onSave}
+            disabled={disabled}
           >
             <i className="align-bottom me-1"></i>Save
           </Button>
           <Button
             color="dark"
             className="add-btn me-1 py-1"
+            onClick={onCancel}
+            disabled={disabled}
           >
             <i className="align-bottom me-1"></i>Cancel
           </Button>

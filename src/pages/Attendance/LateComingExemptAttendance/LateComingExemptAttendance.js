@@ -12,9 +12,29 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { useDispatch, useSelector } from "react-redux";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
 
 const LateComingExemptAttendance = () => {
   document.title = "Late Coming Exempt | EMS";
+
+  const dispatch = useDispatch();
+
+  const { location = [] } = useSelector((state) => state.Location || {});
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  useEffect(() => {
+    dispatch(getLocation());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getDepartment());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -27,7 +47,7 @@ const LateComingExemptAttendance = () => {
                 <Form>
                   <PreviewCardHeader
                     title="Late Coming Exempt Attendance"
-                    // onCancel={formik.resetForm}
+                  // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -46,8 +66,11 @@ const LateComingExemptAttendance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -65,8 +88,11 @@ const LateComingExemptAttendance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -84,8 +110,11 @@ const LateComingExemptAttendance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              {location.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -103,8 +132,11 @@ const LateComingExemptAttendance = () => {
                               id="AttGroupID"
                             >
                               <option value="-1">---Select---</option>
-                              <option value="0">Absent</option>
-                              <option value="1" >Present</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -120,7 +152,7 @@ const LateComingExemptAttendance = () => {
                             />
                           </div>
                         </Col>
-                      
+
                         <Col xxl={2} md={6}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
@@ -167,7 +199,7 @@ const LateComingExemptAttendance = () => {
                           <tr>
                             <th>Employee</th>
                             <th>Location </th>
-                           
+
                             <th>Department</th>
                             <th>Date</th>
                             <th>Remarks</th>
@@ -178,8 +210,8 @@ const LateComingExemptAttendance = () => {
                           <tr>
                             <td>001:Sir Amir:Hr</td>
                             <td>Lahore</td>
-                            <td>IT</td> 
-                            <td>02/02/2025</td>                           
+                            <td>IT</td>
+                            <td>02/02/2025</td>
                             <td>Ok</td>
                             <td>
                               <div className="d-flex gap-2">

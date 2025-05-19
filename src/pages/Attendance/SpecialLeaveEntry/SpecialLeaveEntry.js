@@ -12,9 +12,20 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+
 
 const SpecialLeaveEntry = () => {
   document.title = "Special Leave Entry | EMS";
+  const dispatch = useDispatch();
+    const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+     const { employee = {} } = useSelector((state) => state.Employee || {});
+    useEffect(() => {
+        dispatch(getEmployeeType());
+        dispatch(getEmployee());
+      }, [dispatch]);
   return (
     <React.Fragment>
       <div className="page-content">
@@ -46,8 +57,11 @@ const SpecialLeaveEntry = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -65,8 +79,11 @@ const SpecialLeaveEntry = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>

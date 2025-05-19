@@ -11,6 +11,10 @@ import {
   Form,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 
 const Leaves = () => {
@@ -23,7 +27,19 @@ const Leaves = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
+  const dispatch = useDispatch();
   document.title = "Leave | EMS";
+
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  useEffect(() => {
+      dispatch(getDepartment());
+      dispatch(getEmployeeType());
+      dispatch(getEmployee());
+    }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -58,8 +74,13 @@ const Leaves = () => {
                                   id="AttGroupID"
                                 >
                                   <option value="">---Select--- </option>
-                                  <option value="Choices1">Staf</option>
-                                  <option value="Choices2">Worker</option>
+                                  {employeeType.map((item) => (
+                                    <option key={item.VID} value={item.VID}>
+                                      {item.VName}
+                                    </option>
+                                  ))}
+                                  {/* <option value="Choices1">Staf</option>
+                                  <option value="Choices2">Worker</option> */}
                                 </select>
                               </div>
                             </Col>
@@ -77,12 +98,11 @@ const Leaves = () => {
                                   id="AttGroupID"
                                 >
                                   <option value="">---Select--- </option>
-                                  <option value="Choices1">
-                                    001:Sir Amir:Hr
-                                  </option>
-                                  <option value="Choices2">
-                                    002:Sir Ijaz:HOD
-                                  </option>
+                                  {employee.map((item) => (
+                                    <option key={item.EmpID} value={item.EmpID}>
+                                      {item.EName}
+                                    </option>
+                                  ))}
                                 </select>
                               </div>
                             </Col>
