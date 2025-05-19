@@ -79,7 +79,7 @@ const AttendanceEntry = () => {
       setErrors((prev) => ({ ...prev, apiError: error }));
     } else if (attendanceData.length > 0 && !loading) {
       console.log("Fetch success, data:", attendanceData);
-      alert("Attendance data fetched successfully!");
+      // alert("Attendance data fetched successfully!");
     }
   }, [error, attendanceData, loading]);
 
@@ -259,7 +259,7 @@ const AttendanceEntry = () => {
     }
 
     if (!hasChanges()) {
-      alert("No changes detected. No data will be saved.");
+      // alert("No changes detected. No data will be saved.");
       return;
     }
 
@@ -275,7 +275,7 @@ const AttendanceEntry = () => {
   const confirmSave = () => {
     const changedData = getChangedData();
     if (!changedData) {
-      alert("No changes to save.");
+      // alert("No changes to save.");
       setIsSaveModalOpen(false);
       return;
     }
@@ -284,7 +284,7 @@ const AttendanceEntry = () => {
 
     dispatch(saveAttendanceEntry(changedData))
       .then(() => {
-        alert("is it");
+        // alert("is it");
       });
     setIsSaveModalOpen(false);
   };

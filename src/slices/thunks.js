@@ -104,3 +104,7 @@ export * from "./administration/userManagement/thunk";
 export * from "./administration/secUserCompany/thunk";
 export * from "./administration/secUserLocation/thunk";
 export * from "./administration/secUserRole/thunk";
+
+
+// Attendance
+export * from "./Attendance/AttendanceEntry/thunk";
