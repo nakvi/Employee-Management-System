@@ -17,13 +17,6 @@ import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
-import { CSVLink } from "react-csv";
-// import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
-import { saveAs } from "file-saver";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import { getDepartmentGroup } from "../../../slices/setup/departmentGroup/thunk";
 import {
@@ -40,8 +33,6 @@ const Department = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
-  const [searchText, setSearchText] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
 
   // Access Redux state
   const { loading, error, department } = useSelector(
@@ -49,17 +40,7 @@ const Department = () => {
   );
   const { departmentGroup } = useSelector((state) => state.DepartmentGroup);
   const { location } = useSelector((state) => state.Location);
-  useEffect(() => {
-    if (department?.data) {
-      const filtered = department.data.filter((item) =>
-        Object.values(item)
-          .join(" ")
-          .toLowerCase()
-          .includes(searchText.toLowerCase())
-      );
-      setFilteredData(filtered);
-    }
-  }, [searchText, department]);
+
   // Formik form setup
   const formik = useFormik({
     initialValues: {
@@ -311,241 +292,6 @@ const Department = () => {
     document.body.removeChild(link);
   };
   document.title = "Department | EMS";
-// Export to Excel
-const exportToExcel = () => {
-  const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Departments");
-  XLSX.writeFile(workbook, "Departments.xlsx");
-};
-
-// Export to PDF
-const exportToPDF = () => {
-  try {
-    const doc = new jsPDF();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Departments Report", 105, 15, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
-
-    const headers = [
-      ["Code", "Title", "Title Urdu", "Sorting", "Dept-Group", "Location", "Strength"]
-    ];
-
-    const data = (filteredData || []).map(dep => [
-      dep.VCode,
-      dep.VName,
-      dep.VNameUrdu,
-      dep.SortOrder,
-      departmentGroup?.data?.find((g) => g.VID === dep.GroupID)?.VName || "",
-      location?.find((l) => l.VID === dep.LocationID)?.VName || "",
-      dep.Strength
-    ]);
-
-    autoTable(doc, {
-      head: headers,
-      body: data,
-      startY: 30,
-      margin: { top: 30 },
-      styles: { cellPadding: 4, fontSize: 10, valign: "middle", halign: "left" },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 10, fontStyle: "bold", halign: "center" },
-      columnStyles: {
-        0: { cellWidth: 20, halign: "center" },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 20, halign: "center" },
-        4: { cellWidth: 35 },
-        5: { cellWidth: 35 },
-        6: { cellWidth: 20, halign: "center" }
-      },
-      didDrawPage: (data) => {
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(
-          `Page ${data.pageCount}`,
-          doc.internal.pageSize.width / 2,
-          doc.internal.pageSize.height - 10,
-          { align: "center" }
-        );
-      }
-    });
-
-    doc.save(`Departments_${new Date().toISOString().slice(0, 10)}.pdf`);
-  } catch (error) {
-    alert("Failed to generate PDF. Please try again.");
-  }
-};
-
-// Export to Word
-const exportToWord = () => {
-  const data = filteredData || [];
-  const tableRows = [];
-
-  // Add header row
-  if (data.length > 0) {
-    const headerCells = [
-      "Code", "Title", "Title Urdu", "Sorting", "Dept-Group", "Location", "Strength"
-    ].map(key =>
-      new TableCell({
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: key,
-                bold: true,
-                size: 20,
-              }),
-            ],
-            alignment: AlignmentType.CENTER,
-          }),
-        ],
-        width: { size: 100 / 7, type: WidthType.PERCENTAGE },
-      })
-    );
-    tableRows.push(new TableRow({ children: headerCells }));
-  }
-
-  // Add data rows
-  data.forEach(item => {
-    const rowCells = [
-      item.VCode,
-      item.VName,
-      item.VNameUrdu,
-      item.SortOrder,
-      departmentGroup?.data?.find((g) => g.VID === item.GroupID)?.VName || "",
-      location?.find((l) => l.VID === item.LocationID)?.VName || "",
-      item.Strength
-    ].map(value =>
-      new TableCell({
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: String(value ?? ""),
-                size: 18,
-              }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-        ],
-        width: { size: 100 / 7, type: WidthType.PERCENTAGE },
-      })
-    );
-    tableRows.push(new TableRow({ children: rowCells }));
-  });
-
-  const doc = new Document({
-    sections: [
-      {
-        children: [
-          new Paragraph({
-            text: "Departments",
-            heading: "Heading1",
-          }),
-          new Table({
-            rows: tableRows,
-            width: { size: 100, type: WidthType.PERCENTAGE },
-          }),
-        ],
-      },
-    ],
-  });
-
-  Packer.toBlob(doc).then(blob => {
-    saveAs(blob, "Departments.docx");
-  });
-};
-  const columns = [
-  {
-    name: "Code",
-    selector: (row) => row.VCode,
-    sortable: true,
-  },
-  {
-    name: "Title",
-    selector: (row) => row.VName,
-    sortable: true,
-  },
-  {
-    name: "Title Urdu",
-    selector: (row) => row.VNameUrdu,
-    sortable: true,
-  },
-  {
-    name: "Sorting",
-    selector: (row) => row.SortOrder,
-    sortable: true,
-  },
-  {
-    name: "Dept-Group",
-    selector: (row) =>
-      departmentGroup?.data?.find((g) => g.VID === row.GroupID)?.VName || "",
-    sortable: true,
-  },
-  {
-    name: "Location",
-    selector: (row) =>
-      location?.find((l) => l.VID === row.LocationID)?.VName || "",
-    sortable: true,
-  },
-  {
-    name: "Strength",
-    selector: (row) => row.Strength,
-    sortable: true,
-  },
-  {
-    name: "Action",
-    cell: (row) => (
-      <div className="d-flex gap-2">
-        <Button
-          className="btn btn-soft-info btn-sm"
-          onClick={() => handleEditClick(row)}
-        >
-          <i className="bx bx-edit"></i>
-        </Button>
-        <Button
-          className="btn btn-soft-danger btn-sm"
-          onClick={() => handleDeleteClick(row.VID)}
-        >
-          <i className="ri-delete-bin-2-line"></i>
-        </Button>
-      </div>
-    ),
-    ignoreRowClick: true,
-    allowOverflow: true,
-    button: true,
-  },
-  ];
-    const customStyles = {
-    table: {
-      style: {
-        border: '1px solid #dee2e6',
-      },
-    },
-    headRow: {
-      style: {
-        backgroundColor: '#f8f9fa',
-        borderBottom: '1px solid #dee2e6',
-        fontWeight: '600',
-      },
-    },
-    rows: {
-      style: {
-        minHeight: '48px',
-        borderBottom: '1px solid #dee2e6',
-      },
-    },
-    cells: {
-      style: {
-        paddingLeft: '16px',
-        paddingRight: '16px',
-        borderRight: '1px solid #dee2e6',
-      },
-    },
-  };
-  
   return (
     <React.Fragment>
       <div className="page-content">
@@ -561,9 +307,7 @@ const exportToWord = () => {
                     onCancel={formik.resetForm}
                   /> */}
                   <CardHeader className="align-items-center d-flex py-2">
-                    <h4 className="card-title mb-0 flex-grow-1">
-                      {editingGroup ? "Edit Department" : "Add Department"}
-                    </h4>
+                    <h4 className="card-title mb-0 flex-grow-1">Department</h4>
                     <div className="flex-shrink-0">
                       <Button
                         type="submit"
@@ -571,16 +315,12 @@ const exportToWord = () => {
                         className="add-btn me-1 py-1"
                         id="create-btn"
                       >
-                        <i className="align-bottom me-1"></i>
-                        {editingGroup ? "Update" : "Save"}
+                        <i className="align-bottom me-1"></i>Save
                       </Button>
                       <Button
                         color="dark"
                         className="add-btn me-1 py-1"
-                        onClick={() => {
-                          formik.resetForm();
-                          setEditingGroup(null);
-                        }}
+                        onClick={formik.resetForm}
                       >
                         <i className="align-bottom me-1"></i> Cancel
                       </Button>
@@ -596,7 +336,7 @@ const exportToWord = () => {
                         <Button
                           tag="label"
                           type="submit"
-                          color="primary"
+                          color="success"
                           className="add-btn me-1 py-1 mb-0"
                           htmlFor="file-upload"
                         >
@@ -814,43 +554,7 @@ const exportToWord = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                  <div className="d-flex flex-wrap gap-2 mb-2">
-                    <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
-                    <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
-                    <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
-                    <CSVLink
-                      data={filteredData || []}
-                      filename="departments.csv"
-                      className="btn btn-sm btn-secondary"
-                    >
-                      Export to CSV
-                    </CSVLink>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                    <div></div>
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Search"
-                        className="form-control form-control-sm"
-                        style={{ width: '200px' }}
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <DataTable
-                    title="Departments"
-                    columns={columns}
-                    customStyles={customStyles}
-                    data={filteredData}
-                    pagination
-                    paginationPerPage={100}
-                    paginationRowsPerPageOptions={[100, 200, 500]}
-                    highlightOnHover
-                    responsive
-                  />
-                  {/* <div className="Location-table" id="customerList">
+                  <div className="Location-table" id="customerList">
                     <Row className="g-4 mb-3">
                       <Col className="col-sm">
                         <div className="d-flex justify-content-sm-end">
@@ -983,7 +687,7 @@ const exportToWord = () => {
                         </Link>
                       </div>
                     </div>
-                  </div> */}
+                  </div>
                 </CardBody>
               </Card>
             </Col>

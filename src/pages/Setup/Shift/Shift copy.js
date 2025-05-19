@@ -15,13 +15,6 @@ import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
-import { CSVLink } from "react-csv";
-import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
-import { saveAs } from "file-saver";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import {
   deleteShift,
@@ -36,8 +29,6 @@ const Shift = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
-  const [searchText, setSearchText] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
   // Access Redux state
   const { loading, error, shift } = useSelector((state) => state.Shift);
     const { location } = useSelector((state) => state.Location);
@@ -47,18 +38,6 @@ const Shift = () => {
     dispatch(getShift());
     dispatch(getLocation());
   }, [dispatch]);
-
-  useEffect(() => {
-  if (shift) {
-    const filtered = shift.filter((item) =>
-      Object.values(item)
-        .join(" ")
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
-    );
-    setFilteredData(filtered);
-  }
-}, [searchText, shift]);
   // Formik form setup
   const formik = useFormik({
     initialValues: {
@@ -197,228 +176,6 @@ const Shift = () => {
     });
   };
   document.title = "Shift | EMS";
-
-  const exportToExcel = () => {
-  const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Shifts");
-  XLSX.writeFile(workbook, "Shifts.xlsx");
-  };
-
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Shifts Report", 105, 15, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
-
-    const headers = [
-      ["Code", "Title", "Location", "Sat-H-Time", "IsRoster", "IsSecurity", "Shift", "Rest", "W-Hrs", "Relax", "Min Time", "HD Time", "Ramazan Shift", "Rest (Ramazan)", "W-Hrs (Ramazan)", "Relax (Ramazan)", "Min Time (Ramazan)", "HD Time (Ramazan)"]
-    ];
-
-    const data = (filteredData || []).map(row => [
-      row.VCode,
-      row.VName,
-      location?.find((l) => l.VID === row.LocationID)?.VName || "",
-      row.SaturdayHalfTime ? "Yes" : "No",
-      row.IsRoster ? "Yes" : "No",
-      row.IsSecurity ? "Yes" : "No",
-      `(${row.TimeIn} - ${row.TimeOut})`,
-      `(${row.RestTimeFrom} - ${row.RestTimeTo})`,
-      row.WorkingHrs,
-      row.RelaxTime,
-      row.MinAttTime,
-      row.MinHDTime,
-      `(${row.TimeInRamazan} - ${row.TimeOutRamazan})`,
-      `(${row.RestTimeFromRamazan} - ${row.RestTimeToRamazan})`,
-      row.WorkingHrsRamazan,
-      row.RelaxTimeRamazan,
-      row.MinAttTimeRamazan,
-      row.MinHDTimeRamazan,
-    ]);
-
-    autoTable(doc, {
-      head: headers,
-      body: data,
-      startY: 30,
-      margin: { top: 30 },
-      styles: { cellPadding: 2, fontSize: 8, valign: "middle", halign: "left" },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 8, fontStyle: "bold", halign: "center" },
-      didDrawPage: (data) => {
-        doc.setFontSize(8);
-        doc.setTextColor(100);
-        doc.text(
-          `Page ${data.pageCount}`,
-          doc.internal.pageSize.width / 2,
-          doc.internal.pageSize.height - 10,
-          { align: "center" }
-        );
-      }
-    });
-
-    doc.save(`Shifts_${new Date().toISOString().slice(0, 10)}.pdf`);
-  };
-
-  const exportToWord = () => {
-    const data = filteredData || [];
-    const tableRows = [];
-
-    // Add header row
-    if (data.length > 0) {
-      const headerCells = [
-        "Code", "Title", "Location", "Sat-H-Time", "IsRoster", "IsSecurity", "Shift", "Rest", "W-Hrs", "Relax", "Min Time", "HD Time", "Ramazan Shift", "Rest (Ramazan)", "W-Hrs (Ramazan)", "Relax (Ramazan)", "Min Time (Ramazan)", "HD Time (Ramazan)"
-      ].map(key =>
-        new TableCell({
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: key,
-                  bold: true,
-                  size: 20,
-                }),
-              ],
-              alignment: AlignmentType.CENTER,
-            }),
-          ],
-          width: { size: 100 / 18, type: WidthType.PERCENTAGE },
-        })
-      );
-      tableRows.push(new TableRow({ children: headerCells }));
-    }
-
-    // Add data rows
-    data.forEach(row => {
-      const rowCells = [
-        row.VCode,
-        row.VName,
-        location?.find((l) => l.VID === row.LocationID)?.VName || "",
-        row.SaturdayHalfTime ? "Yes" : "No",
-        row.IsRoster ? "Yes" : "No",
-        row.IsSecurity ? "Yes" : "No",
-        `(${row.TimeIn} - ${row.TimeOut})`,
-        `(${row.RestTimeFrom} - ${row.RestTimeTo})`,
-        row.WorkingHrs,
-        row.RelaxTime,
-        row.MinAttTime,
-        row.MinHDTime,
-        `(${row.TimeInRamazan} - ${row.TimeOutRamazan})`,
-        `(${row.RestTimeFromRamazan} - ${row.RestTimeToRamazan})`,
-        row.WorkingHrsRamazan,
-        row.RelaxTimeRamazan,
-        row.MinAttTimeRamazan,
-        row.MinHDTimeRamazan,
-      ].map(value =>
-        new TableCell({
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: String(value ?? ""),
-                  size: 18,
-                }),
-              ],
-              alignment: AlignmentType.LEFT,
-            }),
-          ],
-          width: { size: 100 / 18, type: WidthType.PERCENTAGE },
-        })
-      );
-      tableRows.push(new TableRow({ children: rowCells }));
-    });
-
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: "Shifts",
-              heading: "Heading1",
-            }),
-            new Table({
-              rows: tableRows,
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            }),
-          ],
-        },
-      ],
-    });
-
-    Packer.toBlob(doc).then(blob => {
-      saveAs(blob, "Shifts.docx");
-    });
-  };
-
-  const columns = [
-  { name: "Code", selector: (row) => row.VCode, sortable: true },
-  { name: "Title", selector: (row) => row.VName, sortable: true },
-  { name: "Location", selector: (row) => location?.find((l) => l.VID === row.LocationID)?.VName || "", sortable: true },
-  { name: "Sat-H-Time", selector: (row) => row.SaturdayHalfTime ? "Yes" : "No", sortable: true },
-  { name: "IsRoster", selector: (row) => row.IsRoster ? "Yes" : "No", sortable: true },
-  { name: "IsSecurity", selector: (row) => row.IsSecurity ? "Yes" : "No", sortable: true },
-  { name: "Shift", selector: (row) => `(${row.TimeIn} - ${row.TimeOut})`, sortable: false },
-  { name: "Rest", selector: (row) => `(${row.RestTimeFrom} - ${row.RestTimeTo})`, sortable: false },
-  { name: "W-Hrs", selector: (row) => row.WorkingHrs, sortable: true },
-  { name: "Relax", selector: (row) => row.RelaxTime, sortable: true },
-  { name: "Min Time", selector: (row) => row.MinAttTime, sortable: true },
-  { name: "HD Time", selector: (row) => row.MinHDTime, sortable: true },
-  { name: "Ramazan Shift", selector: (row) => `(${row.TimeInRamazan} - ${row.TimeOutRamazan})`, sortable: false },
-  { name: "Rest (Ramazan)", selector: (row) => `(${row.RestTimeFromRamazan} - ${row.RestTimeToRamazan})`, sortable: false },
-  { name: "W-Hrs (Ramazan)", selector: (row) => row.WorkingHrsRamazan, sortable: true },
-  { name: "Relax (Ramazan)", selector: (row) => row.RelaxTimeRamazan, sortable: true },
-  { name: "Min Time (Ramazan)", selector: (row) => row.MinAttTimeRamazan, sortable: true },
-  { name: "HD Time (Ramazan)", selector: (row) => row.MinHDTimeRamazan, sortable: true },
-  {
-    name: "Action",
-    cell: (row) => (
-      <div className="d-flex gap-2">
-        <Button className="btn btn-soft-info btn-sm" onClick={() => handleEditClick(row)}>
-          <i className="bx bx-edit"></i>
-        </Button>
-        <Button className="btn btn-soft-danger btn-sm" onClick={() => handleDeleteClick(row.VID)}>
-          <i className="ri-delete-bin-2-line"></i>
-        </Button>
-      </div>
-    ),
-    ignoreRowClick: true,
-    allowOverflow: true,
-    button: true,
-  },
-  ];
-      const customStyles = {
-      table: {
-        style: {
-          border: '1px solid #dee2e6',
-        },
-      },
-      headRow: {
-        style: {
-          backgroundColor: '#f8f9fa',
-          borderBottom: '1px solid #dee2e6',
-          fontWeight: '600',
-        },
-      },
-      rows: {
-        style: {
-          minHeight: '48px',
-          borderBottom: '1px solid #dee2e6',
-        },
-      },
-      cells: {
-        style: {
-          paddingLeft: '16px',
-          paddingRight: '16px',
-          borderRight: '1px solid #dee2e6',
-        },
-      },
-    };
-      const isEditMode = editingGroup !== null;
-      const handleCancel = () => {
-      formik.resetForm();
-      setEditingGroup(null); // This resets the title to "Add Department Group"
-    };
   return (
     <React.Fragment>
       <div className="page-content">
@@ -430,9 +187,8 @@ const Shift = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                     title={isEditMode ? "Edit Shift Management" : "Add Shift Management"}
-                    onCancel={handleCancel}
-                    isEditMode={isEditMode}
+                    title="Shift Management"
+                    onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -984,41 +740,184 @@ const Shift = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                 <div className="d-flex flex-wrap gap-2 mb-2">
-                  <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
-                  <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
-                  <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
-                  <CSVLink
-                    data={filteredData || []}
-                    filename="shifts.csv"
-                    className="btn btn-sm btn-secondary"
-                  >
-                    Export to CSV
-                  </CSVLink>
-                </div>
-                <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                  <div></div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Search"
-                      className="form-control form-control-sm"
-                      style={{ width: '200px' }}
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                    />
+                  <div className="Location-table" id="customerList">
+                    <Row className="g-4 mb-3">
+                      <Col className="col-sm">
+                        <div className="d-flex justify-content-sm-end">
+                          <div className="search-box ms-2">
+                            <input
+                              type="text"
+                              className="form-control-sm search"
+                            />
+                            <i className="ri-search-line search-icon"></i>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+
+                    <div className="table-responsive table-card mt-3 mb-1">
+                      <table
+                        className="table align-middle table-nowrap table-sm"
+                        id="customerTable"
+                      >
+                        <thead className="table-light">
+                          <tr>
+                            <th className="" data-sort="code">
+                              Code
+                            </th>
+                            <th className="" data-sort="title">
+                              Title
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Location
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Sat-H-Time
+                            </th>
+                            <th className="" data-sort="IsRoster">
+                              IsRoster
+                            </th>
+                            <th className="" data-sort="IsSecurity">
+                              IsSecurity
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Shift
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Rest
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              W-Hrs
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Relax
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Min Time
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              HD Time
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Ramazan Shift
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Rest
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              W-Hrs
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Relax
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              Min Time
+                            </th>
+                            <th className="" data-sort="titleUrdu">
+                              HD Time
+                            </th>
+                            <th className="" data-sort="action">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="list form-check-all">
+                          {shift?.length > 0 ? (
+                            shift.map((group, index) => (
+                              <tr key={group.VID}>
+                                <td>{group.VCode}</td>
+                                <td>{group.VName}</td>
+                                <td>Lahore</td>
+                                <td>{group.SaturdayHalfTime ? "Yes" : "No"}</td>
+                                <td>{group.IsRoster ? "Yes" : "No"}</td>
+                                <td>{group.IsSecurity ? "Yes" : "No"}</td>
+                                <td>
+                                  ({group.TimeIn} - {group.TimeOut})
+                                </td>
+                                <td>
+                                  ({group.RestTimeFrom} - {group.RestTimeTo})
+                                </td>
+                                <td>{group.WorkingHrs}</td>
+                                <td>{group.RelaxTime}</td>
+                                <td>{group.MinAttTime}</td>
+                                <td>{group.MinHDTime}</td>
+                                <td>
+                                  ({group.TimeInRamazan} -{" "}
+                                  {group.TimeOutRamazan})
+                                </td>
+                                <td>
+                                  ({group.RestTimeFromRamazan} -{" "}
+                                  {group.RestTimeToRamazan})
+                                </td>
+                                <td>{group.WorkingHrsRamazan}</td>
+                                <td>{group.RelaxTimeRamazan}</td>
+                                <td>{group.MinAttTimeRamazan}</td>
+                                <td>{group.MinHDTimeRamazan}</td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <div className="edit ">
+                                      <Button
+                                        className="btn btn-soft-info"
+                                        onClick={() => handleEditClick(group)}
+                                      >
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="8" className="text-center">
+                                No shift found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                      <div className="noresult" style={{ display: "none" }}>
+                        <div className="text-center">
+                          <lord-icon
+                            src="https://cdn.lordicon.com/msoeawqm.json"
+                            trigger="loop"
+                            colors="primary:#121331,secondary:#08a88a"
+                            style={{ width: "75px", height: "75px" }}
+                          ></lord-icon>
+                          <h5 className="mt-2">Sorry! No Result Found</h5>
+                          <p className="text-muted mb-0">
+                            We've searched more than 150+ Orders We did not find
+                            any orders for you search.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end">
+                      <div className="pagination-wrap hstack gap-2">
+                        <Link
+                          className="page-item pagination-prev disabled"
+                          to="#"
+                        >
+                          Previous
+                        </Link>
+                        <ul className="pagination Location-pagination mb-0"></ul>
+                        <Link className="page-item pagination-next" to="#">
+                          Next
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <DataTable
-                  title="Shifts"
-                  columns={columns}
-                  data={filteredData}
-                  pagination
-                  paginationPerPage={100}
-                  paginationRowsPerPageOptions={[100, 200, 500]}
-                  highlightOnHover
-                  responsive
-                />
                 </CardBody>
               </Card>
             </Col>

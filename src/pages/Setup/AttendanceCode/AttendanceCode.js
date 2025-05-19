@@ -10,11 +10,17 @@ import {
   Label,
   Form,
 } from "reactstrap";
-import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
+import DataTable from "react-data-table-component";
+import { CSVLink } from "react-csv";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import { getAttendanceGroup } from "../../../slices/setup/attendanceGroup/thunk";
 import {
@@ -29,18 +35,37 @@ const AttendanceCode = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
 
-  // Access Redux state
+  // Redux state
   const { loading, error, attendanceCode } = useSelector(
     (state) => state.AttendanceCode
   );
   const { attendanceGroup } = useSelector((state) => state.AttendanceGroup);
 
-  // Fetch data on component mount
+  // Fetch data on mount
   useEffect(() => {
     dispatch(getAttendanceCode());
     dispatch(getAttendanceGroup());
   }, [dispatch]);
+
+  // Filtered DataTable data
+  useEffect(() => {
+    if (attendanceCode) {
+      const filtered = attendanceCode.filter((item) =>
+        [
+          item.VCode,
+          item.VName,
+          attendanceGroup?.data?.find((g) => g.VID === item.GroupID)?.VName || "",
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  }, [searchText, attendanceCode, attendanceGroup]);
 
   // Formik form setup
   const formik = useFormik({
@@ -64,32 +89,33 @@ const AttendanceCode = () => {
       SortOrder: Yup.number()
         .typeError("Sort Order must be a number.")
         .required("Sort Order is required."),
-      // GroupID: Yup.string().required("Attendance Group is required."),
-      GroupID: Yup.string()
-      .test("is-valid-leave-type", "Attendance Group is required.", (value) => value !== "-1"),
+      GroupID: Yup.string().test(
+        "is-valid-leave-type",
+        "Attendance Group is required.",
+        (value) => value !== "-1"
+      ),
       IsActive: Yup.boolean(),
     }),
     onSubmit: (values) => {
-      // Add your form submission logic here
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+        IsActive: values.IsActive ? 1 : 0,
       };
-    if (transformedValues.GroupID === -1) {
-      transformedValues.GroupID === "";
-    }
+      if (transformedValues.GroupID === -1) {
+        transformedValues.GroupID = "";
+      }
       if (editingGroup) {
-        console.log("Editing Group", transformedValues);
         dispatch(
           updateAttendanceCode({ ...transformedValues, VID: editingGroup.VID })
         );
-        setEditingGroup(null); // Reset after submission
+        setEditingGroup(null);
       } else {
         dispatch(submitAttendanceCode(transformedValues));
       }
       formik.resetForm();
     },
   });
+
   // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
@@ -113,6 +139,198 @@ const AttendanceCode = () => {
       IsActive: group.IsActive === 1,
     });
   };
+  const isEditMode = editingGroup !== null;
+  const handleCancel = () => {
+    formik.resetForm();
+    setEditingGroup(null);
+  };
+
+  // Export functions
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "AttendanceCodes");
+    XLSX.writeFile(workbook, "AttendanceCodes.xlsx");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Attendance Codes Report", 105, 15, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
+
+    const headers = [["Code", "Title", "Attendance Group", "Active"]];
+    const data = (filteredData || []).map(row => [
+      row.VCode,
+      row.VName,
+      attendanceGroup?.data?.find((g) => g.VID === row.GroupID)?.VName || "",
+      row.IsActive ? "Yes" : "No"
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 30,
+      margin: { top: 30 },
+      styles: { cellPadding: 4, fontSize: 10, valign: "middle", halign: "left" },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 10, fontStyle: "bold", halign: "center" },
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(
+          `Page ${data.pageCount}`,
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" }
+        );
+      }
+    });
+
+    doc.save(`AttendanceCodes_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const exportToWord = () => {
+    const data = filteredData || [];
+    const tableRows = [];
+
+    // Add header row
+    if (data.length > 0) {
+      const headerCells = [
+        "Code", "Title", "Attendance Group", "Active"
+      ].map(key =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: key,
+                  bold: true,
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+          width: { size: 100 / 4, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: headerCells }));
+    }
+
+    // Add data rows
+    data.forEach(row => {
+      const rowCells = [
+        row.VCode,
+        row.VName,
+        attendanceGroup?.data?.find((g) => g.VID === row.GroupID)?.VName || "",
+        row.IsActive ? "Yes" : "No"
+      ].map(value =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: String(value ?? ""),
+                  size: 18,
+                }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+          ],
+          width: { size: 100 / 4, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Attendance Codes",
+              heading: "Heading1",
+            }),
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, "AttendanceCodes.docx");
+    });
+  };
+
+  // DataTable columns
+  const columns = [
+    { name: "Code", selector: (row) => row.VCode, sortable: true },
+    { name: "Title", selector: (row) => row.VName, sortable: true },
+    {
+      name: "Attendance Group",
+      selector: (row) =>
+        attendanceGroup?.data?.find((g) => g.VID === row.GroupID)?.VName || "",
+      sortable: true,
+    },
+    { name: "Active", selector: (row) => row.IsActive ? "Yes" : "No", sortable: true },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.VID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+
+  const customStyles = {
+    table: {
+      style: {
+        border: '1px solid #dee2e6',
+      },
+    },
+    headRow: {
+      style: {
+        backgroundColor: '#f8f9fa',
+        borderBottom: '1px solid #dee2e6',
+        fontWeight: '600',
+      },
+    },
+    rows: {
+      style: {
+        minHeight: '48px',
+        borderBottom: '1px solid #dee2e6',
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        borderRight: '1px solid #dee2e6',
+      },
+    },
+  };
+
   document.title = "Attendance Codes | EMS";
   return (
     <React.Fragment>
@@ -125,8 +343,9 @@ const AttendanceCode = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title="Attendance Codes"
-                    onCancel={formik.resetForm}
+                    title={isEditMode ? "Edit Attendance Code" : "Add Attendance Code"}
+                    onCancel={handleCancel}
+                    isEditMode={isEditMode}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -171,23 +390,18 @@ const AttendanceCode = () => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="GroupID" className="form-label">
                               Attendance Group
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="GroupID"
                               id="GroupID"
-                              value={formik.values.GroupID} // Bind to Formik state
-                              onChange={formik.handleChange} // Handle changes
-                              onBlur={formik.handleBlur} // Track field blur
+                              value={formik.values.GroupID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="-1" >
-                                ---Select---{" "}
-                              </option>
+                              <option value="-1">---Select---</option>
                               {attendanceGroup?.data?.length > 0 ? (
                                 attendanceGroup.data.map((group) => (
                                   <option key={group.VID} value={group.VID}>
@@ -228,12 +442,11 @@ const AttendanceCode = () => {
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <div className="form-check form-switch " dir="ltr">
+                          <div className="form-check form-switch mt-3" dir="ltr">
                             <Input
                               type="checkbox"
                               className="form-check-input"
                               id="IsActive"
-                              defaultChecked=""
                               {...formik.getFieldProps("IsActive")}
                               checked={formik.values.IsActive}
                             />
@@ -251,119 +464,42 @@ const AttendanceCode = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                  <div className="Location-table" id="customerList">
-                    <Row className="g-4 mb-4">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-
-                    <div className="table-responsive table-card mb-1">
-                      <table
-                        className="table align-middle  table-nowrap table-striped table-sm "
-                        id="customerTable"
-                      >
-                        <thead className="table-light">
-                          <tr>
-                            <th className="" data-sort="code">
-                              Code
-                            </th>
-                            <th className="" data-sort="title">
-                              Title
-                            </th>
-                            <th className="" data-sort="titleUrdu">
-                              Attendance Group
-                            </th>
-                            <th className="" data-sort="action">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="list form-check-all">
-                          {attendanceCode?.length > 0 ? (
-                            attendanceCode.map((group, index) => (
-                              <tr key={group.VID}>
-                                <td>{group.VCode}</td>
-                                <td>{group.VName}</td>
-                                <td>
-                                  {attendanceGroup?.data?.find(
-                                    (groupItem) =>
-                                      groupItem.VID === group.GroupID
-                                  )?.VName || "N/A"}
-                                </td>
-                                <td>
-                                  <div className="d-flex gap-2">
-                                    <div className="edit ">
-                                      <Button
-                                        className="btn btn-soft-info"
-                                        onClick={() => handleEditClick(group)}
-                                      >
-                                        <i className="bx bx-edit"></i>
-                                      </Button>
-                                    </div>
-                                    <div className="delete">
-                                      <Button
-                                        className="btn btn-soft-danger"
-                                        onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }
-                                      >
-                                        <i className="ri-delete-bin-2-line"></i>
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="8" className="text-center">
-                                No attendance Code found.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-end">
-                      <div className="pagination-wrap hstack gap-2">
-                        <Link
-                          className="page-item pagination-prev disabled"
-                          to="#"
-                        >
-                          Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
-                          Next
-                        </Link>
-                      </div>
+                  <div className="d-flex flex-wrap gap-2 mb-2">
+                    <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
+                    <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
+                    <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
+                    <CSVLink
+                      data={filteredData || []}
+                      filename="attendance_codes.csv"
+                      className="btn btn-sm btn-secondary"
+                    >
+                      Export to CSV
+                    </CSVLink>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div></div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className="form-control form-control-sm"
+                        style={{ width: '200px' }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                      />
                     </div>
                   </div>
+                  <DataTable
+                    title="Attendance Codes"
+                    columns={columns}
+                    data={filteredData}
+                    customStyles={customStyles}
+                    pagination
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 500]}
+                    highlightOnHover
+                    responsive
+                  />
                 </CardBody>
               </Card>
             </Col>

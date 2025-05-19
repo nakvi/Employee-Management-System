@@ -11,12 +11,18 @@ import {
   Form,
 } from "reactstrap";
 import { format } from "date-fns";
-import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { CSVLink } from "react-csv";
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
 import DeleteModal from "../../../Components/Common/DeleteModal";
+import DataTable from "react-data-table-component";
 import { getHolidayType } from "../../../slices/setup/holidayType/thunk";
 import {
   deleteHoliday,
@@ -25,15 +31,18 @@ import {
   updateHoliday,
 } from "../../../slices/setup/holiday/thunk";
 import { getLocation } from "../../../slices/setup/location/thunk";
+
 const Holiday = () => {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
   const dispatch = useDispatch();
-  // Access Redux state
+
+  // Redux state
   const { loading, error, holiday } = useSelector((state) => state.Holiday);
   const { holidayType } = useSelector((state) => state.HolidayType);
-  // Fetch data on component mount
   const { location } = useSelector((state) => state.Location);
 
   useEffect(() => {
@@ -41,13 +50,32 @@ const Holiday = () => {
     dispatch(getHolidayType());
     dispatch(getLocation());
   }, [dispatch]);
+
+  // Filtered DataTable data
+  useEffect(() => {
+    if (holiday) {
+      const filtered = holiday.filter((item) =>
+        [
+          item.VName,
+          formatDate(item.VDate),
+          holidayType?.data?.find((groupItem) => groupItem.VID === item.LeaveTypeID)?.VName || "",
+          location?.find((groupItem) => groupItem.VID === item.LocationID)?.VName || "",
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  }, [searchText, holiday, holidayType, location]);
+
   // Formik form setup
   const formik = useFormik({
     initialValues: {
       VName: "",
       VDate: "",
-      LeaveTypeID: "-1", // Default to "-1" (meaning not selected)
-    LocationID: "-1",  // Default to "-1"
+      LeaveTypeID: "-1",
+      LocationID: "-1",
       CompanyID: "1",
       UID: "1",
       IsActive: false,
@@ -56,40 +84,55 @@ const Holiday = () => {
       VName: Yup.string()
         .required("Title is required.")
         .min(3, "Title at least must be 3 characters "),
-        VDate: Yup.date().required("Start date is required."),
-      // LeaveTypeID: Yup.string().required("Holiday Type is required."),
-      LeaveTypeID: Yup.string()
-      .test("is-valid-leave-type", "Holiday Type is required.", (value) => value !== "-1"), // Ensure "-1" is invalid
-
+      VDate: Yup.date().required("Date is required."),
+      LeaveTypeID: Yup.string().test(
+        "is-valid-leave-type",
+        "Holiday Type is required.",
+        (value) => value !== "-1"
+      ),
       IsActive: Yup.boolean(),
     }),
-
     onSubmit: (values) => {
-      // Add your form submission logic here
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+        IsActive: values.IsActive ? 1 : 0,
       };
-         // Remove LocationID if it's "-1" (default/unselected)
-    if (transformedValues.LocationID === -1) {
-      transformedValues.LocationID === "";
-    }
-       if (transformedValues.LeaveTypeID === -1) {
-        transformedValues.LeaveTypeID === "";
+      if (transformedValues.LocationID === -1) {
+        transformedValues.LocationID = "";
+      }
+      if (transformedValues.LeaveTypeID === -1) {
+        transformedValues.LeaveTypeID = "";
       }
       if (editingGroup) {
-        console.log("Editing Group", transformedValues);
         dispatch(
           updateHoliday({ ...transformedValues, VID: editingGroup.VID })
         );
-        setEditingGroup(null); // Reset after submission
+        setEditingGroup(null);
       } else {
         dispatch(submitHoliday(transformedValues));
       }
       formik.resetForm();
     },
   });
-  // Delete Data
+
+  // Edit
+  const handleEditClick = (group) => {
+    setEditingGroup(group);
+    const formatDateForInput = (dateString) => {
+      return dateString ? dateString.split("T")[0] : "";
+    };
+    formik.setValues({
+      VName: group.VName,
+      VDate: formatDateForInput(group.VDate),
+      LeaveTypeID: group.LeaveTypeID,
+      LocationID: group.LocationID,
+      UID: group.UID,
+      CompanyID: group.CompanyID,
+      IsActive: group.IsActive === 1 || group.IsActive === true,
+    });
+  };
+
+  // Delete
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
@@ -100,26 +143,208 @@ const Holiday = () => {
     }
     setDeleteModal(false);
   };
-  const handleEditClick = (group) => {
-    setEditingGroup(group);
-    const formatDateForInput = (dateString) => {
-      return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
-    }; 
-    formik.setValues({
-      VName: group.VName,
-      VDate: formatDateForInput(group.VDate),
-      LeaveTypeID: group.LeaveTypeID,
-      LocationID: group.LocationID,
-      UID: group.UID,
-      CompanyID: group.CompanyID,
-      IsActive: group.IsActive == true,
-    });
+
+  const isEditMode = editingGroup !== null;
+  const handleCancel = () => {
+    formik.resetForm();
+    setEditingGroup(null);
   };
 
+  // Format date for display
   const formatDate = (dateString) => {
     return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
   };
 
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Holidays");
+    XLSX.writeFile(workbook, "Holidays.xlsx");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Holidays Report", 105, 15, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
+
+    const headers = [["Title", "Holiday Type", "Date", "Location"]];
+    const data = (filteredData || []).map(row => [
+      row.VName,
+      holidayType?.data?.find((groupItem) => groupItem.VID === row.LeaveTypeID)?.VName || "",
+      formatDate(row.VDate),
+      location?.find((groupItem) => groupItem.VID === row.LocationID)?.VName || "",
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 30,
+      margin: { top: 30 },
+      styles: { cellPadding: 4, fontSize: 10, valign: "middle", halign: "left" },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 10, fontStyle: "bold", halign: "center" },
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(
+          `Page ${data.pageCount}`,
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" }
+        );
+      }
+    });
+
+    doc.save(`Holidays_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const exportToWord = () => {
+    const data = filteredData || [];
+    const tableRows = [];
+
+    // Add header row
+    if (data.length > 0) {
+      const headerCells = [
+        "Title", "Holiday Type", "Date", "Location"
+      ].map(key =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: key,
+                  bold: true,
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+          width: { size: 100 / 4, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: headerCells }));
+    }
+
+    // Add data rows
+    data.forEach(row => {
+      const rowCells = [
+        row.VName,
+        holidayType?.data?.find((groupItem) => groupItem.VID === row.LeaveTypeID)?.VName || "",
+        formatDate(row.VDate),
+        location?.find((groupItem) => groupItem.VID === row.LocationID)?.VName || "",
+      ].map(value =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: String(value ?? ""),
+                  size: 18,
+                }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+          ],
+          width: { size: 100 / 4, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Holidays",
+              heading: "Heading1",
+            }),
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, "Holidays.docx");
+    });
+  };
+
+  // DataTable columns
+  const columns = [
+    { name: "Title", selector: (row) => row.VName, sortable: true },
+    {
+      name: "Holiday Type",
+      selector: (row) =>
+        holidayType?.data?.find((groupItem) => groupItem.VID === row.LeaveTypeID)?.VName || "",
+      sortable: true,
+    },
+    { name: "Date", selector: (row) => formatDate(row.VDate), sortable: true },
+    {
+      name: "Location",
+      selector: (row) =>
+        location?.find((groupItem) => groupItem.VID === row.LocationID)?.VName || "",
+      sortable: true,
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.VID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+
+  const customStyles = {
+    table: {
+      style: {
+        border: '1px solid #dee2e6',
+      },
+    },
+    headRow: {
+      style: {
+        backgroundColor: '#f8f9fa',
+        borderBottom: '1px solid #dee2e6',
+        fontWeight: '600',
+      },
+    },
+    rows: {
+      style: {
+        minHeight: '48px',
+        borderBottom: '1px solid #dee2e6',
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        borderRight: '1px solid #dee2e6',
+      },
+    },
+  };
 
   document.title = "Holiday | EMS";
   return (
@@ -133,8 +358,9 @@ const Holiday = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title="Holiday"
-                    onCancel={formik.resetForm}
+                    title={isEditMode ? "Edit Holiday" : "Add Holiday"}
+                    onCancel={handleCancel}
+                    isEditMode={isEditMode}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -160,21 +386,18 @@ const Holiday = () => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="LeaveTypeID" className="form-label">
                               Holiday Type
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="LeaveTypeID"
                               id="LeaveTypeID"
-                              {...formik.getFieldProps("LeaveTypeID")}
+                              value={formik.values.LeaveTypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="-1" >
-                                ---Select---
-                              </option>
+                              <option value="-1">---Select---</option>
                               {holidayType?.data?.length > 0 ? (
                                 holidayType.data.map((group) => (
                                   <option key={group.VID} value={group.VID}>
@@ -217,19 +440,17 @@ const Holiday = () => {
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label htmlFor="LocationID" className="form-label">
-                            Location
+                              Location
                             </Label>
                             <select
                               name="LocationID"
                               id="LocationID"
                               className="form-select form-select-sm"
-                              value={formik.values.LocationID} // Bind to Formik state
-                              onChange={formik.handleChange} // Handle changes
-                              onBlur={formik.handleBlur} // Track field blur
+                              value={formik.values.LocationID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="-1" >
-                                ---Select---
-                              </option>
+                              <option value="-1">---Select---</option>
                               {location?.length > 0 ? (
                                 location.map((group) => (
                                   <option key={group.VID} value={group.VID}>
@@ -250,7 +471,7 @@ const Holiday = () => {
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <div className="form-check form-switch " dir="ltr">
+                          <div className="form-check form-switch" dir="ltr">
                             <Input
                               type="checkbox"
                               id="IsActive"
@@ -272,127 +493,42 @@ const Holiday = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                  <div className="Location-table" id="customerList">
-                    <Row className="g-4 mb-3">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-
-                    <div className="table-responsive table-card mt-3 mb-1">
-                      <table
-                        className="table align-middle table-nowrap table-sm"
-                        id="customerTable"
-                      >
-                        <thead className="table-light">
-                          <tr>
-                            <th className="" data-sort="title">
-                              Title
-                            </th>
-                            <th className="" data-sort="deptGroup">
-                              Holiday Type
-                            </th>
-                            <th className="" data-sort="date">
-                              Date
-                            </th>
-                            <th className="" data-sort="location">
-                              Location
-                            </th>
-                            <th className="" data-sort="action">
-                              Action
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody className="list form-check-all">
-                          {holiday?.length > 0 ? (
-                            holiday.map((group, index) => (
-                              <tr key={group.VID}>
-                                <td>{group.VName}</td>
-                                <td>
-                                  {holidayType?.data?.find(
-                                    (groupItem) =>
-                                      groupItem.VID === group.LeaveTypeID
-                                  )?.VName || ""}
-                                </td>
-                                <td>{formatDate(group.VDate)}</td>
-                                <td>
-                                  {location?.find(
-                                    (groupItem) => groupItem.VID === group.LocationID
-                                  )?.VName || ""}
-                                </td>
-                                <td>
-                                  <div className="d-flex gap-2">
-                                    <div className="edit ">
-                                      <Button
-                                        className="btn btn-soft-info"
-                                        onClick={() => handleEditClick(group)}
-                                      >
-                                        <i className="bx bx-edit"></i>
-                                      </Button>
-                                    </div>
-                                    <div className="delete">
-                                      <Button
-                                        className="btn btn-soft-danger"
-                                        onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }
-                                      >
-                                        <i className="ri-delete-bin-2-line"></i>
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="8" className="text-center">
-                                No holiday found.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-end">
-                      <div className="pagination-wrap hstack gap-2">
-                        <Link
-                          className="page-item pagination-prev disabled"
-                          to="#"
-                        >
-                          Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
-                          Next
-                        </Link>
-                      </div>
+                  <div className="d-flex flex-wrap gap-2 mb-2">
+                  <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
+                  <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
+                  <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
+                  <CSVLink
+                    data={filteredData || []}
+                    filename="holidays.csv"
+                    className="btn btn-sm btn-secondary"
+                  >
+                    Export to CSV
+                  </CSVLink>
+                </div>
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div></div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className="form-control form-control-sm"
+                        style={{ width: '200px' }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                      />
                     </div>
                   </div>
+                  <DataTable
+                    title="Holidays"
+                    columns={columns}
+                    data={filteredData}
+                    customStyles={customStyles}
+                    pagination
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 500]}
+                    highlightOnHover
+                    responsive
+                  />
                 </CardBody>
               </Card>
             </Col>
