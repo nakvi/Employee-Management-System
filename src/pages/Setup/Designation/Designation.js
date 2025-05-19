@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Button,
   Card,
+  CardHeader,
   CardBody,
   Col,
   Container,
@@ -29,6 +30,7 @@ import {
   updateDesignation,
   deleteDesignation,
 } from "../../../slices/setup/designation/thunk";
+import { toast } from "react-toastify";
 import { getLocation } from "../../../slices/setup/location/thunk";
 const Designation = () => {
   const dispatch = useDispatch();
@@ -142,6 +144,72 @@ const Designation = () => {
       LocationID: group.LocationID,
       IsActive: group.IsActive === 1,
     });
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      // Check file extension
+      if (!file.name.match(/\.(xlsx|xls)$/i)) {
+        throw new Error("Please upload an Excel file (.xlsx or .xls)");
+      }
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      // Optionally validate format here
+
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      // Upload all records
+      const uploadPromises = jsonData.map((item) => {
+        const transformedValues = {
+          VCode: item.Code?.toString() || "",
+          VName: item.Title || "",
+          VNameUrdu: item["Title Urdu"] || "",
+          SortOrder: Number(item["Sort Order"]) || 0,
+          DefaultSalary: Number(item["Default Salary"]) || 0,
+          LocationID: "-1",
+          GroupID: "0",
+          CompanyID: "1",
+          UID: "1",
+          IsActive: 1,
+        };
+          if (!transformedValues.VNameUrdu) {
+            toast.error(`Title Urdu is required for code ${item.Code}`);
+            return Promise.reject(new Error("Title Urdu is required"));
+          }
+        return dispatch(submitDesignation(transformedValues));
+      });
+
+      const results = await Promise.allSettled(uploadPromises);
+
+      const successfulUploads = results.filter((r) => r.status === "fulfilled").length;
+      const failedUploads = results.filter((r) => r.status === "rejected").length;
+
+      dispatch(getDesignation());
+
+      if (failedUploads > 0) {
+        toast.warning(
+          `Upload completed with ${successfulUploads} successful and ${failedUploads} failed records.`
+        );
+      } else {
+        toast.success(`${successfulUploads} records uploaded successfully!`);
+      }
+    } catch (error) {
+      toast.error("Invalid file format. Please use the correct template.");
+      e.target.value = "";
+    }
+  };
+
+  const handleExportSample = () => {
+    const templatePath = `${process.env.PUBLIC_URL}/templates/Designation_Import_Template.xlsx`;
+    const link = document.createElement("a");
+    link.href = templatePath;
+    link.download = "Designation_Import_Template.xlsx";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   document.title = "Designation | EMS";
 
@@ -303,12 +371,12 @@ const Designation = () => {
     selector: (row) => row.DefaultSalary,
     sortable: true,
   },
-  {
-    name: "Location",
-    selector: (row) =>
-      location?.find((l) => l.VID === row.LocationID)?.VName || "",
-    sortable: true,
-  },
+  // {
+  //   name: "Location",
+  //   selector: (row) =>
+  //     location?.find((l) => l.VID === row.LocationID)?.VName || "",
+  //   sortable: true,
+  // },
   {
     name: "Action",
     cell: (row) => (
@@ -374,11 +442,71 @@ const Designation = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
+                   <CardHeader className="align-items-center d-flex py-2">
+                    <h4 className="card-title mb-0 flex-grow-1">
+                      {editingGroup ? "Edit Designation" : "Add Designation"}
+                    </h4>
+                    <div className="flex-shrink-0">
+                      <Button
+                        type="submit"
+                        color="success"
+                        className="add-btn me-1 py-1"
+                        id="create-btn"
+                      >
+                        <i className="align-bottom me-1"></i>
+                        {editingGroup ? "Update" : "Save"}
+                      </Button>
+                      <Button
+                        color="dark"
+                        className="add-btn me-1 py-1"
+                        onClick={() => {
+                          formik.resetForm();
+                          setEditingGroup(null);
+                        }}
+                      >
+                        <i className="align-bottom me-1"></i> Cancel
+                      </Button>
+                      {/* <Button
+                        type="submit"
+                        color="success"
+                        className="add-btn me-1 py-1"
+                        id="upload-btn"
+                      >
+                        <i className="align-bottom me-1"></i>Upload
+                      </Button> */}
+                      <div className="d-inline-block position-relative">
+                        <Button
+                          tag="label"
+                          type="button" // <-- Fix here
+                          color="primary"
+                          className="add-btn me-1 py-1 mb-0"
+                          htmlFor="file-upload"
+                        >
+                          <i className="align-bottom me-1"></i>Upload
+                        </Button>
+                        <Input
+                          type="file"
+                          id="file-upload"
+                          accept=".xlsx, .xls"
+                          onChange={handleFileUpload}
+                          style={{ display: "none" }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-soft-danger btn-sm"
+                        onClick={handleExportSample}
+                      >
+                        Download Sample
+                      </button>
+                    </div>
+                  </CardHeader>
+                  {/* <PreviewCardHeader
                     title={isEditMode ? "Edit Designation" : "Add Designation"}
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
-                  />
+                  /> */}
+                  
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -483,41 +611,7 @@ const Designation = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
-                          <div className="mb-3">
-                            <Label htmlFor="LocationID" className="form-label">
-                            Location
-                            </Label>
-                            <select
-                              name="LocationID"
-                              id="LocationID"
-                              className="form-select form-select-sm"
-                              value={formik.values.LocationID} // Bind to Formik state
-                              onChange={formik.handleChange} // Handle changes
-                              onBlur={formik.handleBlur} // Track field blur
-                            >
-                              <option value="-1" >
-                                ---Select---
-                              </option>
-                              {location?.length > 0 ? (
-                                location.map((group) => (
-                                  <option key={group.VID} value={group.VID}>
-                                    {group.VName}
-                                  </option>
-                                ))
-                              ) : (
-                                <option value="0" disabled>
-                                  No location available
-                                </option>
-                              )}
-                            </select>
-                            {formik.touched.LocationID && formik.errors.LocationID ? (
-                              <div className="text-danger">
-                                {formik.errors.LocationID}
-                              </div>
-                            ) : null}
-                          </div>
-                        </Col>
+
                         {/* <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label
