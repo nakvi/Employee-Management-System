@@ -220,7 +220,6 @@ const Employee = () => {
                   <PreviewCardHeader title="Employee Details" />
                   <CardBody className="card-body">
                     <div className="live-preview">
-                      {/* First Row */}
                       <Row>
                         <Col lg={10}>
                           <Row className="gy-4">
@@ -292,23 +291,23 @@ const Employee = () => {
                                   className="form-control-sm"
                                   id="EmpCode"
                                   placeholder="Emp Code"
-                                  readOnly
+                                  disabled
                                   value="039"
                                 />
                               </div>
                             </Col>
 
-                            {/* Machine Code */}
+                            {/* Machine */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="MachineCode" className="form-label">
-                                  Machine Code
+                                <Label htmlFor="machine" className="form-label">
+                                  Machine
                                 </Label>
                                 <Input
                                   type="text"
                                   className="form-control-sm"
-                                  id="MachineCode"
-                                  placeholder="Machine Code"
+                                  id="machine"
+                                  placeholder="Machine"
                                   value="1234"
                                 />
                               </div>
@@ -355,24 +354,6 @@ const Employee = () => {
                                 ) : null}
                               </div>
                             </Col>
-
-                             {/* Job Type */}
-                            <Col xxl={2} md={3}>
-                              <div>
-                                <Label htmlFor="JobType" className="form-label">
-                                  Job Type
-                                </Label>
-                                <select
-                                  className="form-select form-select-sm"
-                                  id="JobType"
-                                >
-                                  <option value="-1">---Select---</option>
-                                  <option value="Full-time">Full-time</option>
-                                  <option value="Part-time">Part-time</option>
-                                </select>
-                              </div>
-                            </Col>
-
                             {/* Department */}
                             <Col xxl={2} md={3}>
                               <div>
@@ -426,18 +407,21 @@ const Employee = () => {
                             </Col>
                             {/* HOD */}
                             <Col xxl={2} md={3}>
-                             <div>
-                                <Label htmlFor="HODID" className="form-label">
+                              <div>
+                                <Label
+                                  htmlFor="designation"
+                                  className="form-label"
+                                >
                                   HOD
                                 </Label>
-                                <Input
-                                  type="text"
-                                  className="form-control-sm"
-                                  id="HODID"
-                                  placeholder="HOD"
-                                  readOnly
-                                  value="039"
-                                />
+                                <select
+                                  className="form-select form-select-sm"
+                                  id="designation"
+                                >
+                                  <option value="">--- Select ---</option>
+                                  <option value="frontend">Frontend</option>
+                                  <option value="backend">Backend</option>
+                                </select>
                               </div>
                             </Col>
                             {/* DOB */}
@@ -470,8 +454,26 @@ const Employee = () => {
                                 />
                               </div>
                             </Col>
-
-                            {/* Hire Type */}
+                            {/* Replace Off */}
+                            <Col xxl={2} md={3}>
+                              <div>
+                                <Label
+                                  htmlFor="designation"
+                                  className="form-label"
+                                >
+                                  Shift
+                                </Label>
+                                <select
+                                  className="form-select form-select-sm"
+                                  id="designation"
+                                >
+                                  <option value="">--- Select ---</option>
+                                  <option value="frontend">Frontend</option>
+                                  <option value="backend">Backend</option>
+                                </select>
+                              </div>
+                            </Col>
+                            {/* Designation */}
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label
@@ -492,11 +494,11 @@ const Employee = () => {
                                 </select>
                               </div>
                             </Col>
-                            {/* Replacement Of */}
+                            {/* Designation */}
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label
-                                  htmlFor="ReplacementOf"
+                                  htmlFor="designation"
                                   className="form-label"
                                 >
                                   Replace off
@@ -504,8 +506,8 @@ const Employee = () => {
                                 <Input
                                   type="text"
                                   className="form-control-sm"
-                                  id="ReplacementOf"
-                                  placeholder="Replacement Of"
+                                  id="empCode"
+                                  placeholder="NIC"
                                 />
                               </div>
                             </Col>
@@ -513,14 +515,14 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label
-                                  htmlFor="OffDay1"
+                                  htmlFor="location"
                                   className="form-label"
                                 >
                                   Off Day- 1
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
-                                  id="OffDay1"
+                                  id="location"
                                 >
                                   <option value="">--- Select ---</option>
                                   <option value="lahore">Lahore</option>
@@ -548,38 +550,6 @@ const Employee = () => {
                                 </select>
                               </div>
                             </Col>
-
-                          {/* NIC */}
-                          <Col xxl={2} md={2}>
-                            <div>
-                              <Label htmlFor="NIC" className="form-label">
-                                NIC
-                              </Label>
-                              <Input
-                                type="text"
-                                className="form-control-sm"
-                                id="NIC"
-                                placeholder="NIC"
-                                {...formik.getFieldProps("NIC")}
-                              />
-                            </div>
-                          </Col>
-                           {/* NIC Expiry */}
-                            <Col xxl={2} md={3}>
-                              <div>
-                                <Label htmlFor="NICExpairy" className="form-label">
-                                  NIC Expairy
-                                </Label>
-                                <Input
-                                  type="date"
-                                  className="form-control-sm"
-                                  id="NICExpairy"
-                                  value="2025-02-04"
-                                  {...formik.getFieldProps("NICExpairy")}
-                                />
-                              </div>
-                            </Col>
-
                           </Row>
                         </Col>
 
@@ -616,17 +586,47 @@ const Employee = () => {
                         </Col>
                         {/* Here is Second */}
                       </Row>
-
-                      {/* Second Row */}
                       <Row
                         className="gy-4 mt-2 p-1"
                         style={{ border: "2px dotted lightgray" }}
                       >
-                        {/* BasicSalary */}
+                        {/* Shift */}
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="Shift" className="form-label">
+                              Shift
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="Off Day- 2"
+                            >
+                              <option value="">--- Select ---</option>
+                              <option value="it">IT</option>
+                              <option value="hr">HR</option>
+                            </select>
+                          </div>
+                        </Col>
+                        {/* Emp Code */}
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="NIC" className="form-label">
+                              NIC
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="NIC"
+                              placeholder="NIC"
+                              {...formik.getFieldProps("NIC")}
+                            />
+                          </div>
+                        </Col>
+
+                        {/* Name */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="BasicSalary" className="form-label">
-                              Basic Salary
+                              Salary
                             </Label>
                             <Input
                               type="number"
@@ -638,11 +638,11 @@ const Employee = () => {
                           </div>
                         </Col>
 
-                        {/* Income Tax */}
+                        {/* Monthly Tax */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="IncomeTax" className="form-label">
-                             Income Tax
+                              Monthly Tax
                             </Label>
                             <Input
                               type="number"
@@ -657,7 +657,7 @@ const Employee = () => {
                         {/* Have OverTime */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="HaveOT">
-                            Have Over Time
+                            Have OverTime
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
@@ -669,11 +669,35 @@ const Employee = () => {
                             />
                           </span>
                         </Col>
-
+                        {/* Grade*/}
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="designation" className="form-label">
+                              Grade
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="designation"
+                            >
+                              <option value="-1">---Select---</option>
+                              {grade?.length > 0 ? (
+                                grade.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No grade available
+                                </option>
+                              )}
+                            </select>
+                          </div>
+                        </Col>
                         {/*   IsBank Grid */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsBank">
-                            Bank
+                            IsBank
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
@@ -719,31 +743,9 @@ const Employee = () => {
                             </select>
                           </div>
                         </Col>
-
-                        {/* Shift */}
-                          <Col xxl={2} md={3}>
-                              <div>
-                                <Label
-                                  htmlFor="ShiftID"
-                                  className="form-label"
-                                >
-                                  Shift
-                                </Label>
-                                <select
-                                  className="form-select form-select-sm"
-                                  id="ShiftID"
-                                >
-                                  <option value="">--- Select ---</option>
-                                  <option value="frontend">Frontend</option>
-                                  <option value="backend">Backend</option>
-                                </select>
-                              </div>
-                          </Col>
-
-                        {/* IsActive */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsActive">
-                            Active
+                            IsActive
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
@@ -755,7 +757,6 @@ const Employee = () => {
                             />
                           </span>
                         </Col>
-
                         {/* DOL */}
                         <Col xxl={2} md={2}>
                           <div>
@@ -771,31 +772,15 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                        {/* Left Remarks */}
+                        {/* Left Status */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="LeftRemarks" className="form-label">
-                              Left Remarks
-                            </Label>
-                           <Input
-                             type="text"
-                              className="form-control-sm"
-                              id="LeftRemarks"
-                              placeholder="Left Remarks"
-                            />
-                          </div>
-                        </Col>
-
-                        {/* ProbitionStatus */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="ProbitionStatus" className="form-label">
-                              Probition
+                            <Label htmlFor="designation" className="form-label">
+                              Left Status
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              id="ProbitionStatus"
+                              id="designation"
                             >
                               <option value="">--- Select ---</option>
                               <option value="frontend">Frontend</option>
@@ -803,8 +788,37 @@ const Employee = () => {
                             </select>
                           </div>
                         </Col>
-
-                        {/* Probition Date */}
+                        {/* Is Empt grid*/}
+                        <Col xxl={2} md={2}>
+                          <Label className="form-check-label" for="IsExempt">
+                            IsExempt
+                          </Label>
+                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="IsExempt"
+                              {...formik.getFieldProps("IsExempt")}
+                              checked={formik.values.IsExempt}
+                            />
+                          </span>
+                        </Col>
+                        {/* Religion */}
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="designation" className="form-label">
+                              Probition
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="designation"
+                            >
+                              <option value="">--- Select ---</option>
+                              <option value="frontend">Frontend</option>
+                              <option value="backend">Backend</option>
+                            </select>
+                          </div>
+                        </Col>
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -821,9 +835,7 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                        {/* CellPhone */}
-                         <Col xxl={2} md={2}>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="CellPhone" className="form-label">
                               Contact
@@ -836,24 +848,8 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                        {/* IcePhone */}
-                         <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="IcePhone" className="form-label">
-                              Emergency Contact
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="IcePhone"
-                              placeholder="In Case of Emergency"
-                            />
-                          </div>
-                        </Col>
-
                         {/* Address */}
-                        <Col xxl={4} md={4}>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="Address" className="form-label">
                               Present Address
@@ -866,9 +862,8 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                        {/* Permanent Address */}
-                        <Col xxl={4} md={4}>
+                        {/* Address */}
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label
                               htmlFor="AddressPermanent"
@@ -885,115 +880,23 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
                         {/* Blood Group  */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="Bloodgroup" className="form-label">
-                              Blood Group
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="Bloodgroup"
-                              placeholder="Bloodgroup"
-                            />
-                          </div>
-                        </Col>
-
-                        {/* Gender Grid */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="Gender" className="form-label">
-                              Gender
-                            </Label>
-                            <select
-                              className="form-select form-select-sm"
-                              id="Gender"
-                            >
-                                <option value="-1">---Select---</option>
-                                <option value="1">Male</option>       
-                                <option value="1">Female</option>       
-                            </select>
-                          </div>
-                        </Col>
-
-                        {/* Religion */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="ReligionID" className="form-label">
-                              Religion
-                            </Label>
-                            <select
-                              className="form-select form-select-sm"
-                              id="ReligionID"
-                            >
-                                 <option value="-1">---Select---</option>
-                                  <option value="1">Muslim</option>
-                                  <option value="2">Non-Muslim</option>   
-                            </select>
-                          </div>
-                        </Col>
-
-                        {/*  Old Code */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="OldCode" className="form-label">
-                              Old Code
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="OldCode"
-                              placeholder="5535"
-                              readOnly
-                            />
-                          </div>
-                        </Col>
-
-                        {/* Education Grid */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="Education" className="form-label">
-                              Education
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="Education"
-                              placeholder="Education"
-                              {...formik.getFieldProps("Education")}
-                            />
-                          </div>
-                        </Col>
-
-                        {/* Grade*/}
-                        <Col xxl={2} md={2}>
-                          <div>
                             <Label htmlFor="designation" className="form-label">
-                              Grade
+                              Blood Group
                             </Label>
                             <select
                               className="form-select form-select-sm"
                               id="designation"
                             >
-                              <option value="-1">---Select---</option>
-                              {grade?.length > 0 ? (
-                                grade.map((group) => (
-                                  <option key={group.VID} value={group.VID}>
-                                    {group.VName}
-                                  </option>
-                                ))
-                              ) : (
-                                <option value="0" disabled>
-                                  No grade available
-                                </option>
-                              )}
+                              <option value="">--- Select ---</option>
+                              <option value="frontend">Frontend</option>
+                              <option value="backend">Backend</option>
                             </select>
                           </div>
                         </Col>
-
-                      {/* EOBI*/}
+                        {/* EOBI*/}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="EOBINo" className="form-label">
@@ -1007,8 +910,6 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* SSNo*/}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="SSNo" className="form-label">
@@ -1023,8 +924,6 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* LifeInsuranceNo*/}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1042,14 +941,12 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* IsGroupInsurance*/}
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
                             for="IsGroupInsurance"
                           >
-                            Group Insurance
+                            IsGroupInsurance
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
@@ -1061,8 +958,7 @@ const Employee = () => {
                             />
                           </span>
                         </Col>
-
-                      {/* MartialStatus  */}
+                        {/* MartialStatus  */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="designation" className="form-label">
@@ -1078,17 +974,12 @@ const Employee = () => {
                             </select>
                           </div>
                         </Col>
-                      {/* Blan column for adjustment  */}
-                      <Col xxl={2} md={2}>
-                          
-                        </Col>
-                      {/* IsPFundEntitled  */}
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
                             for="IsPFundEntitled"
                           >
-                            P-Fund Entitled
+                            IsPFundEntitled
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
@@ -1100,15 +991,13 @@ const Employee = () => {
                             />
                           </span>
                         </Col>
-
-                      {/* PFundEntitledDate  */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
                               htmlFor="PFundEntitledDate"
                               className="form-label"
                             >
-                              P-Fund Entitled Date
+                              PFundEntitled Date
                             </Label>
                             <Input
                               type="date"
@@ -1118,11 +1007,9 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* IsPFund */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsPFund">
-                            P-Fund
+                            IsPFund
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
@@ -1134,8 +1021,6 @@ const Employee = () => {
                             />
                           </span>
                         </Col>
-
-                      {/* PF Amount */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="PFAmount" className="form-label">
@@ -1150,11 +1035,9 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* IsPessi */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsPessi">
-                            Pessi
+                            IsPessi
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
@@ -1166,8 +1049,6 @@ const Employee = () => {
                             />
                           </span>
                         </Col>
-
-                      {/* Pessi Amount */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="PessiDate" className="form-label">
@@ -1181,24 +1062,86 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* Is Empt grid*/}
+                        {/* Gender Grid */}
                         <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="IsExempt">
-                            Exempt
+                          <div>
+                            <Label htmlFor="Gender" className="form-label">
+                              Gender
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="Gender"
+                            >
+                                <option value="-1">---Select---</option>
+                              {gender?.length > 0 ? (
+                                gender.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No gender available
+                                </option>
+                              )}
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="Gender" className="form-label">
+                              Religion
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="Gender"
+                            >
+                                 <option value="-1">---Select---</option>
+                              {religion?.length > 0 ? (
+                                religion.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No religion available
+                                </option>
+                              )}
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="OldCode" className="form-label">
+                              Old Code
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="OldCode"
+                              placeholder="5535"
+                              disabled
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <Label
+                            className="form-check-label"
+                            for="IsShiftEmployee"
+                          >
+                            IsShift Employee
                           </Label>
                           <span class="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="IsExempt"
-                              {...formik.getFieldProps("IsExempt")}
-                              checked={formik.values.IsExempt}
+                              id="IsShiftEmployee"
+                              {...formik.getFieldProps("IsShiftEmployee")}
+                              checked={formik.values.IsShiftEmployee}
                             />
                           </span>
                         </Col>
-
-                      {/* ExemptLate */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="ExemptLate" className="form-label">
@@ -1212,8 +1155,6 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* ExemptMinuts */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1230,159 +1171,25 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* IsShift Employee */}
-                        <Col xxl={2} md={2}>
-                          <Label
-                            className="form-check-label"
-                            for="IsShiftEmployee"
-                          >
-                            Shift Employee
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="IsShiftEmployee"
-                              {...formik.getFieldProps("IsShiftEmployee")}
-                              checked={formik.values.IsShiftEmployee}
-                            />
-                          </span>
-                        </Col>
-
-                      {/* IsManager */}
-                        <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="IsManager">
-                            Manager
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="IsManager"
-                              {...formik.getFieldProps("IsPFund")}
-                              checked={formik.values.IsPFund}
-                            />
-                          </span>
-                        </Col>
-
-                      {/* IsStopSalary */}
-                        <Col xxl={2} md={2}>
-                            <Label
-                              className="form-check-label"
-                              for="IsStopSalary"
-                            >
-                              Stop Salary
-                            </Label>
-                             <span class="form-control input-sm input-checkbox p-1 mt-2">
-                              <Input
-                                className="form-check-input"
-                                type="checkbox"
-                                id="IsStopSalary"
-                                {...formik.getFieldProps("IsStopSalary")}
-                              />
-                             </span>
-                        </Col>
-
-                      {/* IsTransport */}
-                        <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="IsTransport">
-                            Transport
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="IsTransport"
-                              {...formik.getFieldProps("IsTransport")}
-                              checked={formik.values.IsTransport}
-                            />
-                          </span>
-                        </Col>
-
-                      {/* Transport Date */}
+                        {/* Education Grid */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label
-                              htmlFor="TransportDate"
-                              className="form-label"
-                            >
-                              Transport Date
-                            </Label>
-                            <Input
-                              type="date"
-                              className="form-control-sm"
-                              id="TransportDate"
-                              value="2025-02-04"
-                            />
-                          </div>
-                        </Col>
-
-                      {/* Transport Route */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label
-                              htmlFor="TransportRoute"
-                              className="form-label"
-                            >
-                              Transport Route
+                            <Label htmlFor="Education" className="form-label">
+                              Education
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="TransportRoute"
-                              placeholder="Transport Route"
-                              {...formik.getFieldProps("TransportRoute")}
+                              id="Education"
+                              placeholder="Education"
+                              {...formik.getFieldProps("Education")}
                             />
                           </div>
                         </Col>
-                        
-                      {/* Transport Location */}
-                        <Col xxl={4} md={4}>
-                          <div>
-                            <Label
-                              htmlFor="TransportLocation"
-                              className="form-label"
-                            >
-                              Transport Location
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="TransportLocation"
-                              placeholder="Transport Location"
-                              {...formik.getFieldProps("TransportLocation")}
-                            />
-                          </div>
-                        </Col>
-
-                      {/* Bus Deduction */}
-                        <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="BusDeduction">
-                            Bus Deduction
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="BusDeduction"
-                              {...formik.getFieldProps("BusDeduction")}
-                              checked={formik.values.BusDeduction}
-                            />
-                          </span>
-                        </Col>
-                      </Row>
-
-                       {/* Third Row */}
-                      <Row
-                        className="gy-4 mt-2 p-1"
-                        style={{ border: "2px dotted lightgray" }}
-                        >
-                      {/* Employee Name Urdu */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="ENameUrdu" className="form-label">
-                              Employee Name Urdu
+                              Education Urdu
                             </Label>
                             <Input
                               type="text"
@@ -1393,8 +1200,6 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* Father Name Urdu */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="FNameUrdu" className="form-label">
@@ -1409,8 +1214,6 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* AddressUrdu */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="AddressUrdu" className="form-label">
@@ -1425,8 +1228,6 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* DesignationTitle */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1444,8 +1245,21 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-
-                      {/* Mother Name Grid */}
+                        <Col xxl={2} md={2}>
+                          <Label className="form-check-label" for="IsManager">
+                            IsManager
+                          </Label>
+                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="IsManager"
+                              {...formik.getFieldProps("IsPFund")}
+                              checked={formik.values.IsPFund}
+                            />
+                          </span>
+                        </Col>
+                        {/* Mother Name Grid */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="MotherName" className="form-label">
@@ -1460,8 +1274,6 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-                        
-                      {/* NextToKin */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="NextToKin" className="form-label">
@@ -1476,225 +1288,447 @@ const Employee = () => {
                             />
                           </div>
                         </Col>
-                      </Row>
-
-                      {/* 4th Row */}
-                      <Row
-                        className="gy-4 mt-2 p-1"
-                        style={{ border: "2px dotted lightgray" }}
-                      >
-                      {/* DOJAct */}
+                        <Col xxl={2} md={2}>
+                          <Label className="form-check-label" for="IsTransport">
+                            IsTransport
+                          </Label>
+                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="IsTransport"
+                              {...formik.getFieldProps("IsTransport")}
+                              checked={formik.values.IsTransport}
+                            />
+                          </span>
+                        </Col>
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
-                              htmlFor="DOJAct"
+                              htmlFor="TransportDate"
                               className="form-label"
                             >
-                              DOJ Act
+                              Transport Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="DOJAct"
+                              id="TransportDate"
                               value="2025-02-04"
                             />
                           </div>
                         </Col>
-
-                      {/* ActualSalary */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="ActualSalary" className="form-label">
-                              Actual Salary
+                            <Label
+                              htmlFor="TransportRoute"
+                              className="form-label"
+                            >
+                              Transport Route
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="ActualSalary"
-                              placeholder="Mother Name"
-                              {...formik.getFieldProps("ActualSalary")}
+                              id="TransportRoute"
+                              placeholder="Transport Route"
+                              {...formik.getFieldProps("TransportRoute")}
                             />
                           </div>
                         </Col>
-
-                      {/* OTRate */}
-                         <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="OTRate">
-                              OT Rate
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label
+                              htmlFor="TransportLocation"
+                              className="form-label"
+                            >
+                              Transport Location
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="TransportLocation"
+                              placeholder="Transport Location"
+                              {...formik.getFieldProps("TransportLocation")}
+                            />
+                          </div>
+                        </Col>
+                      </Row>
+                      {/* Third Row */}
+                      <Row
+                        className="gy-4 mt-2 p-1"
+                        style={{ border: "2px dotted lightgray" }}
+                      >
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="IsShowForAudit"
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="IsShowForAudit"
+                            >
+                              IsShowFor Audit
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="IsStopSalary"
+                              {...formik.getFieldProps("IsStopSalary")}
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="IsStopSalary"
+                            >
+                              IsStopSalary
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="SaturdayHalfTime"
+                              {...formik.getFieldProps("IsTransport")}
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="SaturdayHalfTime"
+                            >
+                              HaveOTOFF
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="OTRate"
                               {...formik.getFieldProps("OTRate")}
                             />
-                          </span>
+                            <Label className="form-check-label" for="OTRate">
+                              OTRate
+                            </Label>
+                          </div>
                         </Col>
-                      
-                      {/* OTRateOFF */}
                         <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="OTRateOFF">
-                              OT Rate OFF
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">       
+                          <div className="form-check mb-2 mt-2 ">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="OTRateOFF"
                               {...formik.getFieldProps("OTRateOFF")}
                             />
-                          </span>
-                        </Col>
-
-                      {/* IsShowForAudit */}
-                        <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="IsShowForAudit"
-                            >
-                              Show For Audit
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="IsShowForAudit"
-                            />
-                          </span>
-                        </Col>
-
-                      {/* BlackList */}
-                        <Col xxl={2} md={2}>
-                        <Label
-                              className="form-check-label"
-                              for="BlackList"
-                            >
-                              Black List
-                        </Label>
-                         <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="BlackList"
-                              {...formik.getFieldProps("BlackList")}
-                            />
-                          </span>
-                        </Col>
-
-                      {/* HaveOTAct */}
-                        <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="HaveOTAct"
-                            >
-                              Have OT Act
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="HaveOTAct"
-                              {...formik.getFieldProps("HaveOTAct")}
-                            />
-                          </span>
-                        </Col>
-                        
-                      {/* HaveOTOFF */}
-                        <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="HaveOTOFF"
-                            >
-                              Have OT OFF
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="HaveOTOFF"
-                              {...formik.getFieldProps("HaveOTOFF")}
-                            />
-                          </span>
-                        </Col>
-
-                      {/* IsactiveAct */}
-                        <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="IsactiveAct"
-                            >
-                              Active Act
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="IsactiveAct"
-                            />
-                          </span>
-                        </Col>
-
-                      {/* DOLAct */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label
-                              htmlFor="DOLAct"
-                              className="form-label"
-                            >
-                              DOL Act
+                            <Label className="form-check-label" for="OTRateOFF">
+                              OTRateOFF
                             </Label>
-                            <Input
-                              type="date"
-                              className="form-control-sm"
-                              id="DOLAct"
-                              value="2025-02-04"
-                            />
                           </div>
                         </Col>
-
-                      {/* IsShiftEmployeeAct */}
-                        <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="IsShiftEmployeeAct"
-                            >
-                              Shift Employee Act
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="IsShiftEmployeeAct"
-                            />
-                          </span>
-                        </Col>
-
-                        
-                      {/* EOBINoAct */}
-                        <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="EOBINoAct" className="form-label">
-                              EOBI No Act
-                            </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="EOBINoAct"
-                              placeholder="EOBINoAct"
-                              {...formik.getFieldProps("EOBINoAct")}
-                            />
-                          </div>
-                        </Col>
-                       
                       </Row>
-
                     </div>
                   </CardBody>
                 </Form>
               </Card>
             </Col>
 
+            {/* <Col lg={12}>
+              <Card>
+                <Form>
+                  <PreviewCardHeader
+                    title="Employee"
+                    // onCancel={formik.resetForm}
+                  />
+                  <CardBody className="card-body">
+                    <div className="live-preview">
+                      <Row className="gy-4">
+                      <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              E-Code
+                            </Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              id="VName"
+                              placeholder="Code"
+                              disabled
+                              value="123456"
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              Machine 
+                            </Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              id="VName"
+                              placeholder="Machine "
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              Name
+                            </Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              id="VName"
+                              placeholder="Name"
+                             
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              Father Name
+                            </Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              id="VName"
+                              placeholder="Father Name"
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              E-Type
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">Amir</option>
+                              <option value="Choices2">Usama</option>
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Location
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">Lahore</option>
+                              <option value="Choices2">Islamabad</option>
+                            </select>
+                          </div>
+                        </Col>
+                   
+                        <Col xxl={2} md={3}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Department
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1">IT</option>
+                              <option value="Choices2">Software</option>
+                            </select>
+                          </div>
+                        </Col>
+                    
+                        <Col xxl={2} md={3}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              Designation
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1" selected>Frontend</option>
+                              <option value="Choices2" disabled>Backend</option>
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="DateFrom" className="form-label">
+                             DOJ
+                            </Label>
+                            <Input
+                              type="date"
+                              className="form-control-sm"
+                              id="DateFrom"
+                              min={getMinDate()} // Prevent past dates
+                              value={selectedDate}
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={3}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="departmentGroupInput"
+                              className="form-label"
+                            >
+                              New Location
+                            </Label>
+                            <select
+                              className="form-select  form-select-sm"
+                              name="AttGroupID"
+                              id="AttGroupID"
+                            >
+                              <option value="">---Select--- </option>
+                              <option value="Choices1" disabled>Lahore</option>
+                              <option value="Choices2" >Islamabad</option>
+                            </select>
+                          </div>
+                        </Col>
+                        
+                       
+                        <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              Remarks
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="VName"
+                              placeholder="Cheque No"
+                            />
+                          </div>
+                        </Col>
+                      </Row>
+                    </div>
+                  </CardBody>
+                </Form>
+              </Card>
+            </Col> */}
+            {/* <Col lg={12}>
+              <Card>
+                <CardBody>
+                  <div className="Location-table" id="customerList">
+                    <Row className="g-4 mb-3">
+                      <Col className="col-sm">
+                        <div className="d-flex justify-content-sm-end">
+                          <div className="search-box ms-2">
+                            <input
+                              type="text"
+                              className="form-control-sm search"
+                            />
+                            <i className="ri-search-line search-icon"></i>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+
+                    <div className="table-responsive table-card mt-3 mb-1">
+                      <table
+                        className="table align-middle table-nowrap table-sm"
+                        id="customerTable"
+                      >
+                        <thead className="table-light">
+                          <tr>
+                            <th>Employee</th>
+                            <th>Code</th>
+                            <th>Old Location</th>
+                            <th>New Location</th>
+                            <th>Effective Date</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="list form-check-all">
+                          <tr>
+                            <td>Afraaz</td>
+                            <td>55f7</td>
+                            <td>Lahore</td>
+                            <td>Karachi</td>
+                            <td>02/02/2025</td>
+                            <td>Ok</td>
+                            <td>
+                              <div className="d-flex gap-2">
+                                <div className="edit ">
+                                  <Button className="btn btn-soft-info">
+                                    <i className="bx bx-edit"></i>
+                                  </Button>
+                                </div>
+                                <div className="delete">
+                                  <Button className="btn btn-soft-danger">
+                                    <i className="ri-delete-bin-2-line"></i>
+                                  </Button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div className="noresult" style={{ display: "none" }}>
+                        <div className="text-center">
+                          <lord-icon
+                            src="https://cdn.lordicon.com/msoeawqm.json"
+                            trigger="loop"
+                            colors="primary:#121331,secondary:#08a88a"
+                            style={{ width: "75px", height: "75px" }}
+                          ></lord-icon>
+                          <h5 className="mt-2">Sorry! No Result Found</h5>
+                          <p className="text-muted mb-0">
+                            We've searched more than 150+ Orders We did not find
+                            any orders for you search.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end">
+                      <div className="pagination-wrap hstack gap-2">
+                        <Link
+                          className="page-item pagination-prev disabled"
+                          to="#"
+                        >
+                          Previous
+                        </Link>
+                        <ul className="pagination Location-pagination mb-0"></ul>
+                        <Link className="page-item pagination-next" to="#">
+                          Next
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                </CardBody>
+              </Card>
+            </Col> */}
           </Row>
         </Container>
       </div>
