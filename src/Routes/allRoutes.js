@@ -65,6 +65,7 @@ import LeaveEntryDepartment from "../pages/Attendance/LeaveEntryDepartment/Leave
 import OTDaily from "../pages/Attendance/OTDaily/OTDaily";
 import LateComingExemptAttendance from "../pages/Attendance/LateComingExemptAttendance/LateComingExemptAttendance";
 import Configuration from "../pages/Administration/Configuration/Configuration";
+import EmployeeList from "../pages/Employee/Employee/EmployeeList";
 
 const authProtectedRoutes = [
   // my routes setup
@@ -83,6 +84,7 @@ const authProtectedRoutes = [
   { path: "/leave-balances", component: <LeaveBalance /> },
   // Employee routes 
   { path: "/employee", component: <Employee /> },
+  { path: "/employee-list", component: <EmployeeList /> },
   { path: "/increment", component: <Increment /> },
   { path: "/loan-disbursement", component: <LoanDisbursement /> },
   { path: "/allowance-deduction", component: <AllowanceDeduction /> },

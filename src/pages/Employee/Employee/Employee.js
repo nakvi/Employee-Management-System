@@ -10,7 +10,6 @@ import {
   Label,
   Form,
 } from "reactstrap";
-import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import avatar1 from "../../../assets/images/users/avatar-11.png";
@@ -28,6 +27,10 @@ import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getReligion } from "../../../slices/employee/religion/thunk";
 import { getGrade } from "../../../slices/setup/grade/thunk";
 import { getGender } from "../../../slices/employee/gender/thunk";
+import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
+import { getEmployeeType } from "../../../slices//employee/employeeType/thunk";
+import { getShift } from "../../../slices/setup/shift/thunk";
+
 const Employee = () => {
   const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState("");
@@ -41,6 +44,9 @@ const Employee = () => {
   const { religion } = useSelector((state) => state.Religion);
   const { grade } = useSelector((state) => state.Grade);
   const { gender } = useSelector((state) => state.Gender);
+  const { salaryBank } = useSelector((state) => state.SalaryBank);
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { shift } = useSelector((state) => state.Shift);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -51,138 +57,215 @@ const Employee = () => {
     dispatch(getReligion());
     dispatch(getGrade());
     dispatch(getGender());
+    dispatch(getSalaryBank());
+    dispatch(getEmployeeType());
+    dispatch(getShift());
   }, [dispatch]);
   // Formik form setup
   const formik = useFormik({
     initialValues: {
-      EmpID: 1,
-      ETypeID: 2,
-      LocationID: 5,
-      EmpCode: "EMP001",
-      AccCode: "ACC1001",
-      MachineCode: "MC001",
-      EName: " Ali Khan",
-      FName: "Ahmed Khan",
-      DeptID: 3,
-      DesgID: 4,
+      EmpID: 0,
+      ETypeID: 0,
+      LocationID: "-1",
+      EmpCode: "",
+      AccCode: "ACC002",
+      MachineCode: "",
+      EName: "",
+      FName: "",
+      DeptID: 0,
+      DesgID: 0,
       HODID: 101,
-      DOB: "1990-05-20T00:00:00",
-      DOJ: "2015-03-01T00:00:00",
-      DOJAct: "2015-03-01T00:00:00",
-      HireType: "Permanent",
-      JobType: "Full-time",
-      OffDay1: 6,
-      OffDay2: 7,
-      ShiftID: 1,
-      NIC: "35202-1234567-1",
-      BasicSalary: "50000",
-      ActualSalary: "55000",
+      DOB: "",
+      DOJ: "",
+      DOJAct: "",
+      HireType: "",
+      JobType: "",
+      OffDay1: 0,
+      OffDay2: 0,
+      ShiftID: 0,
+      NIC: "",
+      BasicSalary: "",
+      ActualSalary: "",
       ManagerSalary: 0,
-      IncomeTax: "2000",
-      HaveOT: true,
-      HaveOTAct: true,
-      HaveOTOFF: true,
-      ReplacementOf: 0,
-      IsBank: true,
-      BankAccountNo: "1234567890",
-      CompanyBankID: "10",
-      IsActive: false,
-      IsactiveAct: 1,
-      DOL: "1900-01-01T00:00:00",
-      DOLAct: "1900-01-01T00:00:00",
+      IncomeTax: "",
+      HaveOT: false,
+      HaveOTAct: false,
+      HaveOTOFF: false,
+      ReplacementOf: "",
+      IsBank: false,
+      BankAccountNo: "",
+      CompanyBankID: "",
+      Isactive: false,
+      IsactiveAct: 0,
+      DOL: "2025-04-23T14:00:00",
+      DOLAct: "2025-04-23T14:00:00",
       LeftRemarks: "",
-      GradeID: 2,
-      ProbitionStatus: "Completed",
-      ProbitionDate: "2015-09-01T00:00:00",
-      CellPhone: "03001234567",
-      IcePhone: "03111234567",
-      Address: "House No. 123, City A",
-      AddressPermanent: "Village B, District C",
-      Bloodgroup: "B+",
-      EOBINo: "EOBI12345",
-      EOBINoAct: "EOBI12345",
-      SSNo: "SS001",
-      LifeInsuranceNo: "LI12345",
-      IsGroupInsurance: true,
-      MartialStatus: "Single",
-      IsPFundEntitled: true,
-      PFundEntitledDate: "2016-01-01T00:00:00",
-      IsPFund: true,
-      PFAmount: "5000",
-      IsPessi: true,
-      PessiDate: "2016-01-01T00:00:00",
-      Gender: "Male",
-      ReligionID: 1,
+      GradeID: 0,
+      ProbitionStatus: "",
+      ProbitionDate: "2025-04-23T14:00:00",
+      CellPhone: "",
+      IcePhone: "",
+      Address: "",
+      AddressPermanent: "",
+      Bloodgroup: "",
+      EOBINo: "",
+      EOBINoAct: "",
+      SSNo: "",
+      LifeInsuranceNo: "",
+      IsGroupInsurance: false,
+      MartialStatus: "",
+      IsPFundEntitled: false,
+      PFundEntitledDate: "",
+      IsPFund: false,
+      PFAmount: "",
+      IsPessi: false,
+      PessiDate: "",
+      Gender: "",
+      ReligionID: 0,
       IsExempt: false,
-      IsShiftEmployee: true,
-      IsShiftEmployeeAct: true,
+      IsShiftEmployee: false,
+      IsShiftEmployeeAct: false,
       ExemptLate: false,
       ExemptMinuts: 0,
-      Education: "BS Computer Science",
-      ENameUrdu: " علی خان",
-      FNameUrdu: " احمد خان",
-      AddressUrdu: " گھر نمبر 123، شہر اے",
-      DesignationTitle: "Software Engineer",
+      Education: "",
+      ENameUrdu: "",
+      FNameUrdu: "",
+      AddressUrdu: "",
+      DesignationTitle: "",
       OldCode: "EMP_OLD_01",
-      MotherName: "Fatima",
-      NextToKin: "Hassan",
-      IsTransport: true,
-      TransportDate: "2020-01-01T00:00:00",
-      TransportRoute: "Route 5",
-      TransportLocation: " Stop A",
+      MotherName: "",
+      NextToKin: "",
+      IsTransport: false,
+      TransportDate: "",
+      TransportRoute: "",
+      TransportLocation: "",
       IsManager: false,
-      IsShowForAudit: true,
+      IsShowForAudit: false,
       IsStopSalary: false,
-      OTRate: 2,
-      OTRateOFF: 1,
-      NICExpairy: "2030-01-01T00:00:00",
-      BusDeduction: true,
+      OTRate: "",
+      OTRateOFF: "",
+      NICExpairy: "",
+      BusDeduction: false,
       BlackList: false,
       UID: 1010,
       Tranzdatetime: "2025-04-23T14:00:00",
       CompanyID: 1,
     },
 
+    // Add this validation schema to your formik configuration
     validationSchema: Yup.object({
-      VCode: Yup.string()
-        .required("Code is required.")
-        .min(3, "Code must be at least 3 characters ")
-        .max(10, "Code must be less then 10 characters"),
-      VName: Yup.string()
-        .required("Title is required.")
-        .min(3, "Title at least must be 3 characters "),
-
-      TimeIn: Yup.number().required("Time In is required."),
-      TimeOut: Yup.number().required("Time Out is required."),
-      RestTimeFrom: Yup.number().required("Rest From is required."),
-      RestTimeTo: Yup.number().required("Rest To is required."),
-      WorkingHrs: Yup.number().required("Working Hours are required."),
-      RelaxTime: Yup.number().required("Relax Time is required."),
-      MinAttTime: Yup.number().required("Min Time is required."),
-      MinHDTime: Yup.number().required("Min Half-Day Time is required."),
-
-      // TimeInRamazan: Yup.number().required("Time In (Ramazan) is required."),
-      // TimeOutRamazan: Yup.number().required("Time Out (Ramazan) is required."),
-      // RestTimeFromRamazan: Yup.number().required("Rest From (Ramazan) is required."),
-      // RestTimeToRamazan: Yup.number().required("Rest To (Ramazan) is required."),
-      // WorkingHrsRamazan: Yup.number().required("Working Hours (Ramazan) are required."),
-      // RelaxTimeRamazan: Yup.number().required("Relax Time (Ramazan) is required."),
-      // MinAttTimeRamazan: Yup.number().required("Min Time (Ramazan) is required."),
-      // MinHDTimeRamazan: Yup.number().required("Min Half-Day Time (Ramazan) is required."),
-      IsRoster: Yup.boolean(),
-      IsSecurity: Yup.boolean(),
-      SaturdayHalfTime: Yup.boolean(),
-      LocationID: Yup.number().required("Location is required."),
-      IsActive: Yup.boolean(),
+      ETypeID: Yup.number()
+        .min(1, "Employee Type is required")
+        .required("Required"),
+      LocationID: Yup.string()
+        .notOneOf(["-1"], "Location is required")
+        .required("Required"),
+      EmpCode: Yup.string().required("Employee Code is required"),
+      EName: Yup.string().required("Employee Name is required"),
+      FName: Yup.string().required("Father Name is required"),
+      JobType: Yup.string().required("Job Type is required"),
+      DeptID: Yup.number()
+        .min(1, "Department is required")
+        .required("Required"),
+      DesgID: Yup.number()
+        .min(1, "Designation is required")
+        .required("Required"),
+      DOB: Yup.date().required("Date of Birth is required"),
+      DOJ: Yup.date().required("Date of Joining is required"),
+      HireType: Yup.string().required("Hire Type is required"),
+      NIC: Yup.string()
+        .matches(
+          /^[0-9]{5}-[0-9]{7}-[0-9]$/,
+          "NIC must be in the format 12345-1234567-1"
+        )
+        .required("NIC is required"),
+      BasicSalary: Yup.number()
+        .min(0, "Salary must be positive")
+        .required("Basic Salary is required"),
+      CellPhone: Yup.string()
+        .matches(/^[0-9]{11}$/, "Phone must be 11 digits")
+        .required("Phone is required"),
+      IcePhone: Yup.string()
+        .matches(/^[0-9]{11}$/, "Emergency phone must be 11 digits")
+        .required("Emergency phone is required"),
+      Address: Yup.string().required("Address is required"),
+      Gender: Yup.string().required("Gender is required"),
+      ReligionID: Yup.number()
+        .min(1, "Religion is required")
+        .required("Required"),
+      BankAccountNo: Yup.string().when("IsBank", {
+        is: true,
+        then: Yup.string().required(
+          "Bank Account is required when Bank is checked"
+        ),
+      }),
+      CompanyBankID: Yup.string().when("IsBank", {
+        is: true,
+        then: Yup.string().required(
+          "Company Bank is required when Bank is checked"
+        ),
+      }),
+      PFAmount: Yup.number().when("IsPFund", {
+        is: true,
+        then: Yup.number()
+          .min(0, "PF Amount must be positive")
+          .required("PF Amount is required when PF is checked"),
+      }),
+      TransportRoute: Yup.string().when("IsTransport", {
+        is: true,
+        then: Yup.string().required(
+          "Transport Route is required when Transport is checked"
+        ),
+      }),
+      TransportLocation: Yup.string().when("IsTransport", {
+        is: true,
+        then: Yup.string().required(
+          "Transport Location is required when Transport is checked"
+        ),
+      }),
+      OTRate: Yup.number().when("HaveOT", {
+        is: true,
+        then: Yup.number()
+          .min(0, "OT Rate must be positive")
+          .required("OT Rate is required when OT is checked"),
+      }),
+      OTRateOFF: Yup.number().when("HaveOTOFF", {
+        is: true,
+        then: Yup.number()
+          .min(0, "OT Rate OFF must be positive")
+          .required("OT Rate OFF is required when OT OFF is checked"),
+      }),
+      ExemptMinuts: Yup.number().when("ExemptLate", {
+        is: true,
+        then: Yup.number()
+          .min(0, "Exempt Minutes must be positive")
+          .required("Exempt Minutes is required when Exempt Late is checked"),
+      }),
     }),
 
     onSubmit: (values) => {
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0,
-        IsRoster: values.IsRoster ? 1 : 0,
-        IsSecurity: values.IsSecurity ? 1 : 0,
-        SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
+        Isactive: values.Isactive ? 1 : 0,
+        IsactiveAct: values.IsactiveAct ? 1 : 0,
+        HaveOT: values.HaveOT ? 1 : 0,
+        HaveOTAct: values.HaveOTAct ? 1 : 0,
+        HaveOTOFF: values.HaveOTOFF ? 1 : 0,
+        IsBank: values.IsBank ? 1 : 0,
+        IsGroupInsurance: values.IsGroupInsurance ? 1 : 0,
+        IsPFundEntitled: values.IsPFundEntitled ? 1 : 0,
+        IsPFund: values.IsPFund ? 1 : 0,
+        IsPessi: values.IsPessi ? 1 : 0,
+        IsExempt: values.IsExempt ? 1 : 0,
+        IsShiftEmployee: values.IsShiftEmployee ? 1 : 0,
+        IsShiftEmployeeAct: values.IsShiftEmployeeAct ? 1 : 0,
+        ExemptLate: values.ExemptLate ? 1 : 0,
+        IsTransport: values.IsTransport ? 1 : 0,
+        IsManager: values.IsManager ? 1 : 0,
+        IsShowForAudit: values.IsShowForAudit ? 1 : 0,
+        IsStopSalary: values.IsStopSalary ? 1 : 0,
+        BusDeduction: values.BusDeduction ? 1 : 0,
+        BlackList: values.BlackList ? 1 : 0,
       };
       if (editingGroup) {
         console.log("Editing Group", transformedValues);
@@ -192,6 +275,7 @@ const Employee = () => {
         );
         setEditingGroup(null); // Reset after submission
       } else {
+        console.log(transformedValues);
         dispatch(submitEmployee(transformedValues));
       }
       formik.resetForm();
@@ -216,8 +300,8 @@ const Employee = () => {
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
-                  <PreviewCardHeader title="Employee Details" />
+                <Form onSubmit={formik.handleSubmit}>
+                  <PreviewCardHeader title="Employee Details"  onCancel={formik.resetForm}/>
                   <CardBody className="card-body">
                     <div className="live-preview">
                       {/* First Row */}
@@ -227,19 +311,36 @@ const Employee = () => {
                             {/* E-Type */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="eType" className="form-label">
+                                <Label htmlFor="ETypeID" className="form-label">
                                   E-Type
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
-                                  id="eType"
+                                  id="ETypeID"
+                                  name="ETypeID"
+                                  value={formik.values.ETypeID}
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
                                 >
-                                  <option value="">--- Select ---</option>
-                                  <option value="permanent">Permanent</option>
-                                  <option value="contractual">
-                                    Contractual
-                                  </option>
+                                  <option value="-1">---Select---</option>
+                                  {employeeType?.length > 0 ? (
+                                    employeeType.map((group) => (
+                                      <option key={group.VID} value={group.VID}>
+                                        {group.VName}
+                                      </option>
+                                    ))
+                                  ) : (
+                                    <option value="0" disabled>
+                                      No Employee Type available
+                                    </option>
+                                  )}
                                 </select>
+                                {formik.touched.ETypeID &&
+                                formik.errors.ETypeID ? (
+                                  <div className="text-danger">
+                                    {formik.errors.ETypeID}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
@@ -291,26 +392,42 @@ const Employee = () => {
                                   type="text"
                                   className="form-control-sm"
                                   id="EmpCode"
+                                  name="EmpCode"
                                   placeholder="Emp Code"
-                                  readOnly
-                                  value="039"
+                                  {...formik.getFieldProps("EmpCode")}
                                 />
+                                {formik.touched.EmpCode &&
+                                formik.errors.EmpCode ? (
+                                  <div className="text-danger">
+                                    {formik.errors.EmpCode}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
                             {/* Machine Code */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="MachineCode" className="form-label">
+                                <Label
+                                  htmlFor="MachineCode"
+                                  className="form-label"
+                                >
                                   Machine Code
                                 </Label>
                                 <Input
                                   type="text"
                                   className="form-control-sm"
                                   id="MachineCode"
+                                  name="MachineCode"
                                   placeholder="Machine Code"
-                                  value="1234"
+                                  {...formik.getFieldProps("MachineCode")}
                                 />
+                                {formik.touched.MachineCode &&
+                                formik.errors.MachineCode ? (
+                                  <div className="text-danger">
+                                    {formik.errors.MachineCode}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
@@ -324,6 +441,7 @@ const Employee = () => {
                                   type="text"
                                   className="form-control-sm"
                                   id="EName"
+                                  name="EName"
                                   placeholder="Name"
                                   {...formik.getFieldProps("EName")}
                                 />
@@ -345,6 +463,7 @@ const Employee = () => {
                                   type="text"
                                   className="form-control-sm"
                                   id="FName"
+                                  name="FName"
                                   placeholder="Father Name"
                                   {...formik.getFieldProps("FName")}
                                 />
@@ -356,7 +475,7 @@ const Employee = () => {
                               </div>
                             </Col>
 
-                             {/* Job Type */}
+                            {/* Job Type */}
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="JobType" className="form-label">
@@ -365,10 +484,16 @@ const Employee = () => {
                                 <select
                                   className="form-select form-select-sm"
                                   id="JobType"
+                                  name="JobType"
+                                  value={formik.values.JobType} // Bind to Formik state
+                                  onChange={formik.handleChange} // Handle changes
+                                  onBlur={formik.handleBlur} // Track field blur
                                 >
                                   <option value="-1">---Select---</option>
-                                  <option value="Full-time">Full-time</option>
-                                  <option value="Part-time">Part-time</option>
+                                  <option value="Contractual">
+                                    Contractual
+                                  </option>
+                                  <option value="Permanent">Permanent</option>
                                 </select>
                               </div>
                             </Col>
@@ -382,10 +507,14 @@ const Employee = () => {
                                 <select
                                   className="form-select form-select-sm"
                                   id="DeptID"
+                                  name="DeptID"
+                                  value={formik.values.DeptID}
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
                                 >
                                   <option value="-1">---Select---</option>
-                                  {department?.length > 0 ? (
-                                    department.map((group) => (
+                                  {department?.data.length > 0 ? (
+                                    department.data.map((group) => (
                                       <option key={group.VID} value={group.VID}>
                                         {group.VName}
                                       </option>
@@ -408,6 +537,10 @@ const Employee = () => {
                                 <select
                                   className="form-select form-select-sm"
                                   id="DesgID"
+                                  name="DesgID"
+                                  value={formik.values.DesgID}
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
                                 >
                                   <option value="-1">---Select---</option>
                                   {designation?.length > 0 ? (
@@ -426,7 +559,7 @@ const Employee = () => {
                             </Col>
                             {/* HOD */}
                             <Col xxl={2} md={3}>
-                             <div>
+                              <div>
                                 <Label htmlFor="HODID" className="form-label">
                                   HOD
                                 </Label>
@@ -434,6 +567,7 @@ const Employee = () => {
                                   type="text"
                                   className="form-control-sm"
                                   id="HODID"
+                                  name="HODID"
                                   placeholder="HOD"
                                   readOnly
                                   value="039"
@@ -443,16 +577,21 @@ const Employee = () => {
                             {/* DOB */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="dob" className="form-label">
+                                <Label htmlFor="DOB" className="form-label">
                                   DOB
                                 </Label>
                                 <Input
                                   type="date"
                                   className="form-control-sm"
-                                  id="dob"
-                                  value="2025-02-04"
+                                  id="DOB"
+                                  name="DOB"
                                   {...formik.getFieldProps("DOB")}
                                 />
+                                {formik.touched.DOB && formik.errors.DOB ? (
+                                  <div className="text-danger">
+                                    {formik.errors.DOB}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
                             {/* DOJ */}
@@ -465,9 +604,14 @@ const Employee = () => {
                                   type="date"
                                   className="form-control-sm"
                                   id="DOJ"
-                                  value="2025-02-04"
+                                  name="DOJ"
                                   {...formik.getFieldProps("DOJ")}
                                 />
+                                {formik.touched.DOJ && formik.errors.DOJ ? (
+                                  <div className="text-danger">
+                                    {formik.errors.DOJ}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
@@ -483,12 +627,14 @@ const Employee = () => {
                                 <select
                                   className="form-select form-select-sm"
                                   id="HireType"
+                                  name="HireType"
+                                  value={formik.values.HireType}
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
                                 >
                                   <option value="">--- Select ---</option>
-                                  <option value="Contractual">
-                                    Contractual
-                                  </option>
-                                  <option value="Permanent">Permanent</option>
+                                  <option value="Full-time">Full-time</option>
+                                  <option value="Part-time">Part-time</option>
                                 </select>
                               </div>
                             </Col>
@@ -505,26 +651,34 @@ const Employee = () => {
                                   type="text"
                                   className="form-control-sm"
                                   id="ReplacementOf"
+                                  name="ReplacementOf"
                                   placeholder="Replacement Of"
+                                  {...formik.getFieldProps("ReplacementOf")}
                                 />
                               </div>
                             </Col>
-                            {/* Off Day- 1*/}
+                            {/* Off Day- 1 */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label
-                                  htmlFor="OffDay1"
-                                  className="form-label"
-                                >
+                                <Label htmlFor="OffDay1" className="form-label">
                                   Off Day- 1
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
                                   id="OffDay1"
+                                  name="OffDay1"
+                                  value={formik.values.OffDay1}
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
                                 >
                                   <option value="">--- Select ---</option>
-                                  <option value="lahore">Lahore</option>
-                                  <option value="islamabad">Islamabad</option>
+                                  <option value="1">Monday</option>
+                                  <option value="2">Tuesday</option>
+                                  <option value="3">Wednesday</option>
+                                  <option value="4">Thursday</option>
+                                  <option value="5">Friday</option>
+                                  <option value="6">Saturday</option>
+                                  <option value="7">Sunday</option>
                                 </select>
                               </div>
                             </Col>
@@ -532,54 +686,73 @@ const Employee = () => {
                             {/* Off Day- 2 */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label
-                                  htmlFor="Off Day- 2"
-                                  className="form-label"
-                                >
+                                <Label htmlFor="OffDay2" className="form-label">
                                   Off Day- 2
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
-                                  id="Off Day- 2"
+                                  id="OffDay2"
+                                  name="OffDay2"
+                                  value={formik.values.OffDay2}
+                                  onChange={formik.handleChange}
+                                  onBlur={formik.handleBlur}
                                 >
                                   <option value="">--- Select ---</option>
-                                  <option value="it">IT</option>
-                                  <option value="hr">HR</option>
+                                  <option value="1">Monday</option>
+                                  <option value="2">Tuesday</option>
+                                  <option value="3">Wednesday</option>
+                                  <option value="4">Thursday</option>
+                                  <option value="5">Friday</option>
+                                  <option value="6">Saturday</option>
+                                  <option value="7">Sunday</option>
                                 </select>
                               </div>
                             </Col>
 
-                          {/* NIC */}
-                          <Col xxl={2} md={2}>
-                            <div>
-                              <Label htmlFor="NIC" className="form-label">
-                                NIC
-                              </Label>
-                              <Input
-                                type="text"
-                                className="form-control-sm"
-                                id="NIC"
-                                placeholder="NIC"
-                                {...formik.getFieldProps("NIC")}
-                              />
-                            </div>
-                          </Col>
-                           {/* NIC Expiry */}
+                            {/* NIC */}
                             <Col xxl={2} md={3}>
                               <div>
-                                <Label htmlFor="NICExpairy" className="form-label">
+                                <Label htmlFor="NIC" className="form-label">
+                                  NIC
+                                </Label>
+                                <Input
+                                  type="text"
+                                  className="form-control-sm"
+                                  id="NIC"
+                                  name="NIC"
+                                  placeholder="xxxxx-xxxxxxx-x"
+                                  {...formik.getFieldProps("NIC")}
+                                />
+                                  {formik.touched.NIC && formik.errors.NIC ? (
+                                  <div className="text-danger">
+                                    {formik.errors.NIC}
+                                  </div>
+                                ) : null}
+                              </div>
+                            </Col>
+                            {/* NIC Expiry */}
+                            <Col xxl={2} md={3}>
+                              <div>
+                                <Label
+                                  htmlFor="NICExpairy"
+                                  className="form-label"
+                                >
                                   NIC Expairy
                                 </Label>
                                 <Input
                                   type="date"
                                   className="form-control-sm"
                                   id="NICExpairy"
-                                  value="2025-02-04"
+                                  name="NICExpairy"
                                   {...formik.getFieldProps("NICExpairy")}
                                 />
+                                    {formik.touched.NICExpairy && formik.errors.NICExpairy ? (
+                                  <div className="text-danger">
+                                    {formik.errors.NICExpairy}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
-
                           </Row>
                         </Col>
 
@@ -632,6 +805,7 @@ const Employee = () => {
                               type="number"
                               className="form-control-sm"
                               id="BasicSalary"
+                              name="BasicSalary"
                               placeholder="00 "
                               {...formik.getFieldProps("BasicSalary")}
                             />
@@ -642,13 +816,14 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="IncomeTax" className="form-label">
-                             Income Tax
+                              Income Tax
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
                               id="IncomeTax"
-                              placeholder="0.01 "
+                              name="IncomeTax"
+                              placeholder="00"
                               {...formik.getFieldProps("IncomeTax")}
                             />
                           </div>
@@ -659,11 +834,12 @@ const Employee = () => {
                           <Label className="form-check-label" for="HaveOT">
                             Have Over Time
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="HaveOT"
+                              name="HaveOT"
                               {...formik.getFieldProps("HaveOT")}
                               checked={formik.values.HaveOT}
                             />
@@ -675,7 +851,7 @@ const Employee = () => {
                           <Label className="form-check-label" for="IsBank">
                             Bank
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
@@ -698,6 +874,7 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="BankAccountNo"
+                              name="BankAccountNo"
                               placeholder="Bank Account"
                               {...formik.getFieldProps("BankAccountNo")}
                             />
@@ -706,52 +883,78 @@ const Employee = () => {
                         {/* Company Bank */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="eType" className="form-label">
+                            <Label
+                              htmlFor="CompanyBankID"
+                              className="form-label"
+                            >
                               Company Bank
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              id="eType"
+                              id="CompanyBankID"
+                              value={formik.values.CompanyBankID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">--- Select ---</option>
-                              <option value="permanent">Permanent</option>
-                              <option value="contractual">Contractual</option>
+                              <option value="-1">---Select---</option>
+                              {console.log(salaryBank)}
+                              {salaryBank?.length > 0 ? (
+                                salaryBank.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No Bank available
+                                </option>
+                              )}
                             </select>
                           </div>
                         </Col>
 
                         {/* Shift */}
-                          <Col xxl={2} md={3}>
-                              <div>
-                                <Label
-                                  htmlFor="ShiftID"
-                                  className="form-label"
-                                >
-                                  Shift
-                                </Label>
-                                <select
-                                  className="form-select form-select-sm"
-                                  id="ShiftID"
-                                >
-                                  <option value="">--- Select ---</option>
-                                  <option value="frontend">Frontend</option>
-                                  <option value="backend">Backend</option>
-                                </select>
-                              </div>
-                          </Col>
+                        <Col xxl={2} md={3}>
+                          <div>
+                            <Label htmlFor="ShiftID" className="form-label">
+                              Shift
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="ShiftID"
+                              value={formik.values.ShiftID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            >
+                              <option value="-1">---Select---</option>
+                              {shift?.length > 0 ? (
+                                shift.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No Shift available
+                                </option>
+                              )}
+                            </select>
+                          </div>
+                        </Col>
 
                         {/* IsActive */}
                         <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="IsActive">
+                          <Label className="form-check-label" for="Isactive">
                             Active
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
-                              id="IsActive"
-                              {...formik.getFieldProps("IsActive")}
-                              checked={formik.values.IsActive}
+                              id="Isactive"
+                              name="Isactive"
+                              {...formik.getFieldProps("Isactive")}
+                              checked={formik.values.Isactive}
                             />
                           </span>
                         </Col>
@@ -766,9 +969,16 @@ const Employee = () => {
                               type="date"
                               className="form-control-sm"
                               id="DOL"
-                              min={getMinDate()} // Prevent past dates
-                              value={selectedDate}
+                              name="DOL"
+                              {...formik.getFieldProps("DOL")}
+                              // min={getMinDate()} // Prevent past dates
+                              // value={selectedDate}
                             />
+                                {formik.touched.DOL && formik.errors.DOL ? (
+                                  <div className="text-danger">
+                                    {formik.errors.DOL}
+                                  </div>
+                                ) : null}
                           </div>
                         </Col>
 
@@ -778,11 +988,13 @@ const Employee = () => {
                             <Label htmlFor="LeftRemarks" className="form-label">
                               Left Remarks
                             </Label>
-                           <Input
-                             type="text"
+                            <Input
+                              type="text"
                               className="form-control-sm"
                               id="LeftRemarks"
+                              name="LeftRemarks"
                               placeholder="Left Remarks"
+                              {...formik.getFieldProps("LeftRemarks")}
                             />
                           </div>
                         </Col>
@@ -790,16 +1002,22 @@ const Employee = () => {
                         {/* ProbitionStatus */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="ProbitionStatus" className="form-label">
+                            <Label
+                              htmlFor="ProbitionStatus"
+                              className="form-label"
+                            >
                               Probition
                             </Label>
                             <select
                               className="form-select form-select-sm"
                               id="ProbitionStatus"
+                              name="ProbitionStatus"
+                              value={formik.values.ProbitionStatus}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
                               <option value="">--- Select ---</option>
-                              <option value="frontend">Frontend</option>
-                              <option value="backend">Backend</option>
+                              <option value="Completed">Completed</option>
                             </select>
                           </div>
                         </Col>
@@ -817,37 +1035,42 @@ const Employee = () => {
                               type="date"
                               className="form-control-sm"
                               id="ProbitionDate"
-                              value="2025-02-04"
+                              name="ProbitionDate"
+                              {...formik.getFieldProps("DateTo")}
                             />
                           </div>
                         </Col>
 
                         {/* CellPhone */}
-                         <Col xxl={2} md={2}>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="CellPhone" className="form-label">
                               Contact
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               className="form-control-sm"
                               id="CellPhone"
+                              name="CellPhone"
                               placeholder="Contact"
+                              {...formik.getFieldProps("CellPhone")}
                             />
                           </div>
                         </Col>
 
                         {/* IcePhone */}
-                         <Col xxl={2} md={2}>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="IcePhone" className="form-label">
                               Emergency Contact
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               className="form-control-sm"
                               id="IcePhone"
+                              name="IcePhone"
                               placeholder="In Case of Emergency"
+                              {...formik.getFieldProps("IcePhone")}
                             />
                           </div>
                         </Col>
@@ -862,7 +1085,9 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="Address"
+                              name="Address"
                               placeholder="Address"
+                              {...formik.getFieldProps("Address")}
                             />
                           </div>
                         </Col>
@@ -895,8 +1120,10 @@ const Employee = () => {
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="Bloodgroup"
-                              placeholder="Bloodgroup"
+                              id="Blood group"
+                              name="Bloodgroup"
+                              placeholder="Blood group"
+                              {...formik.getFieldProps("Bloodgroup")}
                             />
                           </div>
                         </Col>
@@ -910,10 +1137,22 @@ const Employee = () => {
                             <select
                               className="form-select form-select-sm"
                               id="Gender"
+                              value={formik.values.Gender} // Bind to Formik state
+                              onChange={formik.handleChange} // Handle changes
+                              onBlur={formik.handleBlur} // Track field blur
                             >
-                                <option value="-1">---Select---</option>
-                                <option value="1">Male</option>       
-                                <option value="1">Female</option>       
+                              <option value="-1">---Select---</option>
+                              {gender?.length > 0 ? (
+                                gender.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No gender available
+                                </option>
+                              )}
                             </select>
                           </div>
                         </Col>
@@ -927,10 +1166,22 @@ const Employee = () => {
                             <select
                               className="form-select form-select-sm"
                               id="ReligionID"
+                              value={formik.values.ReligionID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                                 <option value="-1">---Select---</option>
-                                  <option value="1">Muslim</option>
-                                  <option value="2">Non-Muslim</option>   
+                              <option value="-1">---Select---</option>
+                              {religion?.length > 0 ? (
+                                religion.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No Religion available
+                                </option>
+                              )}
                             </select>
                           </div>
                         </Col>
@@ -970,12 +1221,15 @@ const Employee = () => {
                         {/* Grade*/}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
+                            <Label htmlFor="GradeID" className="form-label">
                               Grade
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              id="designation"
+                              id="GradeID"
+                              value={formik.values.GradeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
                               <option value="-1">---Select---</option>
                               {grade?.length > 0 ? (
@@ -993,7 +1247,7 @@ const Employee = () => {
                           </div>
                         </Col>
 
-                      {/* EOBI*/}
+                        {/* EOBI*/}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="EOBINo" className="form-label">
@@ -1003,12 +1257,13 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="EOBINo"
+                              name="EOBINo"
                               {...formik.getFieldProps("EOBINo")}
                             />
                           </div>
                         </Col>
 
-                      {/* SSNo*/}
+                        {/* SSNo*/}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="SSNo" className="form-label">
@@ -1024,7 +1279,7 @@ const Employee = () => {
                           </div>
                         </Col>
 
-                      {/* LifeInsuranceNo*/}
+                        {/* LifeInsuranceNo*/}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1037,13 +1292,14 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="LifeInsuranceNo"
+                              name="LifeInsuranceNo"
                               placeholder="Life Insurance No"
                               {...formik.getFieldProps("LifeInsuranceNo")}
                             />
                           </div>
                         </Col>
 
-                      {/* IsGroupInsurance*/}
+                        {/* IsGroupInsurance*/}
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
@@ -1051,38 +1307,44 @@ const Employee = () => {
                           >
                             Group Insurance
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsGroupInsurance"
+                              name="IsGroupInsurance"
                               {...formik.getFieldProps("IsGroupInsurance")}
                               checked={formik.values.IsGroupInsurance}
                             />
                           </span>
                         </Col>
 
-                      {/* MartialStatus  */}
+                        {/* MartialStatus  */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="designation" className="form-label">
+                            <Label
+                              htmlFor="MartialStatus"
+                              className="form-label"
+                            >
                               Martial Status
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              id="designation"
+                              id="MartialStatus"
+                              name="MartialStatus"
+                              value={formik.values.MartialStatus} // Bind to Formik state
+                              onChange={formik.handleChange} // Handle changes
+                              onBlur={formik.handleBlur} // Track field blur
                             >
-                              <option value="">--- Select ---</option>
-                              <option value="frontend">Frontend</option>
-                              <option value="backend">Backend</option>
+                              <option value="-1 ">--- Select ---</option>
+                              <option value="Married">Married</option>
+                              <option value="Single">Single</option>
                             </select>
                           </div>
                         </Col>
-                      {/* Blan column for adjustment  */}
-                      <Col xxl={2} md={2}>
-                          
-                        </Col>
-                      {/* IsPFundEntitled  */}
+                        {/* Blan column for adjustment  */}
+                        <Col xxl={2} md={2}></Col>
+                        {/* IsPFundEntitled  */}
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
@@ -1090,7 +1352,7 @@ const Employee = () => {
                           >
                             P-Fund Entitled
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
@@ -1101,7 +1363,7 @@ const Employee = () => {
                           </span>
                         </Col>
 
-                      {/* PFundEntitledDate  */}
+                        {/* PFundEntitledDate  */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1114,28 +1376,30 @@ const Employee = () => {
                               type="date"
                               className="form-control-sm"
                               id="PFundEntitledDate"
-                              value="2025-02-04"
+                              name="PFundEntitledDate"
+                              {...formik.getFieldProps("PFundEntitledDate")}
                             />
                           </div>
                         </Col>
 
-                      {/* IsPFund */}
+                        {/* IsPFund */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsPFund">
                             P-Fund
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsPFund"
+                              name="IsPFund"
                               {...formik.getFieldProps("IsPFund")}
                               checked={formik.values.IsPFund}
                             />
                           </span>
                         </Col>
 
-                      {/* PF Amount */}
+                        {/* PF Amount */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="PFAmount" className="form-label">
@@ -1145,29 +1409,31 @@ const Employee = () => {
                               type="number"
                               className="form-control-sm"
                               id="PFAmount"
+                              name="PFAmount"
                               placeholder="00"
                               {...formik.getFieldProps("PFAmount")}
                             />
                           </div>
                         </Col>
 
-                      {/* IsPessi */}
+                        {/* IsPessi */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsPessi">
                             Pessi
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsPessi"
+                              name="IsPessi"
                               {...formik.getFieldProps("IsPessi")}
                               checked={formik.values.IsPessi}
                             />
                           </span>
                         </Col>
 
-                      {/* Pessi Amount */}
+                        {/* Pessi Amount */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="PessiDate" className="form-label">
@@ -1177,43 +1443,47 @@ const Employee = () => {
                               type="date"
                               className="form-control-sm"
                               id="PessiDate"
-                              value="2025-02-04"
+                              name="PessiDate"
+                              {...formik.getFieldProps("PessiDate")}
                             />
                           </div>
                         </Col>
 
-                      {/* Is Empt grid*/}
+                        {/* Is Empt grid*/}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsExempt">
                             Exempt
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsExempt"
+                              name="IsExempt"
                               {...formik.getFieldProps("IsExempt")}
                               checked={formik.values.IsExempt}
                             />
                           </span>
                         </Col>
 
-                      {/* ExemptLate */}
+                        {/* ExemptLate */}
                         <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="ExemptLate" className="form-label">
-                              Exempt Late
-                            </Label>
+                          <Label className="form-check-label" for="ExemptLate">
+                            Exempt
+                          </Label>
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
-                              type="number"
-                              className="form-control-sm"
+                              className="form-check-input"
+                              type="checkbox"
                               id="ExemptLate"
-                              placeholder="00"
+                              name="ExemptLate"
+                              {...formik.getFieldProps("ExemptLate")}
+                              checked={formik.values.ExemptLate}
                             />
-                          </div>
+                          </span>
                         </Col>
 
-                      {/* ExemptMinuts */}
+                        {/* ExemptMinuts */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1227,11 +1497,13 @@ const Employee = () => {
                               className="form-control-sm"
                               id="ExemptMinuts"
                               placeholder="00"
+                              name="ExemptMinuts"
+                              {...formik.getFieldProps("ExemptMinuts")}
                             />
                           </div>
                         </Col>
 
-                      {/* IsShift Employee */}
+                        {/* IsShift Employee */}
                         <Col xxl={2} md={2}>
                           <Label
                             className="form-check-label"
@@ -1239,57 +1511,58 @@ const Employee = () => {
                           >
                             Shift Employee
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsShiftEmployee"
+                              name="IsShiftEmployee"
                               {...formik.getFieldProps("IsShiftEmployee")}
                               checked={formik.values.IsShiftEmployee}
                             />
                           </span>
                         </Col>
 
-                      {/* IsManager */}
+                        {/* IsManager */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsManager">
                             Manager
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsManager"
-                              {...formik.getFieldProps("IsPFund")}
-                              checked={formik.values.IsPFund}
+                              {...formik.getFieldProps("IsManager")}
+                              checked={formik.values.IsManager}
                             />
                           </span>
                         </Col>
 
-                      {/* IsStopSalary */}
+                        {/* IsStopSalary */}
                         <Col xxl={2} md={2}>
-                            <Label
-                              className="form-check-label"
-                              for="IsStopSalary"
-                            >
-                              Stop Salary
-                            </Label>
-                             <span class="form-control input-sm input-checkbox p-1 mt-2">
-                              <Input
-                                className="form-check-input"
-                                type="checkbox"
-                                id="IsStopSalary"
-                                {...formik.getFieldProps("IsStopSalary")}
-                              />
-                             </span>
+                          <Label
+                            className="form-check-label"
+                            for="IsStopSalary"
+                          >
+                            Stop Salary
+                          </Label>
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="IsStopSalary"
+                              {...formik.getFieldProps("IsStopSalary")}
+                            />
+                          </span>
                         </Col>
 
-                      {/* IsTransport */}
+                        {/* IsTransport */}
                         <Col xxl={2} md={2}>
                           <Label className="form-check-label" for="IsTransport">
                             Transport
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
@@ -1300,7 +1573,7 @@ const Employee = () => {
                           </span>
                         </Col>
 
-                      {/* Transport Date */}
+                        {/* Transport Date */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1313,12 +1586,13 @@ const Employee = () => {
                               type="date"
                               className="form-control-sm"
                               id="TransportDate"
-                              value="2025-02-04"
+                              name="TransportDate"
+                              {...formik.getFieldProps("TransportDate")}
                             />
                           </div>
                         </Col>
 
-                      {/* Transport Route */}
+                        {/* Transport Route */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1331,13 +1605,17 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="TransportRoute"
+                              name="TransportRoute"
                               placeholder="Transport Route"
                               {...formik.getFieldProps("TransportRoute")}
                             />
+                              {formik.touched.TransportRoute && formik.errors.TransportRoute ? (
+      <div className="text-danger">{formik.errors.TransportRoute}</div>
+    ) : null}
                           </div>
                         </Col>
-                        
-                      {/* Transport Location */}
+
+                        {/* Transport Location */}
                         <Col xxl={4} md={4}>
                           <div>
                             <Label
@@ -1351,17 +1629,24 @@ const Employee = () => {
                               className="form-control-sm"
                               id="TransportLocation"
                               placeholder="Transport Location"
+                              name="TransportLocation"
                               {...formik.getFieldProps("TransportLocation")}
                             />
+                            {formik.touched.TransportLocation && formik.errors.TransportLocation ? (
+      <div className="text-danger">{formik.errors.TransportLocation}</div>
+    ) : null}
                           </div>
                         </Col>
 
-                      {/* Bus Deduction */}
+                        {/* Bus Deduction */}
                         <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="BusDeduction">
+                          <Label
+                            className="form-check-label"
+                            for="BusDeduction"
+                          >
                             Bus Deduction
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
@@ -1373,12 +1658,12 @@ const Employee = () => {
                         </Col>
                       </Row>
 
-                       {/* Third Row */}
+                      {/* Third Row */}
                       <Row
                         className="gy-4 mt-2 p-1"
                         style={{ border: "2px dotted lightgray" }}
-                        >
-                      {/* Employee Name Urdu */}
+                      >
+                        {/* Employee Name Urdu */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="ENameUrdu" className="form-label">
@@ -1388,13 +1673,14 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="ENameUrdu"
+                              name="ENameUrdu"
                               placeholder="Education Urdu"
                               {...formik.getFieldProps("ENameUrdu")}
                             />
                           </div>
                         </Col>
 
-                      {/* Father Name Urdu */}
+                        {/* Father Name Urdu */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="FNameUrdu" className="form-label">
@@ -1404,13 +1690,14 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="FNameUrdu"
+                              name="FNameUrdu"
                               placeholder="Father Name Urdu"
                               {...formik.getFieldProps("FNameUrdu")}
                             />
                           </div>
                         </Col>
 
-                      {/* AddressUrdu */}
+                        {/* AddressUrdu */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="AddressUrdu" className="form-label">
@@ -1421,12 +1708,13 @@ const Employee = () => {
                               className="form-control-sm"
                               id="AddressUrdu"
                               placeholder="Address Urdu"
+                              name="AddressUrdu"
                               {...formik.getFieldProps("AddressUrdu")}
                             />
                           </div>
                         </Col>
 
-                      {/* DesignationTitle */}
+                        {/* DesignationTitle */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label
@@ -1439,13 +1727,14 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="DesignationTitle"
+                              name="DesignationTitle"
                               placeholder="Designation Title"
                               {...formik.getFieldProps("DesignationTitle")}
                             />
                           </div>
                         </Col>
 
-                      {/* Mother Name Grid */}
+                        {/* Mother Name Grid */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="MotherName" className="form-label">
@@ -1455,13 +1744,14 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="MotherName"
+                              name="MotherName"
                               placeholder="Mother Name"
                               {...formik.getFieldProps("MotherName")}
                             />
                           </div>
                         </Col>
-                        
-                      {/* NextToKin */}
+
+                        {/* NextToKin */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="NextToKin" className="form-label">
@@ -1471,6 +1761,7 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="NextToKin"
+                              name="NextToKin"
                               placeholder="NextTo Kin"
                               {...formik.getFieldProps("NextToKin")}
                             />
@@ -1483,195 +1774,194 @@ const Employee = () => {
                         className="gy-4 mt-2 p-1"
                         style={{ border: "2px dotted lightgray" }}
                       >
-                      {/* DOJAct */}
+                        {/* DOJAct */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label
-                              htmlFor="DOJAct"
-                              className="form-label"
-                            >
+                            <Label htmlFor="DOJAct" className="form-label">
                               DOJ Act
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
                               id="DOJAct"
-                              value="2025-02-04"
+                              name="DOJAct"
+                              {...formik.getFieldProps("DOJAct")}
                             />
                           </div>
                         </Col>
 
-                      {/* ActualSalary */}
+                        {/* ActualSalary */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="ActualSalary" className="form-label">
+                            <Label
+                              htmlFor="ActualSalary"
+                              className="form-label"
+                            >
                               Actual Salary
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
                               id="ActualSalary"
-                              placeholder="Mother Name"
+                              name="ActualSalary"
+                              placeholder="Actual Salary"
                               {...formik.getFieldProps("ActualSalary")}
                             />
                           </div>
                         </Col>
 
-                      {/* OTRate */}
-                         <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="OTRate">
+                        {/* OTRate */}
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="OTRate" className="form-label">
                               OT Rate
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                            </Label>
                             <Input
-                              className="form-check-input"
-                              type="checkbox"
+                              type="text"
+                              className="form-control-sm"
                               id="OTRate"
+                              name="OTRate"
+                              placeholder="OT Rate"
                               {...formik.getFieldProps("OTRate")}
                             />
-                          </span>
-                        </Col>
-                      
-                      {/* OTRateOFF */}
-                        <Col xxl={2} md={2}>
-                          <Label className="form-check-label" for="OTRateOFF">
-                              OT Rate OFF
-                          </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">       
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="OTRateOFF"
-                              {...formik.getFieldProps("OTRateOFF")}
-                            />
-                          </span>
+                          </div>
                         </Col>
 
-                      {/* IsShowForAudit */}
+                        {/* OTRateOFF */}
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="OTRateOFF" className="form-label">
+                              OT Rate
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="OTRateOFF"
+                              name="OTRateOFF"
+                              placeholder="OT Rate OFF"
+                              {...formik.getFieldProps("OTRateOFF")}
+                            />
+                          </div>
+                        </Col>
+                        {/* IsShowForAudit */}
                         <Col xxl={2} md={2}>
                           <Label
-                              className="form-check-label"
-                              for="IsShowForAudit"
-                            >
-                              Show For Audit
+                            className="form-check-label"
+                            for="IsShowForAudit"
+                          >
+                            Show For Audit
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsShowForAudit"
+                              {...formik.getFieldProps("IsShowForAudit")}
+                              checked={formik.values.IsShowForAudit}
                             />
                           </span>
                         </Col>
 
-                      {/* BlackList */}
+                        {/* BlackList */}
                         <Col xxl={2} md={2}>
-                        <Label
-                              className="form-check-label"
-                              for="BlackList"
-                            >
-                              Black List
-                        </Label>
-                         <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <Label className="form-check-label" for="BlackList">
+                            Black List
+                          </Label>
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="BlackList"
                               {...formik.getFieldProps("BlackList")}
+                              checked={formik.values.BlackList}
                             />
                           </span>
                         </Col>
 
-                      {/* HaveOTAct */}
+                        {/* HaveOTAct */}
                         <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="HaveOTAct"
-                            >
-                              Have OT Act
+                          <Label className="form-check-label" for="HaveOTAct">
+                            Have OT Act
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="HaveOTAct"
                               {...formik.getFieldProps("HaveOTAct")}
+                              checked={formik.values.HaveOTAct}
                             />
                           </span>
                         </Col>
-                        
-                      {/* HaveOTOFF */}
+
+                        {/* HaveOTOFF */}
                         <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="HaveOTOFF"
-                            >
-                              Have OT OFF
+                          <Label className="form-check-label" for="HaveOTOFF">
+                            Have OT OFF
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="HaveOTOFF"
                               {...formik.getFieldProps("HaveOTOFF")}
+                              checked={formik.values.HaveOTOFF}
                             />
                           </span>
                         </Col>
 
-                      {/* IsactiveAct */}
+                        {/* IsactiveAct */}
                         <Col xxl={2} md={2}>
-                          <Label
-                              className="form-check-label"
-                              for="IsactiveAct"
-                            >
-                              Active Act
+                          <Label className="form-check-label" for="IsactiveAct">
+                            Active Act
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsactiveAct"
+                              {...formik.getFieldProps("IsactiveAct")}
+                              checked={formik.values.IsactiveAct}
                             />
                           </span>
                         </Col>
 
-                      {/* DOLAct */}
+                        {/* DOLAct */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label
-                              htmlFor="DOLAct"
-                              className="form-label"
-                            >
+                            <Label htmlFor="DOLAct" className="form-label">
                               DOL Act
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
                               id="DOLAct"
-                              value="2025-02-04"
+                              name="DOLAct"
+                              {...formik.getFieldProps("DOLAct")}
                             />
                           </div>
                         </Col>
 
-                      {/* IsShiftEmployeeAct */}
+                        {/* IsShiftEmployeeAct */}
                         <Col xxl={2} md={2}>
                           <Label
-                              className="form-check-label"
-                              for="IsShiftEmployeeAct"
-                            >
-                              Shift Employee Act
+                            className="form-check-label"
+                            for="IsShiftEmployeeAct"
+                          >
+                            Shift Employee Act
                           </Label>
-                          <span class="form-control input-sm input-checkbox p-1 mt-2">
+                          <span className="form-control input-sm input-checkbox p-1 mt-2">
                             <Input
                               className="form-check-input"
                               type="checkbox"
                               id="IsShiftEmployeeAct"
+                              {...formik.getFieldProps("IsShiftEmployeeAct")}
+                              checked={formik.values.IsShiftEmployeeAct}
                             />
                           </span>
                         </Col>
 
-                        
-                      {/* EOBINoAct */}
+                        {/* EOBINoAct */}
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="EOBINoAct" className="form-label">
@@ -1681,20 +1971,18 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="EOBINoAct"
+                              name="EOBINoAct"
                               placeholder="EOBINoAct"
                               {...formik.getFieldProps("EOBINoAct")}
                             />
                           </div>
                         </Col>
-                       
                       </Row>
-
                     </div>
                   </CardBody>
                 </Form>
               </Card>
             </Col>
-
           </Row>
         </Container>
       </div>
