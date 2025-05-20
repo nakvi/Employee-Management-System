@@ -13,21 +13,52 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getDesignation } from "../../../slices/setup/designation/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
 
 const DeductionReport = () => {
   const handleFetch = () => {
     console.log("Fetching Report...");
   };
-  
+
   const handleGeneratePDF = () => {
     console.log("Generating PDF...");
   };
-  
+
   const handleCancel = () => {
     console.log("Cancelling...");
   };
-  
+
   document.title = "Deduction Report | EMS";
+
+  const dispatch = useDispatch();
+  const { location = [] } = useSelector((state) => state.Location || {});
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { designation = [] } = useSelector((state) => state.Designation || {});
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+
+  const { employee = [] } = useSelector((state) => state.Employee || {});
+  // const { salaryBank = [] } = useSelector((state) => state.salaryBank || {});
+  const { loading, error, salaryBank } = useSelector(
+    (state) => state.SalaryBank
+  );
+  // console.log("Salary Bank Data:", salaryBank);
+
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getDesignation());
+    dispatch(getLocation());
+    dispatch(getSalaryBank());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -38,11 +69,11 @@ const DeductionReport = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeaderReport title="Deduction Report" 
-                     onFetch={handleFetch}
-                     onGeneratePDF={handleGeneratePDF}
-                     onCancel={handleCancel}
-                     />
+                  <PreviewCardHeaderReport title="Deduction Report"
+                    onFetch={handleFetch}
+                    onGeneratePDF={handleGeneratePDF}
+                    onCancel={handleCancel}
+                  />
 
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -61,8 +92,11 @@ const DeductionReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -80,8 +114,11 @@ const DeductionReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -118,8 +155,11 @@ const DeductionReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {location.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -137,8 +177,11 @@ const DeductionReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -157,8 +200,11 @@ const DeductionReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {designation.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -177,8 +223,11 @@ const DeductionReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {salaryBank.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -512,7 +561,7 @@ const DeductionReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Final Settlement Employee Format
+                              Final Settlement Employee Format
                             </Label>
                           </div>
                         </Col>
@@ -526,7 +575,7 @@ const DeductionReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                             Employee Format
+                              Employee Format
                             </Label>
                           </div>
                         </Col>
@@ -540,7 +589,7 @@ const DeductionReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Arrears Sheet
+                              Arrears Sheet
                             </Label>
                           </div>
                         </Col>
@@ -688,8 +737,8 @@ const DeductionReport = () => {
                           </div>
                         </Col>
                       </Row>
-                        {/* Third Grid */}
-                        <Row>
+                      {/* Third Grid */}
+                      <Row>
                         <Col xxl={2} md={2}>
                           <div className="form-check mt-2 mb-2" dir="ltr">
                             <Input
@@ -747,8 +796,8 @@ const DeductionReport = () => {
                           </div>
                         </Col>
                       </Row>
-                        {/* Second Grid */}
-                        <Row style={{ border: "1px dotted lightgray" }}>
+                      {/* Second Grid */}
+                      <Row style={{ border: "1px dotted lightgray" }}>
                         <Col xxl={2} md={2}>
                           <div className="form-check mt-2 mb-2" dir="ltr">
                             <Input
@@ -759,7 +808,7 @@ const DeductionReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Employee Ledger 
+                              Employee Ledger
                             </Label>
                           </div>
                         </Col>

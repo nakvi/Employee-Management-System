@@ -13,21 +13,53 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getDesignation } from "../../../slices/setup/designation/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
+
 
 const SalaryReport = () => {
   const handleFetch = () => {
     console.log("Fetching Report...");
   };
-  
+
   const handleGeneratePDF = () => {
     console.log("Generating PDF...");
   };
-  
+
   const handleCancel = () => {
     console.log("Cancelling...");
   };
-  
+
   document.title = "Salary Report | EMS";
+
+  const dispatch = useDispatch();
+  const { location = [] } = useSelector((state) => state.Location || {});
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { designation = [] } = useSelector((state) => state.Designation || {});
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+
+  const { employee = [] } = useSelector((state) => state.Employee || {});
+  // const { salaryBank = [] } = useSelector((state) => state.salaryBank || {});
+  const { loading, error, salaryBank } = useSelector(
+    (state) => state.SalaryBank
+  );
+  // console.log("Salary Bank Data:", salaryBank);
+
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getDesignation());
+    dispatch(getLocation());
+    dispatch(getSalaryBank());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -39,9 +71,9 @@ const SalaryReport = () => {
               <Card>
                 <Form>
                   <PreviewCardHeaderReport title="Salary Report"
-                     onFetch={handleFetch}
-                     onGeneratePDF={handleGeneratePDF}
-                     onCancel={handleCancel}
+                    onFetch={handleFetch}
+                    onGeneratePDF={handleGeneratePDF}
+                    onCancel={handleCancel}
                   />
 
                   <CardBody className="card-body">
@@ -61,8 +93,11 @@ const SalaryReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -80,8 +115,11 @@ const SalaryReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -118,8 +156,11 @@ const SalaryReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {location.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -137,12 +178,15 @@ const SalaryReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
-                     
+
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label
@@ -157,8 +201,11 @@ const SalaryReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {designation.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -177,8 +224,11 @@ const SalaryReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {salaryBank.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -441,7 +491,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            OverTime Summary 
+                              OverTime Summary
                             </Label>
                           </div>
                         </Col>
@@ -469,11 +519,11 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Employee Format
+                              Employee Format
                             </Label>
                           </div>
                         </Col>
-                     
+
                         <Col xxl={2} md={2}>
                           <div className="form-check mt-3" dir="ltr">
                             <Input
@@ -484,7 +534,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Arrears Sheet
+                              Arrears Sheet
                             </Label>
                           </div>
                         </Col>
@@ -498,7 +548,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Attendance Allowance
+                              Attendance Allowance
                             </Label>
                           </div>
                         </Col>
@@ -512,7 +562,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Increment List
+                              Increment List
                             </Label>
                           </div>
                         </Col>
@@ -526,7 +576,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Advance/Loan List
+                              Advance/Loan List
                             </Label>
                           </div>
                         </Col>
@@ -540,7 +590,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Advance/Loan Summary
+                              Advance/Loan Summary
                             </Label>
                           </div>
                         </Col>
@@ -554,7 +604,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Allowance List
+                              Allowance List
                             </Label>
                           </div>
                         </Col>
@@ -568,14 +618,14 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Allowance Summary
+                              Allowance Summary
                             </Label>
                           </div>
                         </Col>
                       </Row>
                       {/* Second Grid */}
                       <Row style={{ border: "1px dotted lightgray" }}>
-                      <Col xxl={2} md={2}>
+                        <Col xxl={2} md={2}>
                           <div className="form-check mt-2 mb-2" dir="ltr">
                             <Input
                               type="radio"
@@ -585,7 +635,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Hygiene Card
+                              Hygiene Card
                             </Label>
                           </div>
                         </Col>
@@ -599,7 +649,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              EOBI Contribution 
+                              EOBI Contribution
                             </Label>
                           </div>
                         </Col>
@@ -613,7 +663,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            SS Contribution 
+                              SS Contribution
                             </Label>
                           </div>
                         </Col>

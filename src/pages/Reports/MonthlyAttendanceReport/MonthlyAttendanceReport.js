@@ -14,6 +14,12 @@ import {
 import { Link } from "react-router-dom";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
 import Select from "react-select";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getDesignation } from "../../../slices/setup/designation/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
 
 const MonthlyAttendanceReport = () => {
   const SingleOptions = [
@@ -41,6 +47,24 @@ const MonthlyAttendanceReport = () => {
   };
 
   document.title = "Monthly Attendance Report | EMS";
+
+  const dispatch = useDispatch();
+  const { location = [] } = useSelector((state) => state.Location || {});
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { designation = [] } = useSelector((state) => state.Designation || {});
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+
+  const { employee = [] } = useSelector((state) => state.Employee || {});
+
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getDesignation());
+    dispatch(getLocation());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -75,8 +99,11 @@ const MonthlyAttendanceReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -94,8 +121,11 @@ const MonthlyAttendanceReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -133,8 +163,11 @@ const MonthlyAttendanceReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {location.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -152,7 +185,10 @@ const MonthlyAttendanceReport = () => {
                               onChange={() => {
                                 handleMulti();
                               }}
-                              options={SingleOptions}
+                              options={departmentList.map((item) => ({
+                                value: item.VID,
+                                label: item.VName,
+                              }))}
                             />
                             {/* <select
                               className="form-select  form-select-sm"
@@ -180,8 +216,11 @@ const MonthlyAttendanceReport = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {designation.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
