@@ -38,7 +38,6 @@ export const getEmployee = createAsyncThunk("employee/geteEmployee",
 );
 // Submit Salary Increment
 export const submitEmployee =createAsyncThunk("employee/SubmitEmployee", async (payload, { rejectWithValue }) => {
-  console.log("Em",payload)
   try {
     const response = await fetch(API_ENDPOINT, {
       method: "POST",
@@ -78,7 +77,7 @@ export const updateEmployee = createAsyncThunk("employee/updateEmployee",async (
     }
     
     const  responseData = await response.json();
-    toast.success(data.message || "Employee updated successfully!");
+    toast.success(responseData.message || "Employee updated successfully!");
     return responseData.data; // Assuming the updated data is in 'data'
 
   } catch(error) {

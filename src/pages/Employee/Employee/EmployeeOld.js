@@ -11,7 +11,7 @@ import {
   Form,
 } from "reactstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation,useNavigate } from "react-router-dom"; // Import useLocation
+import { useLocation } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import avatar1 from "../../../assets/images/users/avatar-11.png";
 import { useFormik } from "formik";
@@ -29,18 +29,18 @@ import { getReligion } from "../../../slices/employee/religion/thunk";
 import { getGrade } from "../../../slices/setup/grade/thunk";
 import { getGender } from "../../../slices/employee/gender/thunk";
 import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
-import { getEmployeeType } from "../../../slices//employee/employeeType/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getShift } from "../../../slices/setup/shift/thunk";
 
 const Employee = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const location = useLocation(); // Access location to get passed state
   const [selectedDate, setSelectedDate] = useState("");
   const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
 
   // Access Redux state
   const { loading, error, employee } = useSelector((state) => state.Employee);
+  // const { location } = useSelector((state) => state.Location);
   const { location: locations } = useSelector((state) => state.Location);
   const { department } = useSelector((state) => state.Department);
   const { designation } = useSelector((state) => state.Designation);
@@ -50,57 +50,9 @@ const Employee = () => {
   const { salaryBank } = useSelector((state) => state.SalaryBank);
   const { employeeType } = useSelector((state) => state.EmployeeType);
   const { shift } = useSelector((state) => state.Shift);
-
   // Get employee data from location state
   const employeeData = location.state?.employee;
-
-  // Format date for input type="date"
-  const formatDate = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toISOString().split("T")[0]; // Returns YYYY-MM-DD
-  };
-
-  // Transform employee data for Formik
-  const transformEmployeeData = (data) => {
-    if (!data) return {};
-    return {
-      ...data,
-      // Convert numeric booleans to actual booleans
-      Isactive: data.Isactive === 1,
-      IsactiveAct: data.IsactiveAct === 1,
-      HaveOT: data.HaveOT === 1,
-      HaveOTAct: data.HaveOTAct === 1,
-      HaveOTOFF: data.HaveOTOFF === 1,
-      IsBank: data.IsBank === 1,
-      IsGroupInsurance: data.IsGroupInsurance === 1,
-      IsPFundEntitled: data.IsPFundEntitled === 1,
-      IsPFund: data.IsPFund === 1,
-      IsPessi: data.IsPessi === 1,
-      IsExempt: data.IsExempt === 1,
-      IsShiftEmployee: data.IsShiftEmployee === 1,
-      IsShiftEmployeeAct: data.IsShiftEmployeeAct === 1,
-      ExemptLate: data.ExemptLate === 1,
-      IsTransport: data.IsTransport === 1,
-      IsManager: data.IsManager === 1,
-      IsShowForAudit: data.IsShowForAudit === 1,
-      IsStopSalary: data.IsStopSalary === 1,
-      BusDeduction: data.BusDeduction === 1,
-      BlackList: data.BlackList === 1,
-      // Format date fields
-      DOB: formatDate(data.DOB),
-      DOJ: formatDate(data.DOJ),
-      DOJAct: formatDate(data.DOJAct),
-      DOL: formatDate(data.DOL),
-      DOLAct: formatDate(data.DOLAct),
-      ProbitionDate: formatDate(data.ProbitionDate),
-      PFundEntitledDate: formatDate(data.PFundEntitledDate),
-      PessiDate: formatDate(data.PessiDate),
-      TransportDate: formatDate(data.TransportDate),
-      NICExpairy: formatDate(data.NICExpairy),
-    };
-  };
-
+  console.log(employeeData);
   // Fetch data on component mount
   useEffect(() => {
     dispatch(getEmployee());
@@ -113,14 +65,7 @@ const Employee = () => {
     dispatch(getSalaryBank());
     dispatch(getEmployeeType());
     dispatch(getShift());
-
-    // Set editingGroup and Formik values if employeeData exists
-    if (employeeData) {
-      setEditingGroup(employeeData);
-      formik.setValues(transformEmployeeData(employeeData));
-    }
-  }, [dispatch, employeeData]);
-
+  }, [dispatch]);
   // Formik form setup
   const formik = useFormik({
     initialValues: {
@@ -157,12 +102,12 @@ const Employee = () => {
       CompanyBankID: "",
       Isactive: false,
       IsactiveAct: 0,
-      DOL: "",
-      DOLAct: "",
+      DOL: "2025-04-23T14:00:00",
+      DOLAct: "2025-04-23T14:00:00",
       LeftRemarks: "",
       GradeID: 0,
       ProbitionStatus: "",
-      ProbitionDate: "",
+      ProbitionDate: "2025-04-23T14:00:00",
       CellPhone: "",
       IcePhone: "",
       Address: "",
@@ -212,6 +157,7 @@ const Employee = () => {
       CompanyID: 1,
     },
 
+    // Add this validation schema to your formik configuration
     validationSchema: Yup.object({
       ETypeID: Yup.number()
         .min(1, "Employee Type is required")
@@ -327,32 +273,27 @@ const Employee = () => {
         BlackList: values.BlackList ? 1 : 0,
       };
       if (editingGroup) {
+        console.log("Editing Group", transformedValues);
+
         dispatch(
           updateEmployee({ ...transformedValues, VID: editingGroup.VID })
         );
-         // Only navigate if update was successful
-          navigate(-1);
-        // setEditingGroup(null); // Reset after submission
+        setEditingGroup(null); // Reset after submission
       } else {
+        console.log(transformedValues);
         dispatch(submitEmployee(transformedValues));
       }
       formik.resetForm();
     },
   });
-
-  // Set date format
+  // set date format
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
   }, []);
-
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
-  };
-  const handleCancel = () => {
-    formik.resetForm();
-    navigate(-1); // Go back to previous page
   };
   document.title = "Employee | EMS";
   return (
@@ -365,10 +306,9 @@ const Employee = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                    <PreviewCardHeader
-                    title={editingGroup ? "Edit Employee" : "Employee Details"}
-                     onCancel={editingGroup ? handleCancel : () => formik.resetForm()}
-                    isEditMode={!!editingGroup} // Pass whether we're in edit mode
+                  <PreviewCardHeader
+                    title="Employee Details"
+                    onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
