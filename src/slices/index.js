@@ -77,7 +77,7 @@ import DepartmentReducer from "./setup/department/reducer";
 import DesignationReducer from "./setup/designation/reducer"; 
 import GradeReducer from "./setup/grade/reducer"; 
 import SalaryBankReducer from "./setup/salaryBank/reducer"; 
-import AllowanceDeductionTypeReducer from "./setup/allowanceDeductionType/reducer"; 
+import AllowanceDeductionTypeReducer from "./setup/allowanceDeductionType/reducer";
 import AttendanceCodeReducer from "./setup/attendanceCode/reducer"; 
 import RamazanReducer from "./setup/ramazan/reducer"; 
 import HolidayReducer from "./setup/holiday/reducer"; 
@@ -92,7 +92,7 @@ import EmployeeReducer from "./employee/employee/reducer";
 import LoanDisbursementReducer from "./employee/loanDisbursement/reducer";
 import SalaryIncrementReducer from "./employee/salaryIncrement/reducer";
 import EmployeeLocationTransferReducer from "./employee/employeeTransfer/reducer";
-import EmployeeType from "./employee/employeeType/reducer"; // Correct import
+import EmployeeTypeReducer from "./employee/employeeType/reducer";
 import ReligionReducer from "./employee/religion/reducer";
 import GenderReducer from "./employee/gender/reducer";
 
@@ -159,7 +159,7 @@ const rootReducer = combineReducers({
     LoanDisbursement: LoanDisbursementReducer, 
     SalaryIncrement: SalaryIncrementReducer,  
     EmployeeLocationTransfer:EmployeeLocationTransferReducer,
-    EmployeeType: EmployeeType, // Corrected to use EmployeeType reducer
+    EmployeeType:EmployeeTypeReducer,
     Religion:ReligionReducer,
     Gender:GenderReducer,
     Role: RolesReducer, // Here is my work 01/23/2025

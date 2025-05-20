@@ -17,6 +17,8 @@ export const getEmployee = createAsyncThunk("employee/geteEmployee",
 
       if (data.status === "0") {
         // Success: Return the data
+        console.log("test", data.data);
+        
         return data.data;
       } else if (data.status === "1") {
         // Error: Show an error message on toast
