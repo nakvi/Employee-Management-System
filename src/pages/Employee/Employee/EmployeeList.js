@@ -14,7 +14,7 @@ import {
   AccordionItem,
   Collapse,
 } from "reactstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
 
@@ -39,6 +39,7 @@ import { getShift } from "../../../slices/setup/shift/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 const EmployeeList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState("");
   const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
   const [col, setCol] = useState(false);
@@ -60,15 +61,6 @@ const EmployeeList = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
 
-  // console.log("employee", employee );
-  // console.log("employeeType", employeeType );
-  // console.log("location", location );
-  // console.log("shift", shift );
-  // console.log("department", department );
-  // console.log("designation", designation );
-  // console.log("religion", religion );
-  // console.log("grade", grade );
-  // console.log("gender", gender );
   // Fetch data on component mount
   useEffect(() => {
     dispatch(getEmployee());
@@ -82,151 +74,154 @@ const EmployeeList = () => {
     dispatch(getEmployeeType());
   }, [dispatch]);
 
-useEffect(() => {
-  if (employee) {
-    console.log("Employee data loaded successfully!", employee);
+  useEffect(() => {
+    if (employee) {
+      console.log("Employee data loaded successfully!", employee);
 
-    const filtered = employee.filter((item) =>
-      Object.values(item)
-        .join(" ")
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
-    );
-    setFilteredData(filtered);
-  }
-}, [searchText, employee]); // 🔁 FIXED dependency
-
-const columns = [
-  {
-    name: "Emp Code",
-    selector: (row) => row.EmpCode,
-    sortable: true,
-  },
-   {
-    name: "Emp Name",
-    selector: (row) => row.EName,
-    sortable: true,
-  },
-   {
-    name: "Father Name",
-    selector: (row) => row.FName,
-    sortable: true,
-  },
-   {
-    name: "Designation",
-    selector: (row) => row.DesignationTitle,
-    sortable: true,
-  },
-   {
-    name: "Birth Date",
-    selector: (row) => row.DOB,
-    sortable: true,
-  },
-   {
-    name: "Joining Date",
-    selector: (row) => row.DOJ,
-    sortable: true,
-  },
-   {
-    name: "Probation Date",
-    selector: (row) => row.ProbitionDate,
-    sortable: true,
-  },
-   {
-    name: "CNIC No",
-    selector: (row) => row.NIC,
-    sortable: true,
-  },
-   {
-    name: "Mobile No",
-    selector: (row) => row.CellPhone,
-    sortable: true,
-  },
-   {
-    name: "Email",
-    selector: (row) => row.Email,
-    sortable: true,
-  },
-  {
-    name: "Head Name",
-    selector: (row) => row.HODName,
-    sortable: true,
-  },
-  {
-    name: "Company Code",
-    selector: (row) => row.CompanyCode,
-    sortable: true,
-  },
-  {
-    name: "Company Name",
-    selector: (row) => row.CompanyName,
-    sortable: true,
-  },
-  {
-    name: "Is Active",
-    selector: (row) => row.IsActive,
-    sortable: true,
-  },
-   {
-    name: "Machine Card No",
-    selector: (row) => row.MachineCardNo,
-    sortable: true,
-  },
-   {
-    name: "Basic Salary",
-    selector: (row) => row.BasicSalary,
-    sortable: true,
-  },
-  {
-    name: "Action",
-    cell: (row) => (
-      <div className="d-flex gap-2">
-        <Button
-          className="btn btn-soft-info btn-sm"
-          onClick={() => handleEditClick(row)}
-        >
-          <i className="bx bx-edit"></i>
-        </Button>
-        <Button
-          className="btn btn-soft-danger btn-sm"
-          onClick={() => handleDeleteClick(row.EmpID)}
-        >
-          <i className="ri-delete-bin-2-line"></i>
-        </Button>
-      </div>
-    ),
-    ignoreRowClick: true,
-    allowOverflow: true,
-    button: true,
-  },
-];
-    const customStyles = {
-      table: {
-        style: {
-          border: '1px solid #dee2e6',
-        },
+      const filtered = employee.filter((item) =>
+        Object.values(item)
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  }, [searchText, employee]); // 🔁 FIXED dependency
+  // Edit Click
+  const handleEditClick = (row) => {
+    navigate("/employee", { state: { employee: row } });
+  };
+  const columns = [
+    {
+      name: "Emp Code",
+      selector: (row) => row.EmpCode,
+      sortable: true,
+    },
+    {
+      name: "Emp Name",
+      selector: (row) => row.EName,
+      sortable: true,
+    },
+    {
+      name: "Father Name",
+      selector: (row) => row.FName,
+      sortable: true,
+    },
+    {
+      name: "Designation",
+      selector: (row) => row.DesignationTitle,
+      sortable: true,
+    },
+    {
+      name: "Birth Date",
+      selector: (row) => row.DOB,
+      sortable: true,
+    },
+    {
+      name: "Joining Date",
+      selector: (row) => row.DOJ,
+      sortable: true,
+    },
+    {
+      name: "Probation Date",
+      selector: (row) => row.ProbitionDate,
+      sortable: true,
+    },
+    {
+      name: "CNIC No",
+      selector: (row) => row.NIC,
+      sortable: true,
+    },
+    {
+      name: "Mobile No",
+      selector: (row) => row.CellPhone,
+      sortable: true,
+    },
+    {
+      name: "Email",
+      selector: (row) => row.Email,
+      sortable: true,
+    },
+    {
+      name: "Head Name",
+      selector: (row) => row.HODName,
+      sortable: true,
+    },
+    {
+      name: "Company Code",
+      selector: (row) => row.CompanyCode,
+      sortable: true,
+    },
+    {
+      name: "Company Name",
+      selector: (row) => row.CompanyName,
+      sortable: true,
+    },
+    {
+      name: "Is Active",
+      selector: (row) => row.IsActive,
+      sortable: true,
+    },
+    {
+      name: "Machine Card No",
+      selector: (row) => row.MachineCardNo,
+      sortable: true,
+    },
+    {
+      name: "Basic Salary",
+      selector: (row) => row.BasicSalary,
+      sortable: true,
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.EmpID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+  const customStyles = {
+    table: {
+      style: {
+        border: "1px solid #dee2e6",
       },
-      headRow: {
-        style: {
-          backgroundColor: '#f8f9fa',
-          borderBottom: '1px solid #dee2e6',
-          fontWeight: '600',
-        },
+    },
+    headRow: {
+      style: {
+        backgroundColor: "#f8f9fa",
+        borderBottom: "1px solid #dee2e6",
+        fontWeight: "600",
       },
-      rows: {
-        style: {
-          minHeight: '48px',
-          borderBottom: '1px solid #dee2e6',
-        },
+    },
+    rows: {
+      style: {
+        minHeight: "48px",
+        borderBottom: "1px solid #dee2e6",
       },
-      cells: {
-        style: {
-          paddingLeft: '16px',
-          paddingRight: '16px',
-          borderRight: '1px solid #dee2e6',
-        },
+    },
+    cells: {
+      style: {
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        borderRight: "1px solid #dee2e6",
       },
-    };
+    },
+  };
   // Formik form setup
   const formik = useFormik({
     initialValues: {
@@ -247,8 +242,8 @@ const columns = [
       SalaryFrom: '',
       SalaryTo: '',
       JoinDateCheck: false,
-      JoinDateFrom: '',
-      JoinDateTo: '',
+      JoinDateFrom: "",
+      JoinDateTo: "",
       ResignEmployeeCheck: false,
       ResignDateFrom: '',
       ResignDateTo: '',
@@ -307,7 +302,6 @@ const columns = [
     setSelectedDate(today);
   }, []);
 
-
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -326,7 +320,7 @@ const columns = [
                   style={{
                     color: "#495057",
                     marginLeft: "16px",
-                    border:"none",
+                    border: "none",
                   }}
                 >
                   <h4 className="card-title mb-0 flex-grow-1">
@@ -343,6 +337,13 @@ const columns = [
                     </Button>
                     <Button color="dark" className="add-btn me-1 py-1">
                       <i className="align-bottom me-1"></i> Cancel
+                    </Button>
+                    <Button
+                      color="primary"
+                      className="add-btn me-1 py-1"
+                      onClick={() => navigate("/employee")}
+                    >
+                      <i className="align-bottom me-1"></i> New
                     </Button>
                   </div>
                 </CardHeader>
@@ -383,10 +384,13 @@ const columns = [
                             <div className="live-preview">
                               <Row className="gy-4">
                                 <Col xxl={2} md={2}>
-                                {/* E-Type */}
-                                 <div className="mb-3">
-                                    <Label htmlFor="ETypeID" className="form-label">
-                                     E-Type
+                                  {/* E-Type */}
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="ETypeID"
+                                      className="form-label"
+                                    >
+                                      E-Type
                                     </Label>
                                     <select
                                       name="ETypeID"
@@ -399,7 +403,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {employeeType?.length > 0 ? (
                                         employeeType.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -418,9 +425,12 @@ const columns = [
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={3}>
-                                    {/* Employee */}
-                                 <div className="mb-3">
-                                    <Label htmlFor="EmpID" className="form-label">
+                                  {/* Employee */}
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="EmpID"
+                                      className="form-label"
+                                    >
                                       Employee
                                     </Label>
                                     <select
@@ -434,7 +444,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {employee?.length > 0 ? (
                                         employee.map((group) => (
-                                          <option key={group.EmpID} value={group.EmpID}>
+                                          <option
+                                            key={group.EmpID}
+                                            value={group.EmpID}
+                                          >
                                             {group.EName}
                                           </option>
                                         ))
@@ -467,7 +480,7 @@ const columns = [
                                       {...formik.getFieldProps("FName")}
                                       placeholder="Father Name"
                                     />
-                                         {formik.touched.EmpID &&
+                                    {formik.touched.EmpID &&
                                     formik.errors.EmpID ? (
                                       <div className="text-danger">
                                         {formik.errors.EmpID}
@@ -476,9 +489,12 @@ const columns = [
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={2}>
-                                 {/* Department */}
+                                  {/* Department */}
                                   <div className="mb-3">
-                                    <Label htmlFor="DeptID" className="form-label">
+                                    <Label
+                                      htmlFor="DeptID"
+                                      className="form-label"
+                                    >
                                       Department
                                     </Label>
                                     <select
@@ -492,7 +508,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {department.data?.length > 0 ? (
                                         department.data.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -512,7 +531,10 @@ const columns = [
                                 </Col>
                                 <Col xxl={2} md={2}>
                                   <div className="mb-3">
-                                    <Label htmlFor="DesgID" className="form-label">
+                                    <Label
+                                      htmlFor="DesgID"
+                                      className="form-label"
+                                    >
                                       Designation
                                     </Label>
                                     <select
@@ -526,7 +548,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {designation?.length > 0 ? (
                                         designation.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -581,9 +606,12 @@ const columns = [
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={2}>
-                                {/* Location */}
+                                  {/* Location */}
                                   <div className="mb-3">
-                                    <Label htmlFor="LocationID" className="form-label">
+                                    <Label
+                                      htmlFor="LocationID"
+                                      className="form-label"
+                                    >
                                       Location
                                     </Label>
                                     <select
@@ -597,7 +625,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {location?.length > 0 ? (
                                         location.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -617,7 +648,10 @@ const columns = [
                                 </Col>
                                 <Col xxl={2} md={2}>
                                   <div className="mb-3">
-                                    <Label htmlFor="ShiftID" className="form-label">
+                                    <Label
+                                      htmlFor="ShiftID"
+                                      className="form-label"
+                                    >
                                       Shift
                                     </Label>
                                     <select
@@ -631,7 +665,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {shift?.length > 0 ? (
                                         shift.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -648,12 +685,14 @@ const columns = [
                                       </div>
                                     ) : null}
                                   </div>
-
                                 </Col>
                                 <Col xxl={2} md={2}>
                                   {/* Religion */}
-                                   <div className="mb-3">
-                                    <Label htmlFor="ReligionID" className="form-label">
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="ReligionID"
+                                      className="form-label"
+                                    >
                                       Region
                                     </Label>
                                     <select
@@ -667,7 +706,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {religion?.length > 0 ? (
                                         religion.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -686,9 +728,12 @@ const columns = [
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={2}>
-                                {/* Grade */}
-                                 <div className="mb-3">
-                                    <Label htmlFor="GradeID" className="form-label">
+                                  {/* Grade */}
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="GradeID"
+                                      className="form-label"
+                                    >
                                       Grade
                                     </Label>
                                     <select
@@ -702,7 +747,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {grade?.length > 0 ? (
                                         grade.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -765,7 +813,7 @@ const columns = [
 
                                 </Col>
                                 <Col xxl={2} md={3}>
-                                   <div>
+                                  <div>
                                     <Label
                                       htmlFor="BloodGroup"
                                       className="form-label"
@@ -1058,7 +1106,7 @@ const columns = [
                         type="text"
                         placeholder="Search"
                         className="form-control form-control-sm"
-                        style={{ width: '200px' }}
+                        style={{ width: "200px" }}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                       />
@@ -1069,8 +1117,8 @@ const columns = [
                     columns={columns}
                     data={filteredData}
                     pagination
-                    paginationPerPage={100} 
-                    paginationRowsPerPageOptions={[100, 200, 500]} 
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 500]}
                     highlightOnHover
                     responsive
                     customStyles={customStyles}

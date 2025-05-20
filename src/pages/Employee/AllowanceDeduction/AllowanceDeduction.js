@@ -12,9 +12,14 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
 
 const AllowanceDeduction = () => {
   const [selectedDate, setSelectedDate] = useState("");
+  const dispatch = useDispatch();
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
@@ -24,6 +29,18 @@ const AllowanceDeduction = () => {
     return today.toISOString().split("T")[0];
   };
   document.title = "Allowance Deduction| EMS";
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { loading, error, salaryBank } = useSelector(
+      (state) => state.SalaryBank
+    );
+
+  useEffect(() => {
+    dispatch(getSalaryBank());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -36,7 +53,7 @@ const AllowanceDeduction = () => {
                 <Form>
                   <PreviewCardHeader
                     title="Allowance Deduction"
-                    // onCancel={formik.resetForm}
+                  // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -55,8 +72,11 @@ const AllowanceDeduction = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -74,8 +94,11 @@ const AllowanceDeduction = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -123,7 +146,7 @@ const AllowanceDeduction = () => {
                               htmlFor="departmentGroupInput"
                               className="form-label"
                             >
-                              Details 
+                              Details
                             </Label>
                             <select
                               className="form-select  form-select-sm"
@@ -149,7 +172,7 @@ const AllowanceDeduction = () => {
                             />
                           </div>
                         </Col>
-                      
+
                         <Col xxl={2} md={3}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
@@ -167,7 +190,7 @@ const AllowanceDeduction = () => {
                         <Col xxl={2} md={3}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
-                              To 
+                              To
                             </Label>
                             <Input
                               type="date"
@@ -192,8 +215,11 @@ const AllowanceDeduction = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Habib</option>
-                              <option value="Choices2">Meezan</option>
+                              {salaryBank.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -223,7 +249,7 @@ const AllowanceDeduction = () => {
                             />
                           </div>
                         </Col>
-                   
+
                       </Row>
                     </div>
                   </CardBody>
@@ -265,13 +291,13 @@ const AllowanceDeduction = () => {
                             <th>Bank</th>
                             <th>Cheque No</th>
                             <th>Date</th>
-                            
+
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           <tr>
-                          <td>001:Sir Amir:Hr</td>
+                            <td>001:Sir Amir:Hr</td>
                             <td>Allowance</td>
                             <td>Current Month</td>
                             <td>Loan</td>
@@ -281,7 +307,7 @@ const AllowanceDeduction = () => {
                             <td>Habib</td>
                             <td>84843</td>
                             <td>02/03/2025</td>
-                            
+
                             <td>
                               <div className="d-flex gap-2">
                                 <div className="edit ">
