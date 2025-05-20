@@ -12,9 +12,23 @@ import {
   CardHeader,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getDepartment } from "../../../slices/setup/department/thunk";
 
 const PaymentPlan = () => {
   document.title = "Payment Plan | EMS";
+  const dispatch = useDispatch();
+
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+
+  useEffect(() => {
+    dispatch(getEmployeeType());
+    dispatch(getDepartment());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -68,8 +82,11 @@ const PaymentPlan = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -87,8 +104,11 @@ const PaymentPlan = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>

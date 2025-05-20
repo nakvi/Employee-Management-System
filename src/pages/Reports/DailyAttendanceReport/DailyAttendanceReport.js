@@ -13,6 +13,13 @@ import {
 } from "reactstrap";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
 import RenderTable from "./RenderTable";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getDesignation } from "../../../slices/setup/designation/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+
 
 const DailyAttendanceReport = () => {
   const [selectedDate, setSelectedDate] = useState("");
@@ -34,17 +41,15 @@ const DailyAttendanceReport = () => {
       query += ` AND EType = '${filters.EType ? filters.EType : 0}'`;
     }
     if (filters.EmployeeID && Number(filters.EmployeeID) > 0) {
-      query += ` AND EmployeeID = '${
-        filters.EmployeeID ? filters.EmployeeID : 0
-      }'`;
+      query += ` AND EmployeeID = '${filters.EmployeeID ? filters.EmployeeID : 0
+        }'`;
     }
     if (filters.HODID && Number(filters.HODID) > 0) {
       query += ` AND HODID = '${filters.HODID ? filters.HODID : 0}'`;
     }
     if (filters.LocationID && Number(filters.LocationID) > 0) {
-      query += ` AND LocationID = '${
-        filters.LocationID ? filters.LocationID : 0
-      }'`;
+      query += ` AND LocationID = '${filters.LocationID ? filters.LocationID : 0
+        }'`;
     }
     if (filters.DeptID && Number(filters.DeptID) > 0) {
       query += ` AND DepartmentID = '${filters.DeptID ? filters.DeptID : 0}'`;
@@ -78,7 +83,7 @@ const DailyAttendanceReport = () => {
 
   const handleFetch = () => {
     const selectedFilters = {
-      UserID :1,
+      UserID: 1,
       LoginComapnyID: 1,
       LoginLocationID: 1,
       EType: Number(document.getElementById("EType").value) > 0 ? document.getElementById("EType").value : null,
@@ -94,12 +99,12 @@ const DailyAttendanceReport = () => {
       ShiftEmployee: document.getElementById("ShiftEmployee").checked,
       VType: document.querySelector('input[name="VType"]:checked')?.value || null, // Get selected radio button value
     };
-    
+
     // const selectedFilters = {
     //   UserID :1,
     //   LoginComapnyID: 1,
     //   LoginLocationID: 1,
-      
+
     //   EType: document.getElementById("EType").value,
     //   EmployeeID: document.getElementById("EmployeeID").value,
     //   HODID: document.getElementById("HODID").value,
@@ -138,6 +143,23 @@ const DailyAttendanceReport = () => {
     return today.toISOString().split("T")[0];
   };
   document.title = "Daily Attendance Report | EMS";
+  const dispatch = useDispatch();
+  const { location = [] } = useSelector((state) => state.Location || {});
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { designation = [] } = useSelector((state) => state.Designation || {});
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+
+  const { employee = [] } = useSelector((state) => state.Employee || {});
+
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getDesignation());
+    dispatch(getLocation());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -171,8 +193,11 @@ const DailyAttendanceReport = () => {
                               id="EType"
                             >
                               <option value="-1">---Select--- </option>
-                              <option value="1">Staff</option>
-                              <option value="2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -190,8 +215,11 @@ const DailyAttendanceReport = () => {
                               id="EmployeeID"
                             >
                               <option value="-1">---Select--- </option>
-                              <option value="1">Usama</option>
-                              <option value="2">Zain</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -229,8 +257,11 @@ const DailyAttendanceReport = () => {
                               id="LocationID"
                             >
                               <option value="-1">---Select--- </option>
-                              <option value="1">Lahore</option>
-                              <option value="2">Karachi</option>
+                              {location.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -248,8 +279,11 @@ const DailyAttendanceReport = () => {
                               id="DeptID"
                             >
                               <option value="-1">---Select--- </option>
-                              <option value="1">IT</option>
-                              <option value="2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -268,8 +302,11 @@ const DailyAttendanceReport = () => {
                               id="DesgID"
                             >
                               <option value="-1">---Select--- </option>
-                              <option value="1">Developer</option>
-                              <option value="2">Hr</option>
+                              {designation.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -556,9 +593,9 @@ const DailyAttendanceReport = () => {
                   <CardBody>
                     <h5>Selected Filters:</h5>
                     <p>
-                    <strong>UserID:</strong> {filters.UserID || " "} <br />
-                    <strong>LoginComapnyID:</strong> {filters.LoginComapnyID|| " "} <br />
-                    <strong>LoginLocationID:</strong> {filters.LoginLocationID || " "} <br />
+                      <strong>UserID:</strong> {filters.UserID || " "} <br />
+                      <strong>LoginComapnyID:</strong> {filters.LoginComapnyID || " "} <br />
+                      <strong>LoginLocationID:</strong> {filters.LoginLocationID || " "} <br />
                       <strong>E-Type:</strong> {filters.EType || " "} <br />
                       <strong>Employee:</strong> {filters.EmployeeID || " "}{" "}
                       <br />

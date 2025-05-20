@@ -13,9 +13,27 @@ import {
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { FiRefreshCw } from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
 
 const Gratuity = () => {
   document.title = "Gratuity | EMS";
+  const dispatch = useDispatch();
+
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+    const { employee = {} } = useSelector((state) => state.Employee || {});
+    const { loading, error, salaryBank } = useSelector(
+        (state) => state.SalaryBank
+      );
+  
+    useEffect(() => {
+      dispatch(getSalaryBank());
+      dispatch(getEmployeeType());
+      dispatch(getEmployee());
+    }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -47,8 +65,11 @@ const Gratuity = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -66,8 +87,11 @@ const Gratuity = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                             {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -160,8 +184,11 @@ const Gratuity = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Habib</option>
-                              <option value="Choices2">Meezan</option>
+                              {salaryBank.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>

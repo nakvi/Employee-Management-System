@@ -43,7 +43,8 @@ const EmployeeList = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
   const [col, setCol] = useState(false);
-
+  const [accordionDisabled, setAccordionDisabled] = useState(false);
+  const [searchDisabled, setSearchDisabled] = useState(false);
   const t_col = () => {
     setCol(!col);
   };
@@ -60,15 +61,6 @@ const EmployeeList = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
 
-  console.log("employee", employee);
-  console.log("employeeType", employeeType);
-  console.log("location", location);
-  console.log("shift", shift);
-  console.log("department", department);
-  console.log("designation", designation);
-  console.log("religion", religion);
-  console.log("grade", grade);
-  console.log("gender", gender);
   // Fetch data on component mount
   useEffect(() => {
     dispatch(getEmployee());
@@ -233,51 +225,77 @@ const EmployeeList = () => {
   // Formik form setup
   const formik = useFormik({
     initialValues: {
-      ETypeID: "",
-      EmpID: "",
-      FName: "",
-      DeptID: "",
-      DesgID: "",
-      HODID: "",
-      NIC: "",
-      LocationID: "",
-      ShiftID: "",
-      ReligionID: "",
-      GradeID: "",
-      PseudoName: "",
-      BloodGroup: "",
-      SalaryFrom: "",
-      SalaryTo: "",
+      SearchFilter: '',
+      ETypeID: '',
+      EmpID: '',
+      FName: '',
+      DeptID: '',
+      DesgID: '',
+      HODID: '',
+      NIC: '',
+      LocationID: '',
+      ShiftID: '',
+      ReligionID: '',
+      GradeID: '',
+      PseudoName: '',
+      BloodGroup: '',
+      SalaryFrom: '',
+      SalaryTo: '',
       JoinDateCheck: false,
       JoinDateFrom: "",
       JoinDateTo: "",
       ResignEmployeeCheck: false,
-      ResignDateFrom: "",
-      ResignDateTo: "",
-      ReportType: "VIN", // Default to Department wise list
+      ResignDateFrom: '',
+      ResignDateTo: '',
+      ReportType: 'VIN',
+      leftStatusId: ''
     },
+
+    validationSchema: Yup.object({
+      SearchFilter: Yup.string(),
+      NIC: Yup.string()
+        .matches(/^\d{5}-\d{7}-\d{1}$/, 'CNIC must be in format XXXXX-XXXXXXX-X'),
+      SalaryFrom: Yup.number().typeError('Must be a number'),
+      SalaryTo: Yup.number().typeError('Must be a number'),
+    }),
 
     onSubmit: (values) => {
-      const transformedValues = {
-        ...values,
-        IsActive: values.IsActive ? 1 : 0,
-        IsRoster: values.IsRoster ? 1 : 0,
-        IsSecurity: values.IsSecurity ? 1 : 0,
-        SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
-      };
-      if (editingGroup) {
-        console.log("Editing Group", transformedValues);
-
-        dispatch(
-          updateEmployee({ ...transformedValues, VID: editingGroup.VID })
-        );
-        setEditingGroup(null); // Reset after submission
+      let payload = {};
+      
+      if (values.SearchFilter && values.SearchFilter.trim() !== '') {
+        payload = { Search: values.SearchFilter.trim() };
       } else {
-        dispatch(submitEmployee(transformedValues));
+        // Create filtered payload without empty values
+        Object.entries(values).forEach(([key, value]) => {
+          if (key !== 'SearchFilter' && value !== '' && value !== null && value !== undefined) {
+            payload[key] = value;
+          }
+        });
       }
-      formik.resetForm();
+
+      console.log("Form submitted with:", payload);
+      // Apply your filters or dispatch actions here
     },
   });
+
+    // Handle search input changes
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    formik.setFieldValue("SearchFilter", value);
+    setAccordionDisabled(!!value.trim());
+  };
+
+  // Toggle accordion
+  const handleAccordionToggle = () => {
+    if (!accordionDisabled) {
+      setCol(!col);
+      setSearchDisabled(!searchDisabled);
+      if (!col) {
+        formik.setFieldValue("SearchFilter", "");
+      }
+    }
+  };
+
   // set date format
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -294,7 +312,7 @@ const EmployeeList = () => {
       <div className="page-content">
         <Container fluid>
           <Row>
-            <Form>
+            <Form onSubmit={formik.handleSubmit}>
               <Col lg={12} className="bg-white p-1">
                 {/* <PreviewCardHeader3 title="Employee Report" /> */}
                 <CardHeader
@@ -315,7 +333,7 @@ const EmployeeList = () => {
                       className="add-btn me-1 py-1"
                       id="create-btn"
                     >
-                      <i className="align-bottom me-1"></i>Preview
+                      <i className="align-bottom me-1"></i>Fetch
                     </Button>
                     <Button color="dark" className="add-btn me-1 py-1">
                       <i className="align-bottom me-1"></i> Cancel
@@ -329,39 +347,36 @@ const EmployeeList = () => {
                     </Button>
                   </div>
                 </CardHeader>
-
-                <div className="search-box">
-                  <Input
-                    type="text"
-                    className="form-control"
-                    placeholder="Search for name..."
-                  />
-                  <i className="ri-search-line search-icon"></i>
-                </div>
-              </Col>
-              <Accordion
-                className="lefticon-accordion custom-accordionwithicon accordion-border-box"
-                id="default-accordion-example"
-              >
+             
+              <div className="search-box">
+                <Input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search for name..."
+                  name="SearchFilter"
+                  value={formik.values.SearchFilter}
+                  onChange={handleSearchChange}
+                  onBlur={formik.handleBlur}
+                  disabled={searchDisabled}
+                />
+                <i className="ri-search-line search-icon"></i>
+              </div>
+            </Col>
+            <Accordion className="lefticon-accordion custom-accordionwithicon accordion-border-box">
                 <AccordionItem>
                   <h2 className="accordion-header bg-light" id="headingOne">
                     <button
-                      className={classnames("accordion-button", {
-                        collapsed: !col,
-                      })}
+                      className={classnames("accordion-button", { collapsed: !col })}
                       type="button"
-                      onClick={t_col}
-                      style={{ cursor: "pointer" }}
+                      onClick={handleAccordionToggle}
+                      style={{ cursor: accordionDisabled ? "not-allowed" : "pointer" }}
+                      disabled={accordionDisabled}
                     >
                       Show Advance Filter
                     </button>
                   </h2>
-
-                  <Collapse
-                    isOpen={col}
-                    className="accordion-collapse"
-                    id="collapseOne"
-                  >
+  
+                  <Collapse isOpen={col} className="accordion-collapse">
                     <div className="accordion-body p-0">
                       <Col lg={12}>
                         <Card>
@@ -576,7 +591,7 @@ const EmployeeList = () => {
                                 <Col xxl={2} md={2}>
                                   <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="NIC"
                                       className="form-label"
                                     >
                                       CNIC
@@ -584,7 +599,8 @@ const EmployeeList = () => {
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="NIC"
+                                      {...formik.getFieldProps("NIC")}
                                       placeholder="xxxx-xxxxxxxx-x"
                                     />
                                   </div>
@@ -755,7 +771,7 @@ const EmployeeList = () => {
                                 <Col xxl={2} md={2}>
                                   <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="PseudoName"
                                       className="form-label"
                                     >
                                       Pseudo Name
@@ -763,55 +779,43 @@ const EmployeeList = () => {
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="PseudoName"
+                                      name="PseudoName"
+                                      {...formik.getFieldProps("PseudoName")}
                                       placeholder="Pseudo Name"
                                     />
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={3}>
-                                  <div className="mb-3">
-                                    <Label
-                                      htmlFor="LocationID"
-                                      className="form-label"
-                                    >
-                                      Location
+                                 <div className="mb-3">
+                                    <Label htmlFor="leftStatusId" className="form-label">
+                                      Left Status
                                     </Label>
                                     <select
-                                      name="LocationID"
-                                      id="LocationID"
+                                      name="leftStatusId"
+                                      id="leftStatusId"
                                       className="form-select form-select-sm"
-                                      value={formik.values.LocationID} // Bind to Formik state
+                                      value={formik.values.leftStatusId} // Bind to Formik state
                                       onChange={formik.handleChange} // Handle changes
                                       onBlur={formik.handleBlur} // Track field blur
                                     >
                                       <option value="-1">---Select---</option>
-                                      {location?.length > 0 ? (
-                                        location.map((group) => (
-                                          <option
-                                            key={group.VID}
-                                            value={group.VID}
-                                          >
-                                            {group.VName}
-                                          </option>
-                                        ))
-                                      ) : (
-                                        <option value="0" disabled>
-                                          No location available
-                                        </option>
-                                      )}
+                                      <option value="1">Left</option>
+                                      <option value="2">Not Left</option> 
                                     </select>
-                                    {formik.touched.LocationID &&
-                                    formik.errors.LocationID ? (
+                                    {formik.touched.leftStatusId &&
+                                    formik.errors.leftStatusId ? (
                                       <div className="text-danger">
-                                        {formik.errors.LocationID}
+                                        {formik.errors.leftStatusId}
                                       </div>
                                     ) : null}
                                   </div>
+
                                 </Col>
                                 <Col xxl={2} md={3}>
                                   <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="BloodGroup"
                                       className="form-label"
                                     >
                                       Blood Group
@@ -819,7 +823,9 @@ const EmployeeList = () => {
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="BloodGroup"
+                                      name="BloodGroup"
+                                       {...formik.getFieldProps("BloodGroup")}
                                       placeholder="Blood Group"
                                     />
                                   </div>
@@ -843,7 +849,7 @@ const EmployeeList = () => {
                                 <Col xxl={2} md={2}>
                                   <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="SalaryFrom"
                                       className="form-label"
                                     >
                                       Salary To
@@ -851,7 +857,9 @@ const EmployeeList = () => {
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="SalaryFrom"
+                                      name="SalaryFrom"
+                                       {...formik.getFieldProps("SalaryFrom")}
                                       placeholder="Salary From"
                                     />
                                   </div>
