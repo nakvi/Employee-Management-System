@@ -104,6 +104,8 @@ import UserReducer  from "./administration/userManagement/reducer";
 import SecUserCompanyReducer from "./administration/secUserCompany/reducer";
 import SecUserLocationReducer from "./administration/secUserLocation/reducer";
 import SecUserRoleReducer from "./administration/secUserRole/reducer";
+// Attendance
+import AttendanceEntryReducer from "./Attendance/AttendanceEntry/reducer"; // Correct import
 
 
 
@@ -167,6 +169,9 @@ const rootReducer = combineReducers({
     SecUserCompany: SecUserCompanyReducer, // Here is my work 01/23/2025
     SecUserLocation: SecUserLocationReducer, // Here is my work 01/23/2025
     SecUserRole: SecUserRoleReducer, // Here is my work 01/23/2025
+
+    // Add Attendance Entry Reducer
+    AttendanceEntry: AttendanceEntryReducer, // Uncomment this line if you have an AttendanceEntry reducer
 });
 
 export default rootReducer;

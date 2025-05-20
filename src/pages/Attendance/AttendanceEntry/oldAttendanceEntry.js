@@ -20,7 +20,7 @@ import { getLocation } from "../../../slices/setup/location/thunk";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getDesignation } from "../../../slices/setup/designation/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
-import { getAttendanceEntry, saveAttendanceEntry } from "../../../slices/Attendance/AttendanceEntry/thunk";
+import { getAttendanceEntry } from "../../../slices/Attendance/AttendanceEntry/thunk";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 
 const AttendanceEntry = () => {
@@ -40,16 +40,13 @@ const AttendanceEntry = () => {
   // Validation error state
   const [errors, setErrors] = useState({
     employeeType: "",
-    timeErrors: [],
-    apiError: "",
   });
 
   // State to track changed records
   const [changedRecords, setChangedRecords] = useState({});
 
-  // Modal state
+  // Modal state for cancel confirmation
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
   // Get data from Redux store
   const { location = [] } = useSelector((state) => state.Location || {});
@@ -57,7 +54,7 @@ const AttendanceEntry = () => {
   const departmentList = department.data || [];
   const { designation = [] } = useSelector((state) => state.Designation || {});
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
-  const { attendanceData = [], loading, error, saveLoading, saveError } = useSelector((state) => state.AttendanceEntry || {});
+  const { attendanceData = [], loading } = useSelector((state) => state.AttendanceEntry || {});
 
   useEffect(() => {
     dispatch(getLocation());
@@ -66,35 +63,16 @@ const AttendanceEntry = () => {
     dispatch(getEmployeeType());
   }, [dispatch]);
 
-  // Reset changedRecords and errors when attendanceData changes
+  // Reset changedRecords when attendanceData changes
   useEffect(() => {
     setChangedRecords({});
-    setErrors((prev) => ({ ...prev, timeErrors: [], apiError: "" }));
   }, [attendanceData]);
-
-  // Handle Redux error and success feedback
-  useEffect(() => {
-    if (error) {
-      console.error("Fetch error:", error);
-      setErrors((prev) => ({ ...prev, apiError: error }));
-    } else if (attendanceData.length > 0 && !loading) {
-      console.log("Fetch success, data:", attendanceData);
-      // alert("Attendance data fetched successfully!");
-    }
-  }, [error, attendanceData, loading]);
-
-  // Handle save error feedback
-  useEffect(() => {
-    if (saveError) {
-      console.error("Save error:", saveError);
-      setErrors((prev) => ({ ...prev, apiError: saveError }));
-    }
-  }, [saveError]);
 
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error when user selects a value for employeeType
     if (name === "employeeType" && value) {
       setErrors((prev) => ({ ...prev, employeeType: "" }));
     }
@@ -105,10 +83,10 @@ const AttendanceEntry = () => {
     setFormData((prev) => ({ ...prev, vType: e.target.value }));
   };
 
-  // Validate form for fetch
+  // Validate form
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { employeeType: "", timeErrors: [], apiError: "" };
+    const newErrors = { employeeType: "" };
 
     if (!formData.employeeType) {
       newErrors.employeeType = "Employee Type is required";
@@ -119,14 +97,13 @@ const AttendanceEntry = () => {
     return isValid;
   };
 
-  // Handle fetch
+  // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Fetch button clicked");
     if (!validateForm()) {
-      console.log("Validation failed:", errors);
       return;
     }
+    console.log("Form Data:", formData);
     const params = {
       orgini: "LTT",
       vdate: formData.vdate,
@@ -144,171 +121,10 @@ const AttendanceEntry = () => {
       uid: "0",
       inflage: "0",
     };
-    console.log("Dispatching getAttendanceEntry with params:", params);
-    dispatch(getAttendanceEntry(params));
-  };
-
-  // Validate time entries for save
-  const validateTimeEntries = () => {
-    const timeErrors = [];
-    let isValid = true;
-
-    attendanceData.forEach((original, index) => {
-      const record = changedRecords[index] || {};
-      const errorsForRow = {};
-
-      const timeIn1 = record.timeIn || original.timeIn || "";
-      const timeOut1 = record.timeOut || original.timeOut || "";
-      const timeIn2 = record.timeIn2 || original.timeIn2 || "";
-      const timeOut2 = record.timeOut2 || original.timeOut2 || "";
-
-      // Validation 1: TimeIn1 required if any other time fields are filled
-      if (!timeIn1 && (timeOut1 || timeIn2 || timeOut2)) {
-        errorsForRow.timeIn1 = "Time In 1 is required when other time fields are filled";
-        isValid = false;
-      }
-
-      // Validation 2: TimeOut1 required if TimeIn1 is filled
-      if (timeIn1 && !timeOut1) {
-        errorsForRow.timeOut1 = "Invalid Time Out 1: Time Out 1 is required when Time In 1 is filled";
-        isValid = false;
-      }
-
-      // Validation 3: TimeOut1 must be later than TimeIn1
-      if (timeIn1 && timeOut1 && timeOut1 <= timeIn1) {
-        errorsForRow.timeOut1 = "Invalid Time Out 1: Time Out 1 must be later than Time In 1";
-        isValid = false;
-      }
-
-      // Validation 4: TimeIn2 requires TimeOut1
-      if (timeIn2 && !timeOut1) {
-        errorsForRow.timeIn2 = "Invalid Time In 2: Time Out 1 is required before Time In 2";
-        isValid = false;
-      }
-
-      // Validation 5: TimeIn2 must be later than TimeOut1
-      if (timeOut1 && timeIn2 && timeIn2 <= timeOut1) {
-        errorsForRow.timeIn2 = "Invalid Time In 2: Time In 2 must be later than Time Out 1";
-        isValid = false;
-      }
-
-      // Validation 6: TimeOut2 requires TimeIn2
-      if (timeOut2 && !timeIn2) {
-        errorsForRow.timeOut2 = "Invalid Time Out 2: Time In 2 is required before Time Out 2";
-        isValid = false;
-      }
-
-      // Validation 7: TimeOut2 must be later than TimeIn2
-      if (timeIn2 && timeOut2 && timeOut2 <= timeIn2) {
-        errorsForRow.timeOut2 = "Invalid Time Out 2: Time Out 2 must be later than Time In 2";
-        isValid = false;
-      }
-
-      if (Object.keys(errorsForRow).length > 0) {
-        timeErrors[index] = errorsForRow;
-      }
+    console.log("API Params:", params);
+    dispatch(getAttendanceEntry(params)).then((response) => {
+      console.log("API Response:", response);
     });
-
-    setErrors((prev) => ({ ...prev, timeErrors }));
-    return isValid;
-  };
-
-  // Check if there are any changed records
-  const hasChanges = () => {
-    return Object.values(changedRecords).some((record) => record.changed);
-  };
-
-  // Compare records to detect changes
-  const getChangedData = () => {
-    const changedData = [];
-    attendanceData.forEach((original, index) => {
-      const record = changedRecords[index] || {};
-      const fields = ["timeIn", "timeOut", "timeIn2", "timeOut2", "remarks"];
-      const hasFieldChanged = fields.some(
-        (field) => record[field] !== undefined && record[field] !== (original[field] || "")
-      );
-
-      if (hasFieldChanged) {
-        changedData.push({
-          empid: original.empid,
-          vdate: formData.vdate,
-          vid1: original.vid1,
-          vid2: original.vid2,
-          shiftID: original.shiftID || 3,
-          dateIn1: record.timeIn || original.timeIn || "",
-          dateOut1: record.timeOut || original.timeOut || "",
-          dateIn2: record.timeIn2 || original.timeIn2 || "",
-          dateOut2: record.timeOut2 || original.timeOut2 || "",
-          remarks: record.remarks || original.remarks || "",
-          uID: 101,
-          computerName: "HR-PC-001",
-        });
-      }
-    });
-    return changedData;
-  };
-
-  // Handle save button click
-  const handleSave = (e) => {
-    e.preventDefault();
-    console.log("Save button clicked, vdate:", formData.vdate);
-
-    if (!formData.vdate || isNaN(new Date(formData.vdate).getTime())) {
-      setErrors((prev) => ({ ...prev, apiError: "Date is required to save attendance" }));
-      return;
-    }
-
-    if (!hasChanges()) {
-      // alert("No changes detected. No data will be saved.");
-      return;
-    }
-
-    if (!validateTimeEntries()) {
-      console.log("Save validation failed:", errors.timeErrors);
-      return;
-    }
-
-    setIsSaveModalOpen(true);
-  };
-
-  // Confirm save action
-  const confirmSave = async () => {
-    const changedData = getChangedData();
-    if (!changedData || changedData.length === 0) {
-      // alert("No changes to save.");
-      setIsSaveModalOpen(false);
-      return;
-    }
-
-    console.log("Save API Parameters:", JSON.stringify(changedData, null, 2));
-
-    try {
-      for (const record of changedData) {
-        console.log("Saving record:", JSON.stringify(record, null, 2));
-        await dispatch(saveAttendanceEntry(record)).unwrap();
-      }
-      // alert("All attendance records saved successfully!");
-    } catch (error) {
-      console.error("Failed to save some records:", error);
-      setErrors((prev) => ({ ...prev, apiError: `Failed to save records: ${error.message}` }));
-    }
-
-    setIsSaveModalOpen(false);
-  };
-
-  // Close save modal
-  const closeSaveModal = () => {
-    setIsSaveModalOpen(false);
-  };
-
-  // Handle cancel button click
-  const handleCancel = () => {
-    console.log("Cancel button clicked");
-    if (hasChanges()) {
-      setIsCancelModalOpen(true);
-    } else {
-      resetForm();
-    }
   };
 
   // Handle time input changes
@@ -326,8 +142,32 @@ const AttendanceEntry = () => {
     }));
   };
 
-  // Reset form
-  const resetForm = () => {
+  // Check if there are any changed records
+  const hasChanges = () => {
+    return Object.values(changedRecords).some((record) => record.changed);
+  };
+
+  // Handle cancel button click
+  const handleCancel = () => {
+    if (hasChanges()) {
+      setIsCancelModalOpen(true);
+    } else {
+      // Reset form if no changes
+      setFormData({
+        location: "",
+        department: "",
+        employeeType: "",
+        designation: "",
+        vdate: "",
+        vType: "BOTH",
+      });
+      setChangedRecords({});
+      setErrors({ employeeType: "" });
+    }
+  };
+
+  // Confirm cancel action
+  const confirmCancel = () => {
     setFormData({
       location: "",
       department: "",
@@ -337,17 +177,12 @@ const AttendanceEntry = () => {
       vType: "BOTH",
     });
     setChangedRecords({});
-    setErrors({ employeeType: "", timeErrors: [], apiError: "" });
-  };
-
-  // Confirm cancel action
-  const confirmCancel = () => {
-    resetForm();
+    setErrors({ employeeType: "" });
     setIsCancelModalOpen(false);
   };
 
-  // Close cancel modal
-  const closeCancelModal = () => {
+  // Close modal without canceling
+  const closeModal = () => {
     setIsCancelModalOpen(false);
   };
 
@@ -358,13 +193,12 @@ const AttendanceEntry = () => {
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
+                <Form onSubmit={handleSubmit}>
                   <PreviewCardHeader2
                     title="Attendance Entry"
                     onFetch={handleSubmit}
-                    onSave={handleSave}
-                    onCancel={handleCancel}
-                    disabled={loading || saveLoading}
+                    disabled={loading}
+                    onCancel={handleCancel} // Pass handleCancel to PreviewCardHeader2
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -534,16 +368,23 @@ const AttendanceEntry = () => {
                               />
                               <Label className="form-check-label" htmlFor="BOTH">
                                 Both
-                              </Label>
+                            </Label>
                             </div>
                           </div>
                         </Col>
+
+                        {/* <Col xxl={2} md={2}>
+                          <div className="mt-3">
+                            <Button
+                              color="primary"
+                              onClick={handleSubmit}
+                              disabled={loading}
+                            >
+                              {loading ? "Loading..." : "Fetch Attendance"}
+                            </Button>
+                          </div>
+                        </Col> */}
                       </Row>
-                      {errors.apiError && (
-                        <div className="mt-3 text-danger">
-                          {errors.apiError}
-                        </div>
-                      )}
                     </div>
                   </CardBody>
                 </Form>
@@ -564,8 +405,8 @@ const AttendanceEntry = () => {
                             <th>Employee</th>
                             <th>Time In</th>
                             <th>Time Out</th>
-                            <th>Time In 2</th>
-                            <th>Time Out 2</th>
+                            <th>Time In </th>
+                            <th>Time Out </th>
                             <th>Remarks</th>
                             <th>
                               <Input
@@ -585,79 +426,48 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeIn1 ? "is-invalid" : ""
-                                    }`}
+                                    className="form-control form-control-sm"
                                     defaultValue={entry.timeIn || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeIn", e.target.value)
                                     }
                                   />
-                                  {errors.timeErrors[index]?.timeIn1 && (
-                                    <FormFeedback>
-                                      {errors.timeErrors[index].timeIn1}
-                                    </FormFeedback>
-                                  )}
                                 </td>
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeOut1 ? "is-invalid" : ""
-                                    }`}
+                                    className="form-control form-control-sm"
                                     defaultValue={entry.timeOut || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeOut", e.target.value)
                                     }
                                   />
-                                  {errors.timeErrors[index]?.timeOut1 && (
-                                    <FormFeedback>
-                                      {errors.timeErrors[index].timeOut1}
-                                    </FormFeedback>
-                                  )}
                                 </td>
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeIn2 ? "is-invalid" : ""
-                                    }`}
+                                    className="form-control form-control-sm"
                                     defaultValue={entry.timeIn2 || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeIn2", e.target.value)
                                     }
                                   />
-                                  {errors.timeErrors[index]?.timeIn2 && (
-                                    <FormFeedback>
-                                      {errors.timeErrors[index].timeIn2}
-                                    </FormFeedback>
-                                  )}
                                 </td>
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeOut2 ? "is-invalid" : ""
-                                    }`}
+                                    className="form-control form-control-sm"
                                     defaultValue={entry.timeOut2 || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeOut2", e.target.value)
                                     }
                                   />
-                                  {errors.timeErrors[index]?.timeOut2 && (
-                                    <FormFeedback>
-                                      {errors.timeErrors[index].timeOut2}
-                                    </FormFeedback>
-                                  )}
                                 </td>
                                 <td>
                                   <Input
                                     className="form-control-sm w-75"
                                     type="text"
                                     defaultValue={entry.remarks || ""}
-                                    onChange={(e) =>
-                                      handleTimeChange(index, "remarks", e.target.value)
-                                    }
                                   />
                                 </td>
                                 <td>
@@ -697,33 +507,17 @@ const AttendanceEntry = () => {
       </div>
 
       {/* Cancel Confirmation Modal */}
-      <Modal isOpen={isCancelModalOpen} toggle={closeCancelModal} centered>
-        <ModalHeader toggle={closeCancelModal}>Confirm Cancel</ModalHeader>
+      <Modal isOpen={isCancelModalOpen} toggle={closeModal} centered>
+        <ModalHeader toggle={closeModal}>Confirm Cancel</ModalHeader>
         <ModalBody>
           You have unsaved changes in the attendance data. Are you sure you want to discard these changes?
         </ModalBody>
         <ModalFooter>
-          <Button color="secondary" onClick={closeCancelModal}>
+          <Button color="secondary" onClick={closeModal}>
             Keep Changes
           </Button>
           <Button color="danger" onClick={confirmCancel}>
             Discard Changes
-          </Button>
-        </ModalFooter>
-      </Modal>
-
-      {/* Save Confirmation Modal */}
-      <Modal isOpen={isSaveModalOpen} toggle={closeSaveModal} centered>
-        <ModalHeader toggle={closeSaveModal}>Confirm Save</ModalHeader>
-        <ModalBody>
-          Do you really want to save the changed attendance data?
-        </ModalBody>
-        <ModalFooter>
-          <Button color="secondary" onClick={closeSaveModal}>
-            Cancel
-          </Button>
-          <Button color="success" onClick={confirmSave}>
-            Confirm
           </Button>
         </ModalFooter>
       </Modal>

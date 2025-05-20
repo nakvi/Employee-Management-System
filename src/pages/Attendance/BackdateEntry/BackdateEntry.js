@@ -12,8 +12,15 @@ import {
   CardHeader,
 } from "reactstrap";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 const BackdateEntry = () => {
   document.title = "Backdate Entry | EMS";
+  const dispatch = useDispatch();
+    const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+    useEffect(() => {
+      dispatch(getEmployeeType());
+    }, [dispatch]);
   return (
     <React.Fragment>
       <div className="page-content">
@@ -42,8 +49,11 @@ const BackdateEntry = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>

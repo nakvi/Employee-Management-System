@@ -13,8 +13,20 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 const OTDaily = () => {
   document.title = "O/T Daily | EMS";
+
+  const dispatch = useDispatch();
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+  }, [dispatch]);
   return (
     <React.Fragment>
       <div className="page-content">
@@ -43,8 +55,11 @@ const OTDaily = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -62,8 +77,11 @@ const OTDaily = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -130,7 +148,7 @@ const OTDaily = () => {
                         </div>
                       </Col>
                     </Row> */}
-   <div className="table-responsive table-card mt-3 mb-1">
+                    <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
                         id="customerTable"
@@ -149,13 +167,13 @@ const OTDaily = () => {
                                 className="form-check-input me-1"
                                 type="checkbox"
                               />
-                               Post
+                              Post
                             </th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           <tr>
-                          <td>1</td>
+                            <td>1</td>
                             <td>001:Sir Amir:Hr</td>
                             <td>VN1</td>
                             <td>44</td>
