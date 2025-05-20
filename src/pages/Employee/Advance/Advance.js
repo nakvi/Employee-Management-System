@@ -12,13 +12,25 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
 
 const Advance = () => {
+  const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState("");
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
   }, []);
+
+  useEffect(() => {
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
+
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -36,7 +48,7 @@ const Advance = () => {
                 <Form>
                   <PreviewCardHeader
                     title="Advance"
-                    // onCancel={formik.resetForm}
+                  // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -55,8 +67,11 @@ const Advance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -74,8 +89,11 @@ const Advance = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -150,7 +168,7 @@ const Advance = () => {
                       >
                         <thead className="table-light">
                           <tr>
-                          <th>E-Type</th>
+                            <th>E-Type</th>
                             <th>Employee</th>
                             <th>Amount</th>
                             <th>Date</th>
@@ -160,7 +178,7 @@ const Advance = () => {
                         </thead>
                         <tbody className="list form-check-all">
                           <tr>
-                          <td>Staff</td>
+                            <td>Staff</td>
                             <td>001:Sir Amir:Hr</td>
                             <td>2000</td>
                             <td>02/02/2025</td>

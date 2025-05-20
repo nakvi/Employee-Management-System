@@ -12,9 +12,22 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
 
 const LocalSale = () => {
   document.title = "Local Sale | EMS";
+
+  const dispatch = useDispatch();
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+
+  useEffect(() => {
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -27,7 +40,7 @@ const LocalSale = () => {
                 <Form>
                   <PreviewCardHeader
                     title="Local Sale"
-                    // onCancel={formik.resetForm}
+                  // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -46,8 +59,11 @@ const LocalSale = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -65,12 +81,15 @@ const LocalSale = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
-                      
+
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
@@ -183,7 +202,7 @@ const LocalSale = () => {
                             <td>02/02/2025</td>
                             <td>33</td>
                             <td>3300</td>
-                            
+
                             <td>Ok</td>
                             <td>
                               <div className="d-flex gap-2">

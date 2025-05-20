@@ -12,9 +12,27 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getDepartment } from "../../../slices/setup/department/thunk";
 
 const TrialEmployee = () => {
   document.title = "Trial Employee | EMS";
+
+  const dispatch = useDispatch();
+
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -27,7 +45,7 @@ const TrialEmployee = () => {
                 <Form>
                   <PreviewCardHeader
                     title="Trial Employee"
-                    // onCancel={formik.resetForm}
+                  // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -46,8 +64,11 @@ const TrialEmployee = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -81,8 +102,15 @@ const TrialEmployee = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.length > 0 ? (
+                                departmentList.map((dept) => (
+                                  <option key={dept.VID} value={dept.VID}>
+                                    {dept.VName || dept.DepartmentName || dept.title}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>No departments available</option>
+                              )}
                             </select>
                           </div>
                         </Col>

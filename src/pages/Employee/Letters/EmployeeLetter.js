@@ -12,8 +12,31 @@ import {
   CardHeader,
 } from "reactstrap";
 import PreviewCardHeader4 from "../../../Components/Common/PreviewCardHeader4";
+import { useDispatch, useSelector } from "react-redux";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+
+
 const EmployeeLetter = () => {
   document.title = "Employee Letter | EMS";
+  const dispatch = useDispatch();
+
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { location = [] } = useSelector((state) => state.Location || {});
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+
+  useEffect(() => {
+    dispatch(getLocation());
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
+
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -42,8 +65,11 @@ const EmployeeLetter = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -61,12 +87,15 @@ const EmployeeLetter = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
-                        
+
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
@@ -81,8 +110,15 @@ const EmployeeLetter = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {location.length > 0 ? (
+                                location.map((loc) => (
+                                  <option key={loc.VID} value={loc.VID}>
+                                    {loc.VName || loc.LocationName || loc.title}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>No locations available</option>
+                              )}
                             </select>
                           </div>
                         </Col>
@@ -100,8 +136,15 @@ const EmployeeLetter = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.length > 0 ? (
+                                departmentList.map((dept) => (
+                                  <option key={dept.VID} value={dept.VID}>
+                                    {dept.VName || dept.DepartmentName || dept.title}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>No departments available</option>
+                              )}
                             </select>
                           </div>
                         </Col>
@@ -144,7 +187,7 @@ const EmployeeLetter = () => {
                               checked
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Appointment
+                              Appointment
                             </Label>
                           </div>
                         </Col>
@@ -158,7 +201,7 @@ const EmployeeLetter = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Confirmation
+                              Confirmation
                             </Label>
                           </div>
                         </Col>
@@ -172,7 +215,7 @@ const EmployeeLetter = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Promotion
+                              Promotion
                             </Label>
                           </div>
                         </Col>
@@ -186,7 +229,7 @@ const EmployeeLetter = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Probationary Term & condition
+                              Probationary Term & condition
                             </Label>
                           </div>
                         </Col>
@@ -200,7 +243,7 @@ const EmployeeLetter = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Experience
+                              Experience
                             </Label>
                           </div>
                         </Col>
@@ -214,7 +257,7 @@ const EmployeeLetter = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Increment
+                              Increment
                             </Label>
                           </div>
                         </Col>
@@ -228,7 +271,7 @@ const EmployeeLetter = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Clearence certificate
+                              Clearence certificate
                             </Label>
                           </div>
                         </Col>
@@ -242,7 +285,7 @@ const EmployeeLetter = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                            Employee Agreement
+                              Employee Agreement
                             </Label>
                           </div>
                         </Col>

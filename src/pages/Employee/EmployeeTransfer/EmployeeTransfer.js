@@ -21,7 +21,8 @@ import {
   deleteEmployeeLocationTransfer,
 } from "../../../slices/employee/employeeTransfer/thunk";
 import { getLocation } from "../../../slices/setup/location/thunk";
-import { getEmployeeType } from "../../../slices/thunks";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
 
 const EmployeeTransfer = () => {
   const dispatch = useDispatch();
@@ -32,10 +33,14 @@ const EmployeeTransfer = () => {
   );
   const { location } = useSelector((state) => state.Location);
   const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
 
   // Fetch data on component mount
   useEffect(() => {
     dispatch(getEmployeeLocationTransfer());
+    dispatch(getLocation());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
   }, [dispatch]);
   // set date in input feilds
   useEffect(() => {
@@ -50,6 +55,8 @@ const EmployeeTransfer = () => {
     return today.toISOString().split("T")[0];
   };
   document.title = "Employee Location Transfer | EMS";
+    
+    
   return (
     <React.Fragment>
       <div className="page-content">
@@ -81,8 +88,11 @@ const EmployeeTransfer = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -100,8 +110,11 @@ const EmployeeTransfer = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">001:Sir Amir:Hr</option>
-                              <option value="Choices2">002:Sir Ijaz:HOD</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>

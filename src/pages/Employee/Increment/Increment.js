@@ -23,6 +23,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
 
 const Increment = () => {
   const dispatch = useDispatch();
@@ -30,13 +32,17 @@ const Increment = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [editingGroup, setEditingGroup] = useState(null);
-  
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+
   // get salary increament
   const { loading, error, salaryIncrement } = useSelector(
     (state) => state.SalaryIncrement
   );
   useEffect(() => {
     dispatch(getSalaryIncrement());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
   }, [dispatch]);
   // Formik form setup
   const formik = useFormik({
@@ -44,11 +50,11 @@ const Increment = () => {
       VName: "",
       DateFrom: "",
       DateTo: "",
-      CurrentSalary:"",
-      IncrementAmount:"",
-      IncrementSpecial:"",
-      IncrementPromotional:"",
-      FirstAmount:"",
+      CurrentSalary: "",
+      IncrementAmount: "",
+      IncrementSpecial: "",
+      IncrementPromotional: "",
+      FirstAmount: "",
       CompanyID: "1",
       UID: "1",
       IsActive: false,
@@ -93,7 +99,7 @@ const Increment = () => {
     setEditingGroup(group);
     const formatDateForInput = (dateString) => {
       return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
-    }; 
+    };
     formik.setValues({
       DateFrom: formatDateForInput(group.DateFrom),
       DateTo: formatDateForInput(group.DateTo),
@@ -138,7 +144,7 @@ const Increment = () => {
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                     title="Increment"
-                    // onCancel={formik.resetForm}
+                  // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -154,8 +160,11 @@ const Increment = () => {
                               id="eType"
                             >
                               <option value="">--- Select ---</option>
-                              <option value="permanent">Permanent</option>
-                              <option value="contractual">Contractual</option>
+                              {employeeType?.map((type) => (
+                                <option key={type.VID} value={type.VID}>
+                                  {type.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -174,8 +183,11 @@ const Increment = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Amir</option>
-                              <option value="Choices2">Usama</option>
+                              {employee?.map((group) => (
+                                <option key={group.EmpID} value={group.EmpID}>
+                                  {group.EName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -193,7 +205,7 @@ const Increment = () => {
                               min={getMinDate()} // Prevent past dates
                               value={selectedDate}
                             />
-                               {formik.touched.VDate && formik.errors.VDate ? (
+                            {formik.touched.VDate && formik.errors.VDate ? (
                               <div className="text-danger">
                                 {formik.errors.VDate}
                               </div>
@@ -214,7 +226,7 @@ const Increment = () => {
                               {...formik.getFieldProps("DateFrom")}
 
                             />
-                               {formik.touched.DateFrom && formik.errors.DateFrom ? (
+                            {formik.touched.DateFrom && formik.errors.DateFrom ? (
                               <div className="text-danger">
                                 {formik.errors.DateFrom}
                               </div>
@@ -249,7 +261,7 @@ const Increment = () => {
                               {...formik.getFieldProps("IncrementAmount")}
 
                             />
-                               {formik.touched.IncrementAmount && formik.errors.IncrementAmount ? (
+                            {formik.touched.IncrementAmount && formik.errors.IncrementAmount ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementAmount}
                               </div>
@@ -268,13 +280,13 @@ const Increment = () => {
                               placeholder="00"
                               {...formik.getFieldProps("IncrementSpecial")}
                             />
-                               {formik.touched.IncrementSpecial && formik.errors.IncrementSpecial ? (
+                            {formik.touched.IncrementSpecial && formik.errors.IncrementSpecial ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementSpecial}
                               </div>
                             ) : null}
                           </div>
-                          
+
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
@@ -288,7 +300,7 @@ const Increment = () => {
                               placeholder="000"
                               {...formik.getFieldProps("IncrementPromotional")}
                             />
-                               {formik.touched.IncrementPromotional && formik.errors.IncrementPromotional ? (
+                            {formik.touched.IncrementPromotional && formik.errors.IncrementPromotional ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementPromotional}
                               </div>
@@ -308,7 +320,7 @@ const Increment = () => {
                               {...formik.getFieldProps("FirstAmount")}
 
                             />
-                               {formik.touched.FirstAmount && formik.errors.FirstAmount ? (
+                            {formik.touched.FirstAmount && formik.errors.FirstAmount ? (
                               <div className="text-danger">
                                 {formik.errors.FirstAmount}
                               </div>
@@ -373,8 +385,8 @@ const Increment = () => {
                                   <div className="d-flex gap-2">
                                     <div className="edit ">
                                       <Button className="btn btn-soft-info"
-                                       onClick={() => handleEditClick(group)}
-                                       >
+                                        onClick={() => handleEditClick(group)}
+                                      >
                                         <i className="bx bx-edit"></i>
                                       </Button>
                                     </div>
