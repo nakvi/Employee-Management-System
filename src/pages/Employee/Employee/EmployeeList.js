@@ -1,0 +1,1063 @@
+import React, { useState, useEffect } from "react";
+import {
+  Button,
+  Card,
+  CardBody,
+  Col,
+  Container,
+  CardHeader,
+  Row,
+  Input,
+  Label,
+  Form,
+  Accordion,
+  AccordionItem,
+  Collapse,
+} from "reactstrap";
+import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import DataTable from "react-data-table-component";
+
+import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import avatar1 from "../../../assets/images/users/avatar-11.png";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import {
+  getEmployee,
+  submitEmployee,
+  updateEmployee,
+  deleteEmployee,
+} from "../../../slices/employee/employee/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getDesignation } from "../../../slices/setup/designation/thunk";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getReligion } from "../../../slices/employee/religion/thunk";
+import { getGrade } from "../../../slices/setup/grade/thunk";
+import { getGender } from "../../../slices/employee/gender/thunk";
+import classnames from "classnames";
+import { getShift } from "../../../slices/setup/shift/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+const EmployeeList = () => {
+  const dispatch = useDispatch();
+  const [selectedDate, setSelectedDate] = useState("");
+  const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
+  const [col, setCol] = useState(false);
+
+  const t_col = () => {
+    setCol(!col);
+  };
+  // Access Redux state
+  const { loading, error, employee } = useSelector((state) => state.Employee);
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { location } = useSelector((state) => state.Location);
+  const { shift } = useSelector((state) => state.Shift);
+  const { department } = useSelector((state) => state.Department);
+  const { designation } = useSelector((state) => state.Designation);
+  const { religion } = useSelector((state) => state.Religion);
+  const { grade } = useSelector((state) => state.Grade);
+  const { gender } = useSelector((state) => state.Gender);
+  const [searchText, setSearchText] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+
+  console.log("employee", employee );
+  console.log("employeeType", employeeType );
+  console.log("location", location );
+  console.log("shift", shift );
+  console.log("department", department );
+  console.log("designation", designation );
+  console.log("religion", religion );
+  console.log("grade", grade );
+  console.log("gender", gender );
+  // Fetch data on component mount
+  useEffect(() => {
+    dispatch(getEmployee());
+    dispatch(getLocation());
+    dispatch(getDesignation());
+    dispatch(getDepartment());
+    dispatch(getReligion());
+    dispatch(getGrade());
+    dispatch(getGender());
+    dispatch(getShift());
+    dispatch(getEmployeeType());
+  }, [dispatch]);
+
+useEffect(() => {
+  if (employee) {
+    console.log("Employee data loaded successfully!", employee);
+
+    const filtered = employee.filter((item) =>
+      Object.values(item)
+        .join(" ")
+        .toLowerCase()
+        .includes(searchText.toLowerCase())
+    );
+    setFilteredData(filtered);
+  }
+}, [searchText, employee]); // 🔁 FIXED dependency
+
+const columns = [
+  {
+    name: "Emp Code",
+    selector: (row) => row.EmpCode,
+    sortable: true,
+  },
+   {
+    name: "Emp Name",
+    selector: (row) => row.EName,
+    sortable: true,
+  },
+   {
+    name: "Father Name",
+    selector: (row) => row.FName,
+    sortable: true,
+  },
+   {
+    name: "Designation",
+    selector: (row) => row.DesignationTitle,
+    sortable: true,
+  },
+   {
+    name: "Birth Date",
+    selector: (row) => row.DOB,
+    sortable: true,
+  },
+   {
+    name: "Joining Date",
+    selector: (row) => row.DOJ,
+    sortable: true,
+  },
+   {
+    name: "Probation Date",
+    selector: (row) => row.ProbitionDate,
+    sortable: true,
+  },
+   {
+    name: "CNIC No",
+    selector: (row) => row.NIC,
+    sortable: true,
+  },
+   {
+    name: "Mobile No",
+    selector: (row) => row.CellPhone,
+    sortable: true,
+  },
+   {
+    name: "Email",
+    selector: (row) => row.Email,
+    sortable: true,
+  },
+  {
+    name: "Head Name",
+    selector: (row) => row.HODName,
+    sortable: true,
+  },
+  {
+    name: "Company Code",
+    selector: (row) => row.CompanyCode,
+    sortable: true,
+  },
+  {
+    name: "Company Name",
+    selector: (row) => row.CompanyName,
+    sortable: true,
+  },
+  {
+    name: "Is Active",
+    selector: (row) => row.IsActive,
+    sortable: true,
+  },
+   {
+    name: "Machine Card No",
+    selector: (row) => row.MachineCardNo,
+    sortable: true,
+  },
+   {
+    name: "Basic Salary",
+    selector: (row) => row.BasicSalary,
+    sortable: true,
+  },
+  {
+    name: "Action",
+    cell: (row) => (
+      <div className="d-flex gap-2">
+        <Button
+          className="btn btn-soft-info btn-sm"
+          onClick={() => handleEditClick(row)}
+        >
+          <i className="bx bx-edit"></i>
+        </Button>
+        <Button
+          className="btn btn-soft-danger btn-sm"
+          onClick={() => handleDeleteClick(row.EmpID)}
+        >
+          <i className="ri-delete-bin-2-line"></i>
+        </Button>
+      </div>
+    ),
+    ignoreRowClick: true,
+    allowOverflow: true,
+    button: true,
+  },
+];
+    const customStyles = {
+      table: {
+        style: {
+          border: '1px solid #dee2e6',
+        },
+      },
+      headRow: {
+        style: {
+          backgroundColor: '#f8f9fa',
+          borderBottom: '1px solid #dee2e6',
+          fontWeight: '600',
+        },
+      },
+      rows: {
+        style: {
+          minHeight: '48px',
+          borderBottom: '1px solid #dee2e6',
+        },
+      },
+      cells: {
+        style: {
+          paddingLeft: '16px',
+          paddingRight: '16px',
+          borderRight: '1px solid #dee2e6',
+        },
+      },
+    };
+  // Formik form setup
+  const formik = useFormik({
+    initialValues: {
+      ETypeID: '',
+      EmpID: '',
+      FName: '',
+      DeptID: '',
+      DesgID: '',
+      HODID: '',
+      NIC: '',
+      LocationID: '',
+      ShiftID: '',
+      ReligionID: '',
+      GradeID: '',
+      PseudoName: '',
+      BloodGroup: '',
+      SalaryFrom: '',
+      SalaryTo: '',
+      JoinDateCheck: false,
+      JoinDateFrom: '',
+      JoinDateTo: '',
+      ResignEmployeeCheck: false,
+      ResignDateFrom: '',
+      ResignDateTo: '',
+      ReportType: 'VIN' // Default to Department wise list
+    },
+
+    onSubmit: (values) => {
+      const transformedValues = {
+        ...values,
+        IsActive: values.IsActive ? 1 : 0,
+        IsRoster: values.IsRoster ? 1 : 0,
+        IsSecurity: values.IsSecurity ? 1 : 0,
+        SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
+      };
+      if (editingGroup) {
+        console.log("Editing Group", transformedValues);
+
+        dispatch(
+          updateEmployee({ ...transformedValues, VID: editingGroup.VID })
+        );
+        setEditingGroup(null); // Reset after submission
+      } else {
+        dispatch(submitEmployee(transformedValues));
+      }
+      formik.resetForm();
+    },
+  });
+  // set date format
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setSelectedDate(today);
+  }, []);
+
+
+  const getMinDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+  document.title = "Employee | EMS";
+  return (
+    <React.Fragment>
+      <div className="page-content">
+        <Container fluid>
+          <Row>
+            <Form>
+              <Col lg={12} className="bg-white p-1">
+                {/* <PreviewCardHeader3 title="Employee Report" /> */}
+                <CardHeader
+                  className="align-items-center d-flex py-2"
+                  style={{
+                    color: "#495057",
+                    marginLeft: "16px",
+                    border:"none",
+                  }}
+                >
+                  <h4 className="card-title mb-0 flex-grow-1">
+                    Employee Report
+                  </h4>
+                  <div className="flex-shrink-0">
+                    <Button
+                      type="submit"
+                      color="success"
+                      className="add-btn me-1 py-1"
+                      id="create-btn"
+                    >
+                      <i className="align-bottom me-1"></i>Preview
+                    </Button>
+                    <Button color="dark" className="add-btn me-1 py-1">
+                      <i className="align-bottom me-1"></i> Cancel
+                    </Button>
+                  </div>
+                </CardHeader>
+             
+              <div className="search-box">
+                <Input
+                  type="text"
+                  className="form-control"
+                  placeholder="Search for name..."
+                />
+                <i className="ri-search-line search-icon"></i>
+              </div>
+            </Col>
+              <Accordion className="lefticon-accordion custom-accordionwithicon accordion-border-box"  id="default-accordion-example">
+                <AccordionItem>
+                  <h2 className="accordion-header bg-light" id="headingOne">
+                    <button
+                      className={classnames("accordion-button", {
+                        collapsed: !col,
+                      })}
+                      type="button"
+                      onClick={t_col}
+                      style={{ cursor: "pointer" }}
+                    >
+                      Show Advance Filter
+                    </button>
+                  </h2>
+
+                  <Collapse
+                    isOpen={col}
+                    className="accordion-collapse"
+                    id="collapseOne"
+                  >
+                    <div className="accordion-body p-0">
+                      <Col lg={12}>
+                        <Card>
+                          <CardBody className="card-body">
+                            <div className="live-preview">
+                              <Row className="gy-4">
+                                <Col xxl={2} md={2}>
+                                {/* E-Type */}
+                                 <div className="mb-3">
+                                    <Label htmlFor="ETypeID" className="form-label">
+                                     E-Type
+                                    </Label>
+                                    <select
+                                      name="ETypeID"
+                                      id="ETypeID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.ETypeID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {employeeType?.length > 0 ? (
+                                        employeeType.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No Employee Type available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.ETypeID &&
+                                    formik.errors.ETypeID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.ETypeID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={3}>
+                                    {/* Employee */}
+                                 <div className="mb-3">
+                                    <Label htmlFor="EmpID" className="form-label">
+                                      Employee
+                                    </Label>
+                                    <select
+                                      name="EmpID"
+                                      id="EmpID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.EmpID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {employee?.length > 0 ? (
+                                        employee.map((group) => (
+                                          <option key={group.EmpID} value={group.EmpID}>
+                                            {group.EName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No Employee available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.EmpID &&
+                                    formik.errors.EmpID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.EmpID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={3}>
+                                  <div>
+                                    <Label
+                                      htmlFor="FName"
+                                      className="form-label"
+                                    >
+                                      Father Name
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      className="form-control-sm"
+                                      id="FName"
+                                        {...formik.getFieldProps("FName")}
+                                      placeholder="Father Name"
+                                    />
+                                         {formik.touched.EmpID &&
+                                    formik.errors.EmpID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.EmpID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                 {/* Department */}
+                                  <div className="mb-3">
+                                    <Label htmlFor="DeptID" className="form-label">
+                                      Department
+                                    </Label>
+                                    <select
+                                      name="DeptID"
+                                      id="DeptID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.DeptID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {department.data?.length > 0 ? (
+                                        department.data.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No Department available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.DeptID &&
+                                    formik.errors.DeptID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.DeptID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  <div className="mb-3">
+                                    <Label htmlFor="DesgID" className="form-label">
+                                      Designation
+                                    </Label>
+                                    <select
+                                      name="DesgID"
+                                      id="DesgID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.DesgID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {designation?.length > 0 ? (
+                                        designation.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No Designation available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.DesgID &&
+                                    formik.errors.DesgID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.DesgID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="departmentGroupInput"
+                                      className="form-label"
+                                    >
+                                      HOD
+                                    </Label>
+                                    <select
+                                      className="form-select  form-select-sm"
+                                      name="AttGroupID"
+                                      id="AttGroupID"
+                                    >
+                                      <option value="">---Select--- </option>
+                                      <option value="Choices1">IT</option>
+                                      <option value="Choices2">Software</option>
+                                    </select>
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  <div>
+                                    <Label
+                                      htmlFor="VName"
+                                      className="form-label"
+                                    >
+                                      CNIC
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      className="form-control-sm"
+                                      id="VName"
+                                      placeholder="xxxx-xxxxxxxx-x"
+                                    />
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                {/* Location */}
+                                  <div className="mb-3">
+                                    <Label htmlFor="LocationID" className="form-label">
+                                      Location
+                                    </Label>
+                                    <select
+                                      name="LocationID"
+                                      id="LocationID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.LocationID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {location?.length > 0 ? (
+                                        location.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No location available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.LocationID &&
+                                    formik.errors.LocationID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.LocationID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  <div className="mb-3">
+                                    <Label htmlFor="ShiftID" className="form-label">
+                                      Shift
+                                    </Label>
+                                    <select
+                                      name="ShiftID"
+                                      id="ShiftID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.ShiftID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {shift?.length > 0 ? (
+                                        shift.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No Shift available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.ShiftID &&
+                                    formik.errors.ShiftID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.ShiftID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  {/* Religion */}
+                                   <div className="mb-3">
+                                    <Label htmlFor="ReligionID" className="form-label">
+                                      Region
+                                    </Label>
+                                    <select
+                                      name="ReligionID"
+                                      id="ReligionID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.ReligionID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {religion?.length > 0 ? (
+                                        religion.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No Religion available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.ReligionID &&
+                                    formik.errors.ReligionID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.ReligionID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                {/* Grade */}
+                                 <div className="mb-3">
+                                    <Label htmlFor="GradeID" className="form-label">
+                                      Grade
+                                    </Label>
+                                    <select
+                                      name="GradeID"
+                                      id="GradeID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.GradeID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {grade?.length > 0 ? (
+                                        grade.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No grade available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.GradeID &&
+                                    formik.errors.GradeID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.GradeID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  <div>
+                                    <Label
+                                      htmlFor="VName"
+                                      className="form-label"
+                                    >
+                                      Pseudo Name
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      className="form-control-sm"
+                                      id="VName"
+                                      placeholder="Pseudo Name"
+                                    />
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={3}>
+                                 <div className="mb-3">
+                                    <Label htmlFor="LocationID" className="form-label">
+                                      Location
+                                    </Label>
+                                    <select
+                                      name="LocationID"
+                                      id="LocationID"
+                                      className="form-select form-select-sm"
+                                      value={formik.values.LocationID} // Bind to Formik state
+                                      onChange={formik.handleChange} // Handle changes
+                                      onBlur={formik.handleBlur} // Track field blur
+                                    >
+                                      <option value="-1">---Select---</option>
+                                      {location?.length > 0 ? (
+                                        location.map((group) => (
+                                          <option key={group.VID} value={group.VID}>
+                                            {group.VName}
+                                          </option>
+                                        ))
+                                      ) : (
+                                        <option value="0" disabled>
+                                          No location available
+                                        </option>
+                                      )}
+                                    </select>
+                                    {formik.touched.LocationID &&
+                                    formik.errors.LocationID ? (
+                                      <div className="text-danger">
+                                        {formik.errors.LocationID}
+                                      </div>
+                                    ) : null}
+                                  </div>
+
+                                </Col>
+                                <Col xxl={2} md={3}>
+                                   <div>
+                                    <Label
+                                      htmlFor="VName"
+                                      className="form-label"
+                                    >
+                                      Blood Group
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      className="form-control-sm"
+                                      id="VName"
+                                      placeholder="Blood Group"
+                                    />
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  <div>
+                                    <Label
+                                      htmlFor="VName"
+                                      className="form-label"
+                                    >
+                                      Salary From
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      className="form-control-sm"
+                                      id="VName"
+                                      placeholder="Salary From"
+                                    />
+                                  </div>
+                                </Col>
+                                <Col xxl={2} md={2}>
+                                  <div>
+                                    <Label
+                                      htmlFor="VName"
+                                      className="form-label"
+                                    >
+                                      Salary To
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      className="form-control-sm"
+                                      id="VName"
+                                      placeholder="Salary From"
+                                    />
+                                  </div>
+                                </Col>
+                                <Row>
+                                  <Col xxl={2} md={2}>
+                                    <Label
+                                      className="form-check-label"
+                                      for="SaturdayHalfTime"
+                                    >
+                                      Join Date
+                                    </Label>
+                                    <span class="form-control input-sm input-checkbox p-1 mt-2">
+                                      <Input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="SaturdayHalfTime"
+                                      />
+                                    </span>
+                                  </Col>
+                                  <Col xxl={2} md={4}>
+                                    <div>
+                                      <Label
+                                        htmlFor="VName"
+                                        className="form-label"
+                                      >
+                                        Join Date From
+                                      </Label>
+                                      <Input
+                                        type="date"
+                                        className="form-control-sm"
+                                        id="VName"
+                                        disabled
+                                      />
+                                    </div>
+                                  </Col>
+                                  <Col xxl={2} md={4}>
+                                    <div>
+                                      <Label
+                                        htmlFor="VName"
+                                        className="form-label"
+                                      >
+                                        Join Date To
+                                      </Label>
+                                      <Input
+                                        type="date"
+                                        className="form-control-sm"
+                                        id="VName"
+                                        disabled
+                                      />
+                                    </div>
+                                  </Col>
+                                </Row>
+                                <Row>
+                                  <Col xxl={2} md={2}>
+                                    <Label
+                                      className="form-check-label"
+                                      for="SaturdayHalfTime"
+                                    >
+                                      Resign Employee
+                                    </Label>
+                                    <span class="form-control input-sm input-checkbox p-1 mt-2">
+                                      <Input
+                                        className="form-check-input"
+                                        type="checkbox"
+                                        id="SaturdayHalfTime"
+                                      />
+                                    </span>
+                                  </Col>
+                                  <Col xxl={2} md={4}>
+                                    <div>
+                                      <Label
+                                        htmlFor="VName"
+                                        className="form-label"
+                                      >
+                                        Resign Date To
+                                      </Label>
+                                      <Input
+                                        type="date"
+                                        className="form-control-sm"
+                                        id="VName"
+                                        disabled
+                                      />
+                                    </div>
+                                  </Col>
+                                  <Col xxl={2} md={4}>
+                                    <div>
+                                      <Label
+                                        htmlFor="VName"
+                                        className="form-label"
+                                      >
+                                        Resign Date To
+                                      </Label>
+                                      <Input
+                                        type="date"
+                                        className="form-control-sm"
+                                        id="VName"
+                                        disabled
+                                      />
+                                    </div>
+                                  </Col>
+                                </Row>
+                              </Row>
+                            </div>
+                          </CardBody>
+                        </Card>
+                      </Col>
+                    </div>
+                  </Collapse>
+                </AccordionItem>
+              </Accordion>
+              {/* Optional grid */}
+              <Col lg={12} className="bg-white p-1">
+                <Row className="mt-2 p-2">
+                  <Col xxl={2} md={3}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="VIN"
+                        name="VType"
+                        value="VIN"
+                        checked
+                      />
+                      <Label className="form-check-label" htmlFor="VIN">
+                        Department wise list
+                      </Label>
+                    </div>
+                  </Col>
+                  <Col xxl={2} md={3}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="BOTH"
+                        name="VType"
+                        value="BOTH"
+                      />
+                      <Label className="form-check-label" htmlFor="BOTH">
+                        Export to Excel
+                      </Label>
+                    </div>
+                  </Col>
+                  <Col xxl={2} md={3}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="VOUT"
+                        name="VType"
+                        value="VOUT"
+                      />
+                      <Label className="form-check-label" htmlFor="VOUT">
+                        Employee Strength
+                      </Label>
+                    </div>
+                  </Col>
+
+                  <Col xxl={2} md={2}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="VIN"
+                        name="VType"
+                        value="VIN"
+                      />
+                      <Label className="form-check-label" htmlFor="VIN">
+                        Employee Card
+                      </Label>
+                    </div>
+                  </Col>
+                  <Col xxl={2} md={3}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="VIN"
+                        name="VType"
+                        value="VIN"
+                      />
+                      <Label className="form-check-label" htmlFor="VIN">
+                        Employee Transfer
+                      </Label>
+                    </div>
+                  </Col>
+                  <Col xxl={2} md={3}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="VIN"
+                        name="VType"
+                        value="VIN"
+                      />
+                      <Label className="form-check-label" htmlFor="VIN">
+                        Employee on Date
+                      </Label>
+                    </div>
+                  </Col>
+                  <Col xxl={2} md={3}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="VIN"
+                        name="VType"
+                        value="VIN"
+                      />
+                      <Label className="form-check-label" htmlFor="VIN">
+                        Access Control
+                      </Label>
+                    </div>
+                  </Col>
+                  <Col xxl={2} md={2}>
+                    <div className="form-check mt-3" dir="ltr">
+                      <Input
+                        type="radio"
+                        className="form-check-input"
+                        id="VIN"
+                        name="VType"
+                        value="VIN"
+                      />
+                      <Label className="form-check-label" htmlFor="VIN">
+                        Expected OverTime
+                      </Label>
+                    </div>
+                  </Col>
+                </Row>
+              </Col>
+            </Form>
+          </Row>
+        </Container>
+
+        <Container fluid>
+          <Row>
+            <Col xxl={12} md={12}>
+              <Card className="shadow-sm">
+                <CardBody>
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div></div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className="form-control form-control-sm"
+                        style={{ width: '200px' }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DataTable
+                    title="Employee List"
+                    columns={columns}
+                    data={filteredData}
+                    pagination
+                    paginationPerPage={100} 
+                    paginationRowsPerPageOptions={[100, 200, 500]} 
+                    highlightOnHover
+                    responsive
+                    customStyles={customStyles}
+                  />
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        </Container>
+      </div>
+    </React.Fragment>
+  );
+};
+
+export default EmployeeList;
