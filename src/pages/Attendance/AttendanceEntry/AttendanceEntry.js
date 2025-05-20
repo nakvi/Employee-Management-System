@@ -220,7 +220,7 @@ const AttendanceEntry = () => {
 
   // Compare records to detect changes
   const getChangedData = () => {
-    let changedData = null;
+    const changedData = [];
     attendanceData.forEach((original, index) => {
       const record = changedRecords[index] || {};
       const fields = ["timeIn", "timeOut", "timeIn2", "timeOut2", "remarks"];
@@ -228,8 +228,8 @@ const AttendanceEntry = () => {
         (field) => record[field] !== undefined && record[field] !== (original[field] || "")
       );
 
-      if (hasFieldChanged && !changedData) {
-        changedData = {
+      if (hasFieldChanged) {
+        changedData.push({
           empid: original.empid,
           vdate: formData.vdate,
           vid1: original.vid1,
@@ -242,7 +242,7 @@ const AttendanceEntry = () => {
           remarks: record.remarks || original.remarks || "",
           uID: 101,
           computerName: "HR-PC-001",
-        };
+        });
       }
     });
     return changedData;
@@ -272,9 +272,9 @@ const AttendanceEntry = () => {
   };
 
   // Confirm save action
-  const confirmSave = () => {
+  const confirmSave = async () => {
     const changedData = getChangedData();
-    if (!changedData) {
+    if (!changedData || changedData.length === 0) {
       // alert("No changes to save.");
       setIsSaveModalOpen(false);
       return;
@@ -282,10 +282,17 @@ const AttendanceEntry = () => {
 
     console.log("Save API Parameters:", JSON.stringify(changedData, null, 2));
 
-    dispatch(saveAttendanceEntry(changedData))
-      .then(() => {
-        // alert("is it");
-      });
+    try {
+      for (const record of changedData) {
+        console.log("Saving record:", JSON.stringify(record, null, 2));
+        await dispatch(saveAttendanceEntry(record)).unwrap();
+      }
+      // alert("All attendance records saved successfully!");
+    } catch (error) {
+      console.error("Failed to save some records:", error);
+      setErrors((prev) => ({ ...prev, apiError: `Failed to save records: ${error.message}` }));
+    }
+
     setIsSaveModalOpen(false);
   };
 

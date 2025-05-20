@@ -13,8 +13,26 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+
 const DailyAttendancePosting = () => {
   document.title = "Daily Attendance Posting | EMS";
+
+  const dispatch = useDispatch();
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -43,8 +61,11 @@ const DailyAttendancePosting = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -62,8 +83,11 @@ const DailyAttendancePosting = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {departmentList.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>

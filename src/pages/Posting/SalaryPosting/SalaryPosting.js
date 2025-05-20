@@ -13,8 +13,25 @@ import {
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+
 const SalaryPosting = () => {
   document.title = "Salary Posting | EMS";
+
+  const dispatch = useDispatch();
+  const { department = {} } = useSelector((state) => state.Department || {});
+  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+
+  useEffect(() => {
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
   return (
     <React.Fragment>
       <div className="page-content">
@@ -41,7 +58,7 @@ const SalaryPosting = () => {
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                       
+
                       >
                         <i className="align-bottom me-1"></i>To Final
                       </Button>
@@ -49,7 +66,7 @@ const SalaryPosting = () => {
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                        
+
                       >
                         <i className="align-bottom me-1"></i>To Salary
                       </Button>
@@ -57,7 +74,7 @@ const SalaryPosting = () => {
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                       
+
                       >
                         <i className="align-bottom me-1"></i>Update Salary
                       </Button>
@@ -68,13 +85,13 @@ const SalaryPosting = () => {
                       >
                         <i className="align-bottom me-1"></i>Update Old Salary
                       </Button>
-                     
-                      
+
+
                       <Button
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                        
+
                       >
                         <i className="align-bottom me-1"></i>Year Posting
                       </Button>
@@ -160,8 +177,11 @@ const SalaryPosting = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
                             </select>
                           </div>
                         </Col>
@@ -179,8 +199,13 @@ const SalaryPosting = () => {
                               id="AttGroupID"
                             >
                               <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
+                              {/* <option value="Choices1">Staf</option>
+                              <option value="Choices2">Worker</option> */}
                             </select>
                           </div>
                         </Col>

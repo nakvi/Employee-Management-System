@@ -210,9 +210,10 @@ const Navdata = () => {
         {
           id: "employee",
           label: "Employee",
-          link: "/employee",
+          link: "/employee-list",
           parentId: "employees",
         },
+        
         // {
         //   id: "employeeAccounts",
         //   label: "Employee Accounts",
