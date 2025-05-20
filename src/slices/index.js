@@ -92,6 +92,7 @@ import EmployeeReducer from "./employee/employee/reducer";
 import LoanDisbursementReducer from "./employee/loanDisbursement/reducer";
 import SalaryIncrementReducer from "./employee/salaryIncrement/reducer";
 import EmployeeLocationTransferReducer from "./employee/employeeTransfer/reducer";
+
 import EmployeeTypeReducer from "./employee/employeeType/reducer";
 import ReligionReducer from "./employee/religion/reducer";
 import GenderReducer from "./employee/gender/reducer";

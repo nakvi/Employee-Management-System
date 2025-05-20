@@ -7,7 +7,8 @@ import {
 } from "./thunk";
 
 export const initialState = {
-  department: [],
+  // department: [],
+   department: { data: [] },
   error: null,
   loading: false,
 };
