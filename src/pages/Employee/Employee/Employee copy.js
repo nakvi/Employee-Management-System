@@ -28,7 +28,7 @@ import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getReligion } from "../../../slices/employee/religion/thunk";
 import { getGrade } from "../../../slices/setup/grade/thunk";
 import { getGender } from "../../../slices/employee/gender/thunk";
-const Employee = () => {
+const EmployeeCopy = () => {
   const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState("");
   const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
@@ -1736,4 +1736,4 @@ const Employee = () => {
   );
 };
 
-export default Employee;
+export default EmployeeCopy;

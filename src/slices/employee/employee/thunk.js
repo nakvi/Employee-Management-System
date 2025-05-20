@@ -36,6 +36,7 @@ export const getEmployee = createAsyncThunk("employee/geteEmployee",
 );
 // Submit Salary Increment
 export const submitEmployee =createAsyncThunk("employee/SubmitEmployee", async (payload, { rejectWithValue }) => {
+  console.log("Em",payload)
   try {
     const response = await fetch(API_ENDPOINT, {
       method: "POST",
