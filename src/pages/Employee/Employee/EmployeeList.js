@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
 
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+
 import avatar1 from "../../../assets/images/users/avatar-11.png";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -45,6 +46,8 @@ const EmployeeList = () => {
   const [col, setCol] = useState(false);
   const [accordionDisabled, setAccordionDisabled] = useState(false);
   const [searchDisabled, setSearchDisabled] = useState(false);
+
+
   const t_col = () => {
     setCol(!col);
   };
@@ -91,16 +94,50 @@ const EmployeeList = () => {
   const handleEditClick = (row) => {
     navigate("/employee", { state: { employee: row } });
   };
+
   const columns = [
+        {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.EmpID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
     {
       name: "Emp Code",
       selector: (row) => row.EmpCode,
       sortable: true,
     },
     {
-      name: "Emp Name",
-      selector: (row) => row.EName,
+      name: 'Employee Name',
+      selector: row => row.EName,
       sortable: true,
+      cell: row => (
+        <span
+          style={{ cursor: "pointer", color: "#007bff" }}
+          onClick={() => navigate(`/employee/${row.EmpID}`)}
+        >
+          {row.EName}
+        </span>
+      )
+      // name: "Emp Name",
+      // selector: (row) => row.EName,
+      // sortable: true,
     },
     {
       name: "Father Name",
@@ -172,29 +209,10 @@ const EmployeeList = () => {
       selector: (row) => row.BasicSalary,
       sortable: true,
     },
-    {
-      name: "Action",
-      cell: (row) => (
-        <div className="d-flex gap-2">
-          <Button
-            className="btn btn-soft-info btn-sm"
-            onClick={() => handleEditClick(row)}
-          >
-            <i className="bx bx-edit"></i>
-          </Button>
-          <Button
-            className="btn btn-soft-danger btn-sm"
-            onClick={() => handleDeleteClick(row.EmpID)}
-          >
-            <i className="ri-delete-bin-2-line"></i>
-          </Button>
-        </div>
-      ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-    },
+
   ];
+
+
   const customStyles = {
     table: {
       style: {
@@ -1123,6 +1141,7 @@ const EmployeeList = () => {
                     responsive
                     customStyles={customStyles}
                   />
+                  
                 </CardBody>
               </Card>
             </Col>
