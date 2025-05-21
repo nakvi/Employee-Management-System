@@ -14,7 +14,7 @@ import {
   AccordionItem,
   Collapse,
 } from "reactstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
 
@@ -39,10 +39,12 @@ import { getShift } from "../../../slices/setup/shift/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 const EmployeeList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState("");
   const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
   const [col, setCol] = useState(false);
-
+  const [accordionDisabled, setAccordionDisabled] = useState(false);
+  const [searchDisabled, setSearchDisabled] = useState(false);
   const t_col = () => {
     setCol(!col);
   };
@@ -59,15 +61,6 @@ const EmployeeList = () => {
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
 
-  console.log("employee", employee );
-  console.log("employeeType", employeeType );
-  console.log("location", location );
-  console.log("shift", shift );
-  console.log("department", department );
-  console.log("designation", designation );
-  console.log("religion", religion );
-  console.log("grade", grade );
-  console.log("gender", gender );
   // Fetch data on component mount
   useEffect(() => {
     dispatch(getEmployee());
@@ -81,154 +74,158 @@ const EmployeeList = () => {
     dispatch(getEmployeeType());
   }, [dispatch]);
 
-useEffect(() => {
-  if (employee) {
-    console.log("Employee data loaded successfully!", employee);
+  useEffect(() => {
+    if (employee) {
+      console.log("Employee data loaded successfully!", employee);
 
-    const filtered = employee.filter((item) =>
-      Object.values(item)
-        .join(" ")
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
-    );
-    setFilteredData(filtered);
-  }
-}, [searchText, employee]); // 🔁 FIXED dependency
-
-const columns = [
-  {
-    name: "Emp Code",
-    selector: (row) => row.EmpCode,
-    sortable: true,
-  },
-   {
-    name: "Emp Name",
-    selector: (row) => row.EName,
-    sortable: true,
-  },
-   {
-    name: "Father Name",
-    selector: (row) => row.FName,
-    sortable: true,
-  },
-   {
-    name: "Designation",
-    selector: (row) => row.DesignationTitle,
-    sortable: true,
-  },
-   {
-    name: "Birth Date",
-    selector: (row) => row.DOB,
-    sortable: true,
-  },
-   {
-    name: "Joining Date",
-    selector: (row) => row.DOJ,
-    sortable: true,
-  },
-   {
-    name: "Probation Date",
-    selector: (row) => row.ProbitionDate,
-    sortable: true,
-  },
-   {
-    name: "CNIC No",
-    selector: (row) => row.NIC,
-    sortable: true,
-  },
-   {
-    name: "Mobile No",
-    selector: (row) => row.CellPhone,
-    sortable: true,
-  },
-   {
-    name: "Email",
-    selector: (row) => row.Email,
-    sortable: true,
-  },
-  {
-    name: "Head Name",
-    selector: (row) => row.HODName,
-    sortable: true,
-  },
-  {
-    name: "Company Code",
-    selector: (row) => row.CompanyCode,
-    sortable: true,
-  },
-  {
-    name: "Company Name",
-    selector: (row) => row.CompanyName,
-    sortable: true,
-  },
-  {
-    name: "Is Active",
-    selector: (row) => row.IsActive,
-    sortable: true,
-  },
-   {
-    name: "Machine Card No",
-    selector: (row) => row.MachineCardNo,
-    sortable: true,
-  },
-   {
-    name: "Basic Salary",
-    selector: (row) => row.BasicSalary,
-    sortable: true,
-  },
-  {
-    name: "Action",
-    cell: (row) => (
-      <div className="d-flex gap-2">
-        <Button
-          className="btn btn-soft-info btn-sm"
-          onClick={() => handleEditClick(row)}
-        >
-          <i className="bx bx-edit"></i>
-        </Button>
-        <Button
-          className="btn btn-soft-danger btn-sm"
-          onClick={() => handleDeleteClick(row.EmpID)}
-        >
-          <i className="ri-delete-bin-2-line"></i>
-        </Button>
-      </div>
-    ),
-    ignoreRowClick: true,
-    allowOverflow: true,
-    button: true,
-  },
-];
-    const customStyles = {
-      table: {
-        style: {
-          border: '1px solid #dee2e6',
-        },
+      const filtered = employee.filter((item) =>
+        Object.values(item)
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  }, [searchText, employee]); // 🔁 FIXED dependency
+  // Edit Click
+  const handleEditClick = (row) => {
+    navigate("/employee", { state: { employee: row } });
+  };
+  const columns = [
+    {
+      name: "Emp Code",
+      selector: (row) => row.EmpCode,
+      sortable: true,
+    },
+    {
+      name: "Emp Name",
+      selector: (row) => row.EName,
+      sortable: true,
+    },
+    {
+      name: "Father Name",
+      selector: (row) => row.FName,
+      sortable: true,
+    },
+    {
+      name: "Designation",
+      selector: (row) => row.DesignationTitle,
+      sortable: true,
+    },
+    {
+      name: "Birth Date",
+      selector: (row) => row.DOB,
+      sortable: true,
+    },
+    {
+      name: "Joining Date",
+      selector: (row) => row.DOJ,
+      sortable: true,
+    },
+    {
+      name: "Probation Date",
+      selector: (row) => row.ProbitionDate,
+      sortable: true,
+    },
+    {
+      name: "CNIC No",
+      selector: (row) => row.NIC,
+      sortable: true,
+    },
+    {
+      name: "Mobile No",
+      selector: (row) => row.CellPhone,
+      sortable: true,
+    },
+    {
+      name: "Email",
+      selector: (row) => row.Email,
+      sortable: true,
+    },
+    {
+      name: "Head Name",
+      selector: (row) => row.HODName,
+      sortable: true,
+    },
+    {
+      name: "Company Code",
+      selector: (row) => row.CompanyCode,
+      sortable: true,
+    },
+    {
+      name: "Company Name",
+      selector: (row) => row.CompanyName,
+      sortable: true,
+    },
+    {
+      name: "Is Active",
+      selector: (row) => row.IsActive,
+      sortable: true,
+    },
+    {
+      name: "Machine Card No",
+      selector: (row) => row.MachineCardNo,
+      sortable: true,
+    },
+    {
+      name: "Basic Salary",
+      selector: (row) => row.BasicSalary,
+      sortable: true,
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.EmpID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+  const customStyles = {
+    table: {
+      style: {
+        border: "1px solid #dee2e6",
       },
-      headRow: {
-        style: {
-          backgroundColor: '#f8f9fa',
-          borderBottom: '1px solid #dee2e6',
-          fontWeight: '600',
-        },
+    },
+    headRow: {
+      style: {
+        backgroundColor: "#f8f9fa",
+        borderBottom: "1px solid #dee2e6",
+        fontWeight: "600",
       },
-      rows: {
-        style: {
-          minHeight: '48px',
-          borderBottom: '1px solid #dee2e6',
-        },
+    },
+    rows: {
+      style: {
+        minHeight: "48px",
+        borderBottom: "1px solid #dee2e6",
       },
-      cells: {
-        style: {
-          paddingLeft: '16px',
-          paddingRight: '16px',
-          borderRight: '1px solid #dee2e6',
-        },
+    },
+    cells: {
+      style: {
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        borderRight: "1px solid #dee2e6",
       },
-    };
+    },
+  };
   // Formik form setup
   const formik = useFormik({
     initialValues: {
+      SearchFilter: '',
       ETypeID: '',
       EmpID: '',
       FName: '',
@@ -245,41 +242,65 @@ const columns = [
       SalaryFrom: '',
       SalaryTo: '',
       JoinDateCheck: false,
-      JoinDateFrom: '',
-      JoinDateTo: '',
+      JoinDateFrom: "",
+      JoinDateTo: "",
       ResignEmployeeCheck: false,
       ResignDateFrom: '',
       ResignDateTo: '',
-      ReportType: 'VIN' // Default to Department wise list
+      ReportType: 'VIN',
+      leftStatusId: ''
     },
+
+    validationSchema: Yup.object({
+      SearchFilter: Yup.string(),
+      NIC: Yup.string()
+        .matches(/^\d{5}-\d{7}-\d{1}$/, 'CNIC must be in format XXXXX-XXXXXXX-X'),
+      SalaryFrom: Yup.number().typeError('Must be a number'),
+      SalaryTo: Yup.number().typeError('Must be a number'),
+    }),
 
     onSubmit: (values) => {
-      const transformedValues = {
-        ...values,
-        IsActive: values.IsActive ? 1 : 0,
-        IsRoster: values.IsRoster ? 1 : 0,
-        IsSecurity: values.IsSecurity ? 1 : 0,
-        SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
-      };
-      if (editingGroup) {
-        console.log("Editing Group", transformedValues);
-
-        dispatch(
-          updateEmployee({ ...transformedValues, VID: editingGroup.VID })
-        );
-        setEditingGroup(null); // Reset after submission
+      let payload = {};
+      
+      if (values.SearchFilter && values.SearchFilter.trim() !== '') {
+        payload = { Search: values.SearchFilter.trim() };
       } else {
-        dispatch(submitEmployee(transformedValues));
+        // Create filtered payload without empty values
+        Object.entries(values).forEach(([key, value]) => {
+          if (key !== 'SearchFilter' && value !== '' && value !== null && value !== undefined) {
+            payload[key] = value;
+          }
+        });
       }
-      formik.resetForm();
+
+      console.log("Form submitted with:", payload);
+      // Apply your filters or dispatch actions here
     },
   });
+
+    // Handle search input changes
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    formik.setFieldValue("SearchFilter", value);
+    setAccordionDisabled(!!value.trim());
+  };
+
+  // Toggle accordion
+  const handleAccordionToggle = () => {
+    if (!accordionDisabled) {
+      setCol(!col);
+      setSearchDisabled(!searchDisabled);
+      if (!col) {
+        formik.setFieldValue("SearchFilter", "");
+      }
+    }
+  };
+
   // set date format
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
   }, []);
-
 
   const getMinDate = () => {
     const today = new Date();
@@ -291,7 +312,7 @@ const columns = [
       <div className="page-content">
         <Container fluid>
           <Row>
-            <Form>
+            <Form onSubmit={formik.handleSubmit}>
               <Col lg={12} className="bg-white p-1">
                 {/* <PreviewCardHeader3 title="Employee Report" /> */}
                 <CardHeader
@@ -299,7 +320,7 @@ const columns = [
                   style={{
                     color: "#495057",
                     marginLeft: "16px",
-                    border:"none",
+                    border: "none",
                   }}
                 >
                   <h4 className="card-title mb-0 flex-grow-1">
@@ -312,10 +333,17 @@ const columns = [
                       className="add-btn me-1 py-1"
                       id="create-btn"
                     >
-                      <i className="align-bottom me-1"></i>Preview
+                      <i className="align-bottom me-1"></i>Fetch
                     </Button>
                     <Button color="dark" className="add-btn me-1 py-1">
                       <i className="align-bottom me-1"></i> Cancel
+                    </Button>
+                    <Button
+                      color="primary"
+                      className="add-btn me-1 py-1"
+                      onClick={() => navigate("/employee")}
+                    >
+                      <i className="align-bottom me-1"></i> New
                     </Button>
                   </div>
                 </CardHeader>
@@ -325,30 +353,30 @@ const columns = [
                   type="text"
                   className="form-control"
                   placeholder="Search for name..."
+                  name="SearchFilter"
+                  value={formik.values.SearchFilter}
+                  onChange={handleSearchChange}
+                  onBlur={formik.handleBlur}
+                  disabled={searchDisabled}
                 />
                 <i className="ri-search-line search-icon"></i>
               </div>
             </Col>
-              <Accordion className="lefticon-accordion custom-accordionwithicon accordion-border-box"  id="default-accordion-example">
+            <Accordion className="lefticon-accordion custom-accordionwithicon accordion-border-box">
                 <AccordionItem>
                   <h2 className="accordion-header bg-light" id="headingOne">
                     <button
-                      className={classnames("accordion-button", {
-                        collapsed: !col,
-                      })}
+                      className={classnames("accordion-button", { collapsed: !col })}
                       type="button"
-                      onClick={t_col}
-                      style={{ cursor: "pointer" }}
+                      onClick={handleAccordionToggle}
+                      style={{ cursor: accordionDisabled ? "not-allowed" : "pointer" }}
+                      disabled={accordionDisabled}
                     >
                       Show Advance Filter
                     </button>
                   </h2>
-
-                  <Collapse
-                    isOpen={col}
-                    className="accordion-collapse"
-                    id="collapseOne"
-                  >
+  
+                  <Collapse isOpen={col} className="accordion-collapse">
                     <div className="accordion-body p-0">
                       <Col lg={12}>
                         <Card>
@@ -356,10 +384,13 @@ const columns = [
                             <div className="live-preview">
                               <Row className="gy-4">
                                 <Col xxl={2} md={2}>
-                                {/* E-Type */}
-                                 <div className="mb-3">
-                                    <Label htmlFor="ETypeID" className="form-label">
-                                     E-Type
+                                  {/* E-Type */}
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="ETypeID"
+                                      className="form-label"
+                                    >
+                                      E-Type
                                     </Label>
                                     <select
                                       name="ETypeID"
@@ -372,7 +403,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {employeeType?.length > 0 ? (
                                         employeeType.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -391,9 +425,12 @@ const columns = [
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={3}>
-                                    {/* Employee */}
-                                 <div className="mb-3">
-                                    <Label htmlFor="EmpID" className="form-label">
+                                  {/* Employee */}
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="EmpID"
+                                      className="form-label"
+                                    >
                                       Employee
                                     </Label>
                                     <select
@@ -407,7 +444,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {employee?.length > 0 ? (
                                         employee.map((group) => (
-                                          <option key={group.EmpID} value={group.EmpID}>
+                                          <option
+                                            key={group.EmpID}
+                                            value={group.EmpID}
+                                          >
                                             {group.EName}
                                           </option>
                                         ))
@@ -437,10 +477,10 @@ const columns = [
                                       type="text"
                                       className="form-control-sm"
                                       id="FName"
-                                        {...formik.getFieldProps("FName")}
+                                      {...formik.getFieldProps("FName")}
                                       placeholder="Father Name"
                                     />
-                                         {formik.touched.EmpID &&
+                                    {formik.touched.EmpID &&
                                     formik.errors.EmpID ? (
                                       <div className="text-danger">
                                         {formik.errors.EmpID}
@@ -449,9 +489,12 @@ const columns = [
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={2}>
-                                 {/* Department */}
+                                  {/* Department */}
                                   <div className="mb-3">
-                                    <Label htmlFor="DeptID" className="form-label">
+                                    <Label
+                                      htmlFor="DeptID"
+                                      className="form-label"
+                                    >
                                       Department
                                     </Label>
                                     <select
@@ -465,7 +508,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {department.data?.length > 0 ? (
                                         department.data.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -485,7 +531,10 @@ const columns = [
                                 </Col>
                                 <Col xxl={2} md={2}>
                                   <div className="mb-3">
-                                    <Label htmlFor="DesgID" className="form-label">
+                                    <Label
+                                      htmlFor="DesgID"
+                                      className="form-label"
+                                    >
                                       Designation
                                     </Label>
                                     <select
@@ -499,7 +548,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {designation?.length > 0 ? (
                                         designation.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -539,7 +591,7 @@ const columns = [
                                 <Col xxl={2} md={2}>
                                   <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="NIC"
                                       className="form-label"
                                     >
                                       CNIC
@@ -547,15 +599,19 @@ const columns = [
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="NIC"
+                                      {...formik.getFieldProps("NIC")}
                                       placeholder="xxxx-xxxxxxxx-x"
                                     />
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={2}>
-                                {/* Location */}
+                                  {/* Location */}
                                   <div className="mb-3">
-                                    <Label htmlFor="LocationID" className="form-label">
+                                    <Label
+                                      htmlFor="LocationID"
+                                      className="form-label"
+                                    >
                                       Location
                                     </Label>
                                     <select
@@ -569,7 +625,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {location?.length > 0 ? (
                                         location.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -589,7 +648,10 @@ const columns = [
                                 </Col>
                                 <Col xxl={2} md={2}>
                                   <div className="mb-3">
-                                    <Label htmlFor="ShiftID" className="form-label">
+                                    <Label
+                                      htmlFor="ShiftID"
+                                      className="form-label"
+                                    >
                                       Shift
                                     </Label>
                                     <select
@@ -603,7 +665,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {shift?.length > 0 ? (
                                         shift.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -620,12 +685,14 @@ const columns = [
                                       </div>
                                     ) : null}
                                   </div>
-
                                 </Col>
                                 <Col xxl={2} md={2}>
                                   {/* Religion */}
-                                   <div className="mb-3">
-                                    <Label htmlFor="ReligionID" className="form-label">
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="ReligionID"
+                                      className="form-label"
+                                    >
                                       Region
                                     </Label>
                                     <select
@@ -639,7 +706,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {religion?.length > 0 ? (
                                         religion.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -658,9 +728,12 @@ const columns = [
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={2}>
-                                {/* Grade */}
-                                 <div className="mb-3">
-                                    <Label htmlFor="GradeID" className="form-label">
+                                  {/* Grade */}
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="GradeID"
+                                      className="form-label"
+                                    >
                                       Grade
                                     </Label>
                                     <select
@@ -674,7 +747,10 @@ const columns = [
                                       <option value="-1">---Select---</option>
                                       {grade?.length > 0 ? (
                                         grade.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
+                                          <option
+                                            key={group.VID}
+                                            value={group.VID}
+                                          >
                                             {group.VName}
                                           </option>
                                         ))
@@ -695,7 +771,7 @@ const columns = [
                                 <Col xxl={2} md={2}>
                                   <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="PseudoName"
                                       className="form-label"
                                     >
                                       Pseudo Name
@@ -703,50 +779,43 @@ const columns = [
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="PseudoName"
+                                      name="PseudoName"
+                                      {...formik.getFieldProps("PseudoName")}
                                       placeholder="Pseudo Name"
                                     />
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={3}>
                                  <div className="mb-3">
-                                    <Label htmlFor="LocationID" className="form-label">
-                                      Location
+                                    <Label htmlFor="leftStatusId" className="form-label">
+                                      Left Status
                                     </Label>
                                     <select
-                                      name="LocationID"
-                                      id="LocationID"
+                                      name="leftStatusId"
+                                      id="leftStatusId"
                                       className="form-select form-select-sm"
-                                      value={formik.values.LocationID} // Bind to Formik state
+                                      value={formik.values.leftStatusId} // Bind to Formik state
                                       onChange={formik.handleChange} // Handle changes
                                       onBlur={formik.handleBlur} // Track field blur
                                     >
                                       <option value="-1">---Select---</option>
-                                      {location?.length > 0 ? (
-                                        location.map((group) => (
-                                          <option key={group.VID} value={group.VID}>
-                                            {group.VName}
-                                          </option>
-                                        ))
-                                      ) : (
-                                        <option value="0" disabled>
-                                          No location available
-                                        </option>
-                                      )}
+                                      <option value="1">Left</option>
+                                      <option value="2">Not Left</option> 
                                     </select>
-                                    {formik.touched.LocationID &&
-                                    formik.errors.LocationID ? (
+                                    {formik.touched.leftStatusId &&
+                                    formik.errors.leftStatusId ? (
                                       <div className="text-danger">
-                                        {formik.errors.LocationID}
+                                        {formik.errors.leftStatusId}
                                       </div>
                                     ) : null}
                                   </div>
 
                                 </Col>
                                 <Col xxl={2} md={3}>
-                                   <div>
+                                  <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="BloodGroup"
                                       className="form-label"
                                     >
                                       Blood Group
@@ -754,7 +823,9 @@ const columns = [
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="BloodGroup"
+                                      name="BloodGroup"
+                                       {...formik.getFieldProps("BloodGroup")}
                                       placeholder="Blood Group"
                                     />
                                   </div>
@@ -778,7 +849,7 @@ const columns = [
                                 <Col xxl={2} md={2}>
                                   <div>
                                     <Label
-                                      htmlFor="VName"
+                                      htmlFor="SalaryFrom"
                                       className="form-label"
                                     >
                                       Salary To
@@ -786,7 +857,9 @@ const columns = [
                                     <Input
                                       type="text"
                                       className="form-control-sm"
-                                      id="VName"
+                                      id="SalaryFrom"
+                                      name="SalaryFrom"
+                                       {...formik.getFieldProps("SalaryFrom")}
                                       placeholder="Salary From"
                                     />
                                   </div>
@@ -1033,7 +1106,7 @@ const columns = [
                         type="text"
                         placeholder="Search"
                         className="form-control form-control-sm"
-                        style={{ width: '200px' }}
+                        style={{ width: "200px" }}
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}
                       />
@@ -1044,8 +1117,8 @@ const columns = [
                     columns={columns}
                     data={filteredData}
                     pagination
-                    paginationPerPage={100} 
-                    paginationRowsPerPageOptions={[100, 200, 500]} 
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 500]}
                     highlightOnHover
                     responsive
                     customStyles={customStyles}
