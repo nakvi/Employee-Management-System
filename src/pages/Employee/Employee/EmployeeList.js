@@ -17,6 +17,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
+import DeleteModal from "../../../Components/Common/DeleteModal";
 
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import avatar1 from "../../../assets/images/users/avatar-11.png";
@@ -40,8 +41,10 @@ import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 const EmployeeList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
-  const [editingGroup, setEditingGroup] = useState(null); // Track the group being edited
+  const [editingGroup, setEditingGroup] = useState(null); 
   const [col, setCol] = useState(false);
   const [accordionDisabled, setAccordionDisabled] = useState(false);
   const [searchDisabled, setSearchDisabled] = useState(false);
@@ -91,6 +94,17 @@ const EmployeeList = () => {
   const handleEditClick = (row) => {
     navigate("/employee", { state: { employee: row } });
   };
+   // Delete Data
+    const handleDeleteClick = (id) => {
+      setDeleteId(id);
+      setDeleteModal(true);
+    };
+    const handleDeleteConfirm = () => {
+      if (deleteId) {
+        dispatch(deleteEmployee(deleteId));
+      }
+      setDeleteModal(false);
+    };
   const columns = [
     {
       name: "Emp Code",
@@ -191,7 +205,7 @@ const EmployeeList = () => {
         </div>
       ),
       ignoreRowClick: true,
-      allowOverflow: true,
+      // allowOverflow: true,
       button: true,
     },
   ];
@@ -872,7 +886,7 @@ const EmployeeList = () => {
                                     >
                                       Join Date
                                     </Label>
-                                    <span class="form-control input-sm input-checkbox p-1 mt-2">
+                                    <span className="form-control input-sm input-checkbox p-1 mt-2">
                                       <Input
                                         className="form-check-input"
                                         type="checkbox"
@@ -921,7 +935,7 @@ const EmployeeList = () => {
                                     >
                                       Resign Employee
                                     </Label>
-                                    <span class="form-control input-sm input-checkbox p-1 mt-2">
+                                    <span className="form-control input-sm input-checkbox p-1 mt-2">
                                       <Input
                                         className="form-check-input"
                                         type="checkbox"
@@ -1129,6 +1143,11 @@ const EmployeeList = () => {
           </Row>
         </Container>
       </div>
+        <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };

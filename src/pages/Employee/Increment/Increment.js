@@ -25,6 +25,23 @@ import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
+import DataTable from "react-data-table-component";
+import { CSVLink } from "react-csv";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  TextRun,
+  AlignmentType,
+} from "docx";
+import { saveAs } from "file-saver";
 
 const Increment = () => {
   const dispatch = useDispatch();
@@ -32,22 +49,36 @@ const Increment = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
   const [editingGroup, setEditingGroup] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filteredData, setFilteredData] = useState([]);
+
+  // get salary increment
+  const { loading, error, salaryIncrement } = useSelector(
+    (state) => state.SalaryIncrement );
   const { employeeType } = useSelector((state) => state.EmployeeType);
   const { employee = {} } = useSelector((state) => state.Employee || {});
-
-  // get salary increament
-  const { loading, error, salaryIncrement } = useSelector(
-    (state) => state.SalaryIncrement
-  );
   useEffect(() => {
     dispatch(getSalaryIncrement());
     dispatch(getEmployeeType());
     dispatch(getEmployee());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (salaryIncrement) {
+      const filtered = salaryIncrement.filter((item) =>
+        Object.values(item)
+          .join(" ")
+          .toLowerCase()
+          .includes(searchText.toLowerCase())
+      );
+      setFilteredData(filtered);
+    }
+  }, [searchText, salaryIncrement]);
+
   // Formik form setup
   const formik = useFormik({
     initialValues: {
-      VName: "",
+      EmpID: "",
       DateFrom: "",
       DateTo: "",
       CurrentSalary: "",
@@ -60,77 +91,366 @@ const Increment = () => {
       IsActive: false,
     },
     validationSchema: Yup.object({
-      // VName: Yup.string()
-      //   .required("Title is required.")
-      //   .min(3, "Title at least must be 3 characters "),
-      // DateFrom: Yup.date()
-      //   .required("Start date is required.")
-      //   .max(
-      //     Yup.ref("DateTo"),
-      //     "Start date must be earlier than or the same as the end date"
-      //   ),
-      // DateTo: Yup.date()
-      //   .required("End date is required.")
-      //   .min(
-      //     Yup.ref("DateFrom"),
-      //     "End date must be later than or the same as the start date"
-      //   ),
-      IsActive: Yup.boolean(),
+      ETypeID: Yup.number()
+        .min(1, "Employee Type is required")
+        .required("Required"),
+      EName: Yup.string().required("Employee Name is required"),
+      DateFrom: Yup.date().required("Effective date is required"),
+      CurrentSalary: Yup.number().required("Current salary is required"),
+      IncrementAmount: Yup.number().required("Increment amount is required"),
+      IncrementSpecial: Yup.number().required(
+        "Increment Special salary is required"
+      ),
+      IncrementPromotional: Yup.number().required(
+        "Increment Promotional is required"
+      ),
+      FirstAmount: Yup.number().required("First Amount is required"),
     }),
     onSubmit: (values) => {
-      // Add your form submission logic here
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+        IsActive: values.IsActive ? 1 : 0,
       };
       if (editingGroup) {
-        console.log("Editing Group", transformedValues);
         dispatch(
           updateSalaryIncrement({ ...transformedValues, VID: editingGroup.VID })
         );
-        setEditingGroup(null); // Reset after submission
+        setEditingGroup(null);
       } else {
         dispatch(submitSalaryIncrement(transformedValues));
       }
       formik.resetForm();
     },
   });
+
   const handleEditClick = (group) => {
     setEditingGroup(group);
     const formatDateForInput = (dateString) => {
-      return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
+      return dateString ? dateString.split("T")[0] : "";
     };
     formik.setValues({
+      EmpID: group.EmpID,
       DateFrom: formatDateForInput(group.DateFrom),
       DateTo: formatDateForInput(group.DateTo),
-      VName: group.VName,
-      UID: group.UID,
+      CurrentSalary: group.CurrentSalary,
+      IncrementAmount: group.IncrementAmount,
+      IncrementSpecial: group.IncrementSpecial,
+      IncrementPromotional: group.IncrementPromotional,
+      FirstAmount: group.FirstAmount,
       CompanyID: group.CompanyID,
+      UID: group.UID,
       IsActive: group.IsActive === 1,
     });
   };
-  // Delete Data
+
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
   };
+
   const handleDeleteConfirm = () => {
     if (deleteId) {
       dispatch(deleteSalaryIncrement(deleteId));
     }
     setDeleteModal(false);
   };
+
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
   }, []);
+
   const formatDate = (dateString) => {
     return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
   };
+
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
+
+  // Export functions
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "SalaryIncrement");
+    XLSX.writeFile(workbook, "SalaryIncrement.xlsx");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Salary Increment Report", 105, 15, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, {
+      align: "center",
+    });
+
+    const headers = [
+      [
+        "Employee",
+        "Date",
+        "Effective Date",
+        "Current Salary",
+        "Amount",
+        "Special",
+        "Promotional",
+        "First Amount",
+      ],
+    ];
+
+    const data = (filteredData || []).map((row) => [
+      row.EmpID,
+      formatDate(row.VDate),
+      formatDate(row.DateFrom),
+      row.CurrentSalary,
+      row.IncrementAmount,
+      row.IncrementSpecial,
+      row.IncrementPromotional,
+      row.FirstAmount,
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 30,
+      margin: { top: 30 },
+      styles: {
+        cellPadding: 4,
+        fontSize: 10,
+        valign: "middle",
+        halign: "left",
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 10,
+        fontStyle: "bold",
+        halign: "center",
+      },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 20 },
+        2: { cellWidth: 20 },
+        3: { cellWidth: 20, halign: "right" },
+        4: { cellWidth: 15, halign: "right" },
+        5: { cellWidth: 15, halign: "right" },
+        6: { cellWidth: 15, halign: "right" },
+        7: { cellWidth: 15, halign: "right" },
+      },
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(
+          `Page ${data.pageCount}`,
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" }
+        );
+      },
+    });
+
+    doc.save(`SalaryIncrement_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const exportToWord = () => {
+    const data = filteredData || [];
+    const tableRows = [];
+
+    // Add header row
+    const headerCells = [
+      "Employee",
+      "Date",
+      "Effective Date",
+      "Current Salary",
+      "Amount",
+      "Special",
+      "Promotional",
+      "First Amount",
+    ].map(
+      (key) =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: key,
+                  bold: true,
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+          width: { size: 100 / 8, type: WidthType.PERCENTAGE },
+        })
+    );
+    tableRows.push(new TableRow({ children: headerCells }));
+
+    // Add data rows
+    data.forEach((item) => {
+      const rowCells = [
+        item.EmpID,
+        formatDate(item.VDate),
+        formatDate(item.DateFrom),
+        item.CurrentSalary,
+        item.IncrementAmount,
+        item.IncrementSpecial,
+        item.IncrementPromotional,
+        item.FirstAmount,
+      ].map(
+        (value) =>
+          new TableCell({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: String(value ?? ""),
+                    size: 18,
+                  }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+            ],
+            width: { size: 100 / 8, type: WidthType.PERCENTAGE },
+          })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Salary Increment Report",
+              heading: "Heading1",
+              alignment: AlignmentType.CENTER,
+            }),
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then((blob) => {
+      saveAs(blob, "SalaryIncrement.docx");
+    });
+  };
+
+  // DataTable columns with the specified headers
+  const columns = [
+    {
+      name: "Employee",
+      selector: (row) => row.EmpID,
+      sortable: true,
+      width: "150px",
+    },
+    {
+      name: "Date",
+      selector: (row) => formatDate(row.VDate),
+      sortable: true,
+      width: "100px",
+    },
+    {
+      name: "Effective Date",
+      selector: (row) => formatDate(row.DateFrom),
+      sortable: true,
+      width: "120px",
+    },
+    {
+      name: "Current Salary",
+      selector: (row) => row.CurrentSalary,
+      sortable: true,
+      right: true,
+      width: "120px",
+    },
+    {
+      name: "Amount",
+      selector: (row) => row.IncrementAmount,
+      sortable: true,
+      right: true,
+      width: "100px",
+    },
+    {
+      name: "Special",
+      selector: (row) => row.IncrementSpecial,
+      sortable: true,
+      right: true,
+      width: "100px",
+    },
+    {
+      name: "Promotional",
+      selector: (row) => row.IncrementPromotional,
+      sortable: true,
+      right: true,
+      width: "120px",
+    },
+    {
+      name: "First Amount",
+      selector: (row) => row.FirstAmount,
+      sortable: true,
+      right: true,
+      width: "120px",
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.VID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+      width: "100px",
+    },
+  ];
+
+  const customStyles = {
+    table: {
+      style: {
+        border: "1px solid #dee2e6",
+      },
+    },
+    headRow: {
+      style: {
+        backgroundColor: "#f8f9fa",
+        borderBottom: "1px solid #dee2e6",
+        fontWeight: "600",
+      },
+    },
+    rows: {
+      style: {
+        minHeight: "48px",
+        borderBottom: "1px solid #dee2e6",
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        borderRight: "1px solid #dee2e6",
+      },
+    },
+  };
+
   document.title = "Increment | EMS";
   return (
     <React.Fragment>
@@ -144,7 +464,12 @@ const Increment = () => {
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                     title="Increment"
-                  // onCancel={formik.resetForm}
+                    onCancel={() => {
+                      formik.resetForm();
+                      setEditingGroup(null);
+                    }}
+                    editing={!!editingGroup}
+                    isEditMode={!!editingGroup}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -158,6 +483,9 @@ const Increment = () => {
                             <select
                               className="form-select form-select-sm"
                               id="eType"
+                              onChange={(e) => {
+                                // Filter employees based on selected type
+                              }}
                             >
                               <option value="">--- Select ---</option>
                               {employeeType?.map((type) => (
@@ -166,29 +494,35 @@ const Increment = () => {
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
-
                         <Col xxl={2} md={4}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="EmpID" className="form-label">
                               Employee
                             </Label>
                             <select
                               className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              name="EmpID"
+                              id="EmpID"
                             >
-                              <option value="">---Select--- </option>
-                              {employee?.map((group) => (
-                                <option key={group.EmpID} value={group.EmpID}>
-                                  {group.EName}
+                              <option value="-1">---Select--- </option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -200,16 +534,11 @@ const Increment = () => {
                               type="date"
                               className="form-control-sm"
                               id="VDate"
-                              {...formik.getFieldProps("VDate")}
-
-                              min={getMinDate()} // Prevent past dates
+                              min={getMinDate()}
                               value={selectedDate}
+                              {...formik.getFieldProps("VDate")}
+                              
                             />
-                            {formik.touched.VDate && formik.errors.VDate ? (
-                              <div className="text-danger">
-                                {formik.errors.VDate}
-                              </div>
-                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -221,12 +550,11 @@ const Increment = () => {
                               type="date"
                               className="form-control-sm"
                               id="DateFrom"
-                              min={getMinDate()} // Prevent past dates
-                              value={selectedDate}
+                              min={getMinDate()}
                               {...formik.getFieldProps("DateFrom")}
-
                             />
-                            {formik.touched.DateFrom && formik.errors.DateFrom ? (
+                            {formik.touched.DateFrom &&
+                            formik.errors.DateFrom ? (
                               <div className="text-danger">
                                 {formik.errors.DateFrom}
                               </div>
@@ -235,22 +563,33 @@ const Increment = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label
+                              htmlFor="CurrentSalary"
+                              className="form-label"
+                            >
                               Current Salary
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
+                              id="CurrentSalary"
                               placeholder="5000"
-                              readOnly
-                              disabled
+                              {...formik.getFieldProps("CurrentSalary")}
                             />
+                            {formik.touched.CurrentSalary &&
+                            formik.errors.CurrentSalary ? (
+                              <div className="text-danger">
+                                {formik.errors.CurrentSalary}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="IncrementAmount" className="form-label">
+                            <Label
+                              htmlFor="IncrementAmount"
+                              className="form-label"
+                            >
                               Amount
                             </Label>
                             <Input
@@ -259,9 +598,9 @@ const Increment = () => {
                               id="IncrementAmount"
                               placeholder="00"
                               {...formik.getFieldProps("IncrementAmount")}
-
                             />
-                            {formik.touched.IncrementAmount && formik.errors.IncrementAmount ? (
+                            {formik.touched.IncrementAmount &&
+                            formik.errors.IncrementAmount ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementAmount}
                               </div>
@@ -270,7 +609,10 @@ const Increment = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="IncrementSpecial" className="form-label">
+                            <Label
+                              htmlFor="IncrementSpecial"
+                              className="form-label"
+                            >
                               Special
                             </Label>
                             <Input
@@ -280,17 +622,20 @@ const Increment = () => {
                               placeholder="00"
                               {...formik.getFieldProps("IncrementSpecial")}
                             />
-                            {formik.touched.IncrementSpecial && formik.errors.IncrementSpecial ? (
+                            {formik.touched.IncrementSpecial &&
+                            formik.errors.IncrementSpecial ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementSpecial}
                               </div>
                             ) : null}
                           </div>
-
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="IncrementPromotional" className="form-label">
+                            <Label
+                              htmlFor="IncrementPromotional"
+                              className="form-label"
+                            >
                               Promotional
                             </Label>
                             <Input
@@ -300,7 +645,8 @@ const Increment = () => {
                               placeholder="000"
                               {...formik.getFieldProps("IncrementPromotional")}
                             />
-                            {formik.touched.IncrementPromotional && formik.errors.IncrementPromotional ? (
+                            {formik.touched.IncrementPromotional &&
+                            formik.errors.IncrementPromotional ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementPromotional}
                               </div>
@@ -318,13 +664,33 @@ const Increment = () => {
                               id="FirstAmount"
                               placeholder="000"
                               {...formik.getFieldProps("FirstAmount")}
-
                             />
-                            {formik.touched.FirstAmount && formik.errors.FirstAmount ? (
+                            {formik.touched.FirstAmount &&
+                            formik.errors.FirstAmount ? (
                               <div className="text-danger">
                                 {formik.errors.FirstAmount}
                               </div>
                             ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mt-4 pt-2">
+                            <div className="form-check form-switch form-switch-md">
+                              <Input
+                                type="checkbox"
+                                className="form-check-input"
+                                id="IsActive"
+                                checked={formik.values.IsActive}
+                                onChange={formik.handleChange}
+                                name="IsActive"
+                              />
+                              <Label
+                                className="form-check-label"
+                                htmlFor="IsActive"
+                              >
+                                Active
+                              </Label>
+                            </div>
                           </div>
                         </Col>
                       </Row>
@@ -336,115 +702,62 @@ const Increment = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                  <div className="Location-table" id="customerList">
-                    <Row className="g-4 mb-3">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-
-                    <div className="table-responsive table-card mt-3 mb-1">
-                      <table
-                        className="table align-middle table-nowrap table-sm"
-                        id="customerTable"
-                      >
-                        <thead className="table-light">
-                          <tr>
-                            <th>Employee</th>
-                            <th>Date</th>
-                            <th>Effective Date</th>
-                            <th>Current Salary</th>
-                            <th>Amount</th>
-                            <th>Special</th>
-                            <th>Promotional</th>
-                            <th>First Amount</th>
-                            <th>Action</th>
-                          </tr>
-                        </thead>
-                        <tbody className="list form-check-all">
-                          {salaryIncrement?.length > 0 ? (
-                            salaryIncrement.map((group, index) => (
-                              <tr key={group.VID}>
-                                <td>{group.VName}</td>
-                                <td>{formatDate(group.VDate)}</td>
-                                <td>{formatDate(group.DateFrom)}</td>
-                                <td>{group.CurrentSalary}</td>
-                                <td>{group.IncrementAmount}</td>
-                                <td>{group.IncrementSpecial}</td>
-                                <td>{group.IncrementPromotional}</td>
-                                <td>{group.FirstAmount}</td>
-                                <td>
-                                  <div className="d-flex gap-2">
-                                    <div className="edit ">
-                                      <Button className="btn btn-soft-info"
-                                        onClick={() => handleEditClick(group)}
-                                      >
-                                        <i className="bx bx-edit"></i>
-                                      </Button>
-                                    </div>
-                                    <div className="delete">
-                                      <Button
-                                        className="btn btn-soft-danger"
-                                        onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }
-                                      >
-                                        <i className="ri-delete-bin-2-line"></i>
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="8" className="text-center">
-                                No Salary Increment found.
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-end">
-                      <div className="pagination-wrap hstack gap-2">
-                        <Link
-                          className="page-item pagination-prev disabled"
-                          to="#"
-                        >
-                          Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
-                          Next
-                        </Link>
-                      </div>
+                  <div className="d-flex flex-wrap gap-2 mb-3">
+                    <Button
+                      className="btn-sm"
+                      color="success"
+                      onClick={exportToExcel}
+                    >
+                      Export to Excel
+                    </Button>
+                    <Button
+                      className="btn-sm"
+                      color="primary"
+                      onClick={exportToWord}
+                    >
+                      Export to Word
+                    </Button>
+                    <Button
+                      className="btn-sm"
+                      color="danger"
+                      onClick={exportToPDF}
+                    >
+                      Export to PDF
+                    </Button>
+                    <CSVLink
+                      data={filteredData || []}
+                      filename="salary_increment.csv"
+                      className="btn btn-sm btn-secondary"
+                    >
+                      Export to CSV
+                    </CSVLink>
+                  </div>
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div></div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Search..."
+                        className="form-control form-control-sm"
+                        style={{ width: "200px" }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                      />
                     </div>
                   </div>
+                  <DataTable
+                    title="Salary Increments"
+                    columns={columns}
+                    data={filteredData}
+                    customStyles={customStyles}
+                    pagination
+                    paginationPerPage={10}
+                    paginationRowsPerPageOptions={[10, 25, 50, 100]}
+                    highlightOnHover
+                    responsive
+                    striped
+                    persistTableHead
+                  />
                 </CardBody>
               </Card>
             </Col>
