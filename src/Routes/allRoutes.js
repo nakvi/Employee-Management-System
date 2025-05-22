@@ -66,7 +66,7 @@ import OTDaily from "../pages/Attendance/OTDaily/OTDaily";
 import LateComingExemptAttendance from "../pages/Attendance/LateComingExemptAttendance/LateComingExemptAttendance";
 import Configuration from "../pages/Administration/Configuration/Configuration";
 import EmployeeList from "../pages/Employee/Employee/EmployeeList";
-
+import EmployeeProfile from "../pages/Employee/Employee/EmployeeProfile";
 const authProtectedRoutes = [
   // my routes setup
   { path: "/company", component: <Company /> },
@@ -84,6 +84,7 @@ const authProtectedRoutes = [
   { path: "/leave-balances", component: <LeaveBalance /> },
   // Employee routes 
   { path: "/employee", component: <Employee /> },
+  { path: "/employee/:id", component: <EmployeeProfile /> },
   { path: "/employee-list", component: <EmployeeList /> },
   { path: "/increment", component: <Increment /> },
   { path: "/loan-disbursement", component: <LoanDisbursement /> },
