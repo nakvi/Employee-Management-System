@@ -92,7 +92,59 @@ const EmployeeList = () => {
   }, [searchText, employee]); // 🔁 FIXED dependency
   // Edit Click
   const handleEditClick = (row) => {
-    navigate("/employee", { state: { employee: row } });
+    // navigate("/employee", { state: { employee: row } });
+    window.open(`/employee?EmpID=${row.EmpID}`, '_blank', 'noopener,noreferrer');
+
+  };
+
+  const handleFilterSubmit = async (values) => {
+    let apiUrl = "http://192.168.18.65:8001/ems/employeeSearch/?";
+    let params = {};
+
+    if (values.SearchFilter && values.SearchFilter.trim() !== "") {
+      // Only use string param, ignore others
+      params.string = values.SearchFilter.trim();
+    } else {
+      // Use all other filters
+      params = {
+        string: "",
+        etypeID: values.ETypeID || 0,
+        ename: values.EmpID || 0,
+        fname: values.FName || "",
+        deptID: values.DeptID || 0,
+        desgID: values.DesgID || 0,
+        hodID: values.HODID || 0,
+        nic: values.NIC || "",
+        locationID: values.LocationID || 0,
+        shiftID: values.ShiftID || 0,
+        regionID: values.ReligionID || 0,
+        gradeID: values.GradeID || 0,
+        leftStatus: values.leftStatusId || "",
+        bloodGroup: values.BloodGroup || "",
+        salaryFrom: values.SalaryFrom || 0,
+        salaryTo: values.SalaryTo || 0,
+        joinDateFrom: values.JoinDateFrom || "1900-01-01",
+        joinDateTo: values.JoinDateTo || "1900-01-01",
+        resignDateFrom: values.ResignDateFrom || "1900-01-01",
+        resignDateTo: values.ResignDateTo || "1900-01-01",
+      };
+    }
+    // Build query string
+    const queryString = Object.entries(params)
+      .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+      .join("&");
+
+    const fullUrl = apiUrl + queryString;
+    console.log("API URL:", fullUrl);
+
+    // Fetch data
+    try {
+      const response = await fetch(fullUrl);
+      const data = await response.json();
+      setFilteredData(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching employee data:", err);
+    }
   };
 
   const columns = [
@@ -276,24 +328,24 @@ const EmployeeList = () => {
       SalaryFrom: Yup.number().typeError('Must be a number'),
       SalaryTo: Yup.number().typeError('Must be a number'),
     }),
-
-    onSubmit: (values) => {
-      let payload = {};
+    onSubmit: handleFilterSubmit,
+    // onSubmit: (values) => {
+    //   let payload = {};
       
-      if (values.SearchFilter && values.SearchFilter.trim() !== '') {
-        payload = { Search: values.SearchFilter.trim() };
-      } else {
-        // Create filtered payload without empty values
-        Object.entries(values).forEach(([key, value]) => {
-          if (key !== 'SearchFilter' && value !== '' && value !== null && value !== undefined) {
-            payload[key] = value;
-          }
-        });
-      }
+    //   if (values.SearchFilter && values.SearchFilter.trim() !== '') {
+    //     payload = { Search: values.SearchFilter.trim() };
+    //   } else {
+    //     // Create filtered payload without empty values
+    //     Object.entries(values).forEach(([key, value]) => {
+    //       if (key !== 'SearchFilter' && value !== '' && value !== null && value !== undefined) {
+    //         payload[key] = value;
+    //       }
+    //     });
+    //   }
 
-      console.log("Form submitted with:", payload);
-      // Apply your filters or dispatch actions here
-    },
+    //   console.log("Form submitted with:", payload);
+    //   // Apply your filters or dispatch actions here
+    // },
   });
 
     // Handle search input changes
@@ -353,7 +405,10 @@ const EmployeeList = () => {
                     >
                       <i className="align-bottom me-1"></i>Fetch
                     </Button>
-                    <Button color="dark" className="add-btn me-1 py-1">
+                    <Button color="dark" className="add-btn me-1 py-1"  onClick={() => {
+                          formik.resetForm();
+                        }}>
+                      
                       <i className="align-bottom me-1"></i> Cancel
                     </Button>
                     <Button
@@ -890,7 +945,7 @@ const EmployeeList = () => {
                                     >
                                       Join Date
                                     </Label>
-                                    <span class="form-control input-sm input-checkbox p-1 mt-2">
+                                    <span className="form-control input-sm input-checkbox p-1 mt-2">
                                       <Input
                                         className="form-check-input"
                                         type="checkbox"
@@ -939,7 +994,7 @@ const EmployeeList = () => {
                                     >
                                       Resign Employee
                                     </Label>
-                                    <span class="form-control input-sm input-checkbox p-1 mt-2">
+                                    <span className="form-control input-sm input-checkbox p-1 mt-2">
                                       <Input
                                         className="form-check-input"
                                         type="checkbox"
@@ -990,7 +1045,7 @@ const EmployeeList = () => {
                 </AccordionItem>
               </Accordion>
               {/* Optional grid */}
-              <Col lg={12} className="bg-white p-1">
+              {/* <Col lg={12} className="bg-white p-1">
                 <Row className="mt-2 p-2">
                   <Col xxl={2} md={3}>
                     <div className="form-check mt-3" dir="ltr">
@@ -1107,7 +1162,7 @@ const EmployeeList = () => {
                     </div>
                   </Col>
                 </Row>
-              </Col>
+              </Col> */}
             </Form>
           </Row>
         </Container>
@@ -1130,10 +1185,10 @@ const EmployeeList = () => {
                       />
                     </div>
                   </div>
-                  <DataTable
+                 <DataTable
                     title="Employee List"
                     columns={columns}
-                    data={filteredData}
+                    data={Array.isArray(filteredData) ? filteredData : []} // <-- Always an array
                     pagination
                     paginationPerPage={100}
                     paginationRowsPerPageOptions={[100, 200, 500]}
