@@ -21,7 +21,7 @@ import { getLocation } from "../../../slices/setup/location/thunk";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getDesignation } from "../../../slices/setup/designation/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
-import { getAttendanceEntry, saveAttendanceEntry } from "../../../slices/Attendance/AttendanceEntry/thunk";
+import { getAttendanceEntry, saveAttendanceEntry, resetAttendanceData } from "../../../slices/Attendance/AttendanceEntry/thunk";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 
 const AttendanceEntry = () => {
@@ -41,6 +41,7 @@ const AttendanceEntry = () => {
   // Validation error state
   const [errors, setErrors] = useState({
     employeeType: "",
+    vdate: "", // Add vdate to errors state
     timeErrors: [],
     apiError: "",
   });
@@ -116,10 +117,18 @@ const AttendanceEntry = () => {
   // Validate form for fetch
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { employeeType: "", timeErrors: [], apiError: "" };
+    const newErrors = { employeeType: "", vdate: "", timeErrors: [], apiError: "" };
 
     if (!formData.employeeType) {
       newErrors.employeeType = "Employee Type is required";
+      isValid = false;
+    }
+
+    if (!formData.vdate) {
+      newErrors.vdate = "Date is required";
+      isValid = false;
+    } else if (isNaN(new Date(formData.vdate).getTime())) {
+      newErrors.vdate = "Invalid date";
       isValid = false;
     }
 
@@ -134,7 +143,6 @@ const AttendanceEntry = () => {
     if (formData.location) {
       // conditions.push(`E."LocationID" = ${formData.location}`);
       conditions.push(`E."LocationID" = 4`);
-
     }
 
     if (formData.department.length > 0) {
@@ -390,6 +398,7 @@ const AttendanceEntry = () => {
     });
     setChangedRecords({});
     setErrors({ employeeType: "", timeErrors: [], apiError: "" });
+    dispatch(resetAttendanceData()); // Reset the attendance data in Redux store
   };
 
   // Confirm cancel action
@@ -466,7 +475,7 @@ const AttendanceEntry = () => {
                               options={departmentList.map((dept) => ({
                                 value: dept.VID,
                                 label: dept.VName || dept.DepartmentName || dept.title,
-                                }))}
+                              }))}
                             />
                           </div>
                         </Col>
@@ -524,7 +533,7 @@ const AttendanceEntry = () => {
                           </div>
                         </Col>
 
-                        <Col xxl={2} md={2} className="px-1">
+                        {/* <Col xxl={2} md={2} className="px-1">
                           <div>
                             <Label htmlFor="vdate" className="form-label">
                               Date
@@ -537,6 +546,23 @@ const AttendanceEntry = () => {
                               value={formData.vdate}
                               onChange={handleInputChange}
                             />
+                          </div>
+                        </Col> */}
+
+                        <Col xxl={2} md={2} className="px-1">
+                          <div className="mb-3">
+                            <Label htmlFor="vdate" className="form-label">
+                              Date
+                            </Label>
+                            <Input
+                              type="date"
+                              className={`form-control-sm ${errors.vdate ? "is-invalid" : ""}`}
+                              id="vdate"
+                              name="vdate"
+                              value={formData.vdate}
+                              onChange={handleInputChange}
+                            />
+                            {errors.vdate && <FormFeedback>{errors.vdate}</FormFeedback>}
                           </div>
                         </Col>
 
@@ -633,9 +659,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeIn1 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeIn1 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeIn || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeIn", e.target.value)
@@ -650,9 +675,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeOut1 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeOut1 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeOut || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeOut", e.target.value)
@@ -667,9 +691,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeIn2 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeIn2 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeIn2 || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeIn2", e.target.value)
@@ -684,9 +707,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeOut2 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeOut2 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeOut2 || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeOut2", e.target.value)
