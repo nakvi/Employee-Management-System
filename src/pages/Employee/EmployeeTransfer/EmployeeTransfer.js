@@ -11,7 +11,17 @@ import {
   Form,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
+import DataTable from "react-data-table-component";
+import { CSVLink } from "react-csv";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
+import { saveAs } from "file-saver";
+import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { format } from "date-fns";
 import {
@@ -27,10 +37,15 @@ import { getEmployee } from "../../../slices/employee/employee/thunk";
 const EmployeeTransfer = () => {
   const dispatch = useDispatch();
   const [selectedDate, setSelectedDate] = useState("");
+    const [editingGroup, setEditingGroup] = useState(null);
+  
   // get Employee Transfor
   const { loading, error, employeeLocationTransfer } = useSelector(
     (state) => state.EmployeeLocationTransfer
   );
+
+  console.log( 'data' ,employeeLocationTransfer);
+
   const { location } = useSelector((state) => state.Location);
   const { employeeType } = useSelector((state) => state.EmployeeType);
   const { employee = {} } = useSelector((state) => state.Employee || {});
@@ -43,20 +58,75 @@ const EmployeeTransfer = () => {
     dispatch(getEmployee());
   }, [dispatch]);
   // set date in input feilds
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    setSelectedDate(today);
-  }, []);
-  const formatDate = (dateString) => {
-    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
-  };
-  const getMinDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  };
-  document.title = "Employee Location Transfer | EMS";
-    
-    
+
+    const formik = useFormik({
+      initialValues: {
+          VID: 1,
+          VName: "Sample Name",
+          VNo: "V12345",
+          VDate: "2025-04-23T10:00:00Z",
+          EmpID: "100001234567890123",
+          CurrentLocationID: 5,
+          LocationID: 3,
+          IsPosted: 1,
+          PostedBy: 101,
+          PostedDate: "2025-04-23T11:00:00Z",
+          IsActive: true,
+          UID: 202,
+          CompanyID: 3001,
+          Tranzdatetime: "2025-04-24T10:19:32.099586Z"
+      },
+
+      onSubmit: (values) => {
+          const transformedValues = {
+            ...values,
+            IsActive: values.IsActive ? 1 : 0,
+          };
+          if (editingGroup) {
+            dispatch(updateEmployeeLocationTransfer({ ...transformedValues, VID: editingGroup.VID }));
+            setEditingGroup(null);
+          } else {
+            dispatch(submitEmployeeLocationTransfer(transformedValues));
+          }
+          formik.resetForm();
+        },
+      });
+        useEffect(() => {
+          const today = new Date().toISOString().split("T")[0];
+          setSelectedDate(today);
+        }, []);
+
+        const formatDate = (dateString) => {
+          return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+        };
+        const getMinDate = () => {
+          const today = new Date();
+          return today.toISOString().split("T")[0];
+        };
+
+          const handleEditClick = (group) => {  
+            console.log("Edit clicked for group:", group);
+            setEditingGroup(group);
+            formik.setValues({
+              VID: group.VID,
+              VName: group.VName,
+              VNo: group.VNo,
+              VDate: group.VDate,
+              EmpID: group.EmpID,
+              CurrentLocationID: group.CurrentLocationID,
+              LocationID: group.LocationID,
+              IsPosted: group.IsPosted,
+              PostedBy: group.PostedBy,
+              PostedDate: group.PostedDate,
+              IsActive: group.IsActive === 1,
+              UID: 202,
+              CompanyID: 3001,
+              Tranzdatetime: "2025-04-24T10:19:32.099586Z"
+            });
+          };
+
+        document.title = "Employee Location Transfer | EMS";
+
   return (
     <React.Fragment>
       <div className="page-content">
@@ -66,7 +136,7 @@ const EmployeeTransfer = () => {
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
+                <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                     title="Employee Location Transfer"
                     // onCancel={formik.resetForm}
@@ -86,6 +156,9 @@ const EmployeeTransfer = () => {
                               className="form-select  form-select-sm"
                               name="AttGroupID"
                               id="AttGroupID"
+                              value={formik.values.GroupID} // Bind to Formik state
+                              onChange={formik.handleChange} // Handle changes
+                              onBlur={formik.handleBlur} // Track field blur
                             >
                               <option value="">---Select--- </option>
                               {employeeType.map((item) => (
@@ -256,9 +329,12 @@ const EmployeeTransfer = () => {
                                 <td>
                                   <div className="d-flex gap-2">
                                     <div className="edit ">
-                                      <Button className="btn btn-soft-info">
-                                        <i className="bx bx-edit"></i>
-                                      </Button>
+                                     <Button
+                                      className="btn btn-soft-info"
+                                      onClick={() => handleEditClick(group)}
+                                    >
+                                      <i className="bx bx-edit"></i>
+                                    </Button>
                                     </div>
                                     <div className="delete">
                                       <Button className="btn btn-soft-danger">
