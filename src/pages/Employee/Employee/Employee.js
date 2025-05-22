@@ -127,14 +127,14 @@ const Employee = () => {
       EmpID: 0,
       ETypeID: 0,
       LocationID: "-1",
-      EmpCode: "ACC002",
-      AccCode: "ACC002",
+      EmpCode: "1111111",
+      AccCode: "0",
       MachineCode: "0",
       EName: "",
       FName: "",
       DeptID: 0,
       DesgID: 0,
-      HODID: "",
+      HODID: "0",
       DOB: "",
       DOJ: "",
       DOJAct: "",
@@ -202,8 +202,8 @@ const Employee = () => {
       IsManager: false,
       IsShowForAudit: false,
       IsStopSalary: false,
-      OTRate: "",
-      OTRateOFF: "",
+      OTRate: "0",
+      OTRateOFF: "0",
       NICExpairy: "",
       BusDeduction: false,
       BlackList: false,
@@ -244,33 +244,11 @@ const Employee = () => {
         )
         .required("NIC is required"),
       NICExpairy: Yup.date().required("Date of NIC Expairy is required"),
-      BasicSalary: Yup.number()
-        .min(0, "Salary must be positive")
-        .required("Basic Salary is required"),
-      IncomeTax: Yup.string().required("Income Tax is required"),
-      // CellPhone: Yup.string()
-      //   .matches(/^[0-9]{11}$/, "Phone must be 11 digits")
-      //   .required("Phone is required"),
-      // IcePhone: Yup.string()
-      //   .matches(/^[0-9]{11}$/, "Emergency phone must be 11 digits")
-      //   .required("Emergency phone is required"),
-      // Address: Yup.string().required("Address is required"),
       Gender: Yup.string().required("Gender is required"),
       ReligionID: Yup.number()
         .min(1, "Religion is required")
         .required("Required"),
-      // BankAccountNo: Yup.string().when("IsBank", {
-      //   is: true,
-      //   then: Yup.string().required(
-      //     "Bank Account is required when Bank is checked"
-      //   ),
-      // }),
-      // CompanyBankID: Yup.string().when("IsBank", {
-      //   is: true,
-      //   then: Yup.string().required(
-      //     "Company Bank is required when Bank is checked"
-      //   ),
-      // }),
+
       BankAccountNo: Yup.string().test(
         "bank-account-required",
         "Bank Account is required when Bank is checked",
@@ -293,30 +271,51 @@ const Employee = () => {
       ProbitionStatus: Yup.string().required(
         "Probition Status  Type is required"
       ),
-      ProbitionDate: Yup.date().required("Probition Date is required"),
+      // ProbitionDate: Yup.date().required("Probition Date is required"),
       GradeID: Yup.number()
         .min(1, "Grade type is required")
         .required("Required"),
       MartialStatus: Yup.string().required("Martial Status Type is required"),
-      PFundEntitledDate: Yup.date().required("PFund Entitled Date is required"),
-      PessiDate: Yup.date().required("Pessi Date is required"),
-      // OTRate: Yup.number().when("HaveOT", {
-      //   is: true,
-      //   then: Yup.number()
-      //     .min(0, "OT Rate must be positive")
-      //     .required("OT Rate is required when OT is checked"),
-      // }),
-      // OTRateOFF: Yup.number().when("HaveOTOFF", {
-      //   is: true,
-      //   then: Yup.number()
-      //     .min(0, "OT Rate OFF must be positive")
-      //     .required("OT Rate OFF is required when OT OFF is checked"),
-      // }),
-    }),
+      // PFundEntitledDate: Yup.date().required("PFund Entitled Date is required"),
+      // PessiDate: Yup.date().required("Pessi Date is required"),
+      BasicSalary: Yup.number()
+        .nullable()
+        .required("Required")
+        .min(0, "Basic Salary must be positive")
+        .max(9999999999, "Basic Salary must be less than 10 digits"),
 
-    onSubmit: (values) => {
+      ActualSalary: Yup.number()
+        .nullable()
+        .notRequired()
+        .min(0, "Actual Salary must be positive")
+        .max(9999999999, "Actual Salary must be less than 10 digits"),
+
+      IncomeTax: Yup.number()
+        .nullable()
+        .required("Required")
+        .min(0, "Income Tax must be positive")
+        .max(999999999999999999, "Income Tax must be less than 18 digits"),
+
+      OTRate: Yup.number()
+        .nullable()
+        .notRequired()
+        .min(0, "OT Rate must be positive")
+        .max(99.99, "OT Rate must be less than 100"),
+
+      OTRateOFF: Yup.number()
+        .nullable()
+        .notRequired()
+        .min(0, "OT Rate OFF must be positive")
+        .max(99.99, "OT Rate OFF must be less than 100"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
       const transformedValues = {
         ...values,
+        ActualSalary: values.ActualSalary ? Number(values.ActualSalary) : 0,
+        CompanyBankID: values.CompanyBankID ? Number(values.CompanyBankID) : 0,
+        PFAmount: values.PFAmount ? Number(values.PFAmount) : 0,
+        OTRate: values.OTRate ? Number(values.OTRate) : 0,
+        OTRateOFF: values.OTRateOFF ? Number(values.OTRateOFF) : 0,
         Isactive: values.Isactive ? 1 : 0,
         IsactiveAct: values.IsactiveAct ? 1 : 0,
         HaveOT: values.HaveOT ? 1 : 0,
@@ -338,19 +337,67 @@ const Employee = () => {
         BusDeduction: values.BusDeduction ? 1 : 0,
         BlackList: values.BlackList ? 1 : 0,
       };
-      if (editingGroup) {
-        dispatch(
-          updateEmployee({ ...transformedValues, VID: editingGroup.VID })
-        );
-        // Only navigate if update was successful
-        // navigate(-1);
-        setEditingGroup(null); // Reset after submission
-      } else {
-        // console.log(transformedValues);
-        dispatch(submitEmployee(transformedValues));
+
+      try {
+        if (editingGroup) {
+          await dispatch(
+            updateEmployee({ ...transformedValues, VID: editingGroup.VID })
+          ).unwrap();
+
+          // ✅ Reset form only on success
+          formik.resetForm();
+          setEditingGroup(null);
+        } else {
+          await dispatch(submitEmployee(transformedValues)).unwrap();
+
+          // ✅ Reset form only on success
+          formik.resetForm();
+        }
+      } catch (error) {
+        // ❌ Don't reset form, show error if needed
+        console.error("Error in form submission:", error);
+      } finally {
+        setSubmitting(false);
       }
-      formik.resetForm();
     },
+
+    // onSubmit: (values) => {
+    //   const transformedValues = {
+    //     ...values,
+    //     Isactive: values.Isactive ? 1 : 0,
+    //     IsactiveAct: values.IsactiveAct ? 1 : 0,
+    //     HaveOT: values.HaveOT ? 1 : 0,
+    //     HaveOTAct: values.HaveOTAct ? 1 : 0,
+    //     HaveOTOFF: values.HaveOTOFF ? 1 : 0,
+    //     IsBank: values.IsBank ? 1 : 0,
+    //     IsGroupInsurance: values.IsGroupInsurance ? 1 : 0,
+    //     IsPFundEntitled: values.IsPFundEntitled ? 1 : 0,
+    //     IsPFund: values.IsPFund ? 1 : 0,
+    //     IsPessi: values.IsPessi ? 1 : 0,
+    //     IsExempt: values.IsExempt ? 1 : 0,
+    //     IsShiftEmployee: values.IsShiftEmployee ? 1 : 0,
+    //     IsShiftEmployeeAct: values.IsShiftEmployeeAct ? 1 : 0,
+    //     ExemptLate: values.ExemptLate ? 1 : 0,
+    //     IsTransport: values.IsTransport ? 1 : 0,
+    //     IsManager: values.IsManager ? 1 : 0,
+    //     IsShowForAudit: values.IsShowForAudit ? 1 : 0,
+    //     IsStopSalary: values.IsStopSalary ? 1 : 0,
+    //     BusDeduction: values.BusDeduction ? 1 : 0,
+    //     BlackList: values.BlackList ? 1 : 0,
+    //   };
+    //   if (editingGroup) {
+    //     dispatch(
+    //       updateEmployee({ ...transformedValues, VID: editingGroup.VID })
+    //     );
+    //     // Only navigate if update was successful
+    //     // navigate(-1);
+    //     setEditingGroup(null); // Reset after submission
+    //   } else {
+    //     // console.log(transformedValues);
+    //     dispatch(submitEmployee(transformedValues));
+    //   }
+    //   formik.resetForm();
+    // },
   });
 
   // Set date format
@@ -373,7 +420,7 @@ const Employee = () => {
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
@@ -395,7 +442,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="ETypeID" className="form-label">
-                                  E-Type
+                                  E-Type<span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -434,7 +481,7 @@ const Employee = () => {
                                   htmlFor="LocationID"
                                   className="form-label"
                                 >
-                                  Location
+                                  Location<span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   name="LocationID"
@@ -480,7 +527,6 @@ const Employee = () => {
                                   readOnly
                                   disabled
                                   {...formik.getFieldProps("EmpCode")}
-                                  
                                 />
                               </div>
                             </Col>
@@ -502,8 +548,7 @@ const Employee = () => {
                                   placeholder="Machine Code"
                                   readOnly
                                   disabled
-                                   {...formik.getFieldProps("MachineCode")}
-                                  
+                                  {...formik.getFieldProps("MachineCode")}
                                 />
                               </div>
                             </Col>
@@ -512,7 +557,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="EName" className="form-label">
-                                  Name
+                                  Name<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="text"
@@ -535,6 +580,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="FName" className="form-label">
                                   Father Name
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="text"
@@ -556,7 +602,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="JobType" className="form-label">
-                                  Job Type
+                                  Job Type<span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -586,6 +632,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="DeptID" className="form-label">
                                   Department
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -622,6 +669,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="DesgID" className="form-label">
                                   Designation
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -672,7 +720,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="DOB" className="form-label">
-                                  DOB
+                                  DOB<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="date"
@@ -692,7 +740,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="DOJ" className="form-label">
-                                  DOJ
+                                  DOJ<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="date"
@@ -717,6 +765,7 @@ const Employee = () => {
                                   className="form-label"
                                 >
                                   Hire Type
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -762,6 +811,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="OffDay1" className="form-label">
                                   Off Day- 1
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -794,6 +844,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="OffDay2" className="form-label">
                                   Off Day- 2
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -825,7 +876,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="NIC" className="form-label">
-                                  NIC
+                                  NIC<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="text"
@@ -850,6 +901,7 @@ const Employee = () => {
                                   className="form-label"
                                 >
                                   NIC Expairy
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="date"
@@ -912,7 +964,7 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="BasicSalary" className="form-label">
-                              Basic Salary
+                              Basic Salary<span className="text-danger">*</span>
                             </Label>
                             <Input
                               type="number"
@@ -935,7 +987,7 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="IncomeTax" className="form-label">
-                              Income Tax
+                              Income Tax<span className="text-danger">*</span>
                             </Label>
                             <Input
                               type="number"
@@ -1186,12 +1238,12 @@ const Employee = () => {
                               name="ProbitionDate"
                               {...formik.getFieldProps("ProbitionDate")}
                             />
-                            {formik.touched.ProbitionDate &&
+                            {/* {formik.touched.ProbitionDate &&
                             formik.errors.ProbitionDate ? (
                               <div className="text-danger">
                                 {formik.errors.ProbitionDate}
                               </div>
-                            ) : null}
+                            ) : null} */}
                           </div>
                         </Col>
 
@@ -1556,12 +1608,12 @@ const Employee = () => {
                               name="PFundEntitledDate"
                               {...formik.getFieldProps("PFundEntitledDate")}
                             />
-                            {formik.touched.PFundEntitledDate &&
+                            {/* {formik.touched.PFundEntitledDate &&
                             formik.errors.PFundEntitledDate ? (
                               <div className="text-danger">
                                 {formik.errors.PFundEntitledDate}
                               </div>
-                            ) : null}
+                            ) : null} */}
                           </div>
                         </Col>
 
@@ -1629,12 +1681,12 @@ const Employee = () => {
                               name="PessiDate"
                               {...formik.getFieldProps("PessiDate")}
                             />
-                            {formik.touched.PessiDate &&
+                            {/* {formik.touched.PessiDate &&
                             formik.errors.PessiDate ? (
                               <div className="text-danger">
                                 {formik.errors.PessiDate}
                               </div>
-                            ) : null}
+                            ) : null} */}
                           </div>
                         </Col>
 
@@ -1990,6 +2042,12 @@ const Employee = () => {
                               placeholder="Actual Salary"
                               {...formik.getFieldProps("ActualSalary")}
                             />
+                            {formik.touched.ActualSalary &&
+                            formik.errors.ActualSalary ? (
+                              <div className="text-danger">
+                                {formik.errors.ActualSalary}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -2007,6 +2065,11 @@ const Employee = () => {
                               placeholder="OT Rate"
                               {...formik.getFieldProps("OTRate")}
                             />
+                            {formik.touched.OTRate && formik.errors.OTRate ? (
+                              <div className="text-danger">
+                                {formik.errors.OTRate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -2024,6 +2087,12 @@ const Employee = () => {
                               placeholder="OT Rate OFF"
                               {...formik.getFieldProps("OTRateOFF")}
                             />
+                            {formik.touched.OTRateOFF &&
+                            formik.errors.OTRateOFF ? (
+                              <div className="text-danger">
+                                {formik.errors.OTRateOFF}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         {/* IsShowForAudit */}
