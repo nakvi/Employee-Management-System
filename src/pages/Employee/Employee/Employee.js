@@ -11,7 +11,7 @@ import {
   Form,
 } from "reactstrap";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation,useNavigate } from "react-router-dom"; // Import useLocation
+import { useLocation, useNavigate } from "react-router-dom"; // Import useLocation
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import avatar1 from "../../../assets/images/users/avatar-11.png";
 import { useFormik } from "formik";
@@ -127,14 +127,14 @@ const Employee = () => {
       EmpID: 0,
       ETypeID: 0,
       LocationID: "-1",
-      EmpCode: "",
-      AccCode: "ACC002",
-      MachineCode: "",
+      EmpCode: "1111111",
+      AccCode: "0",
+      MachineCode: "0",
       EName: "",
       FName: "",
       DeptID: 0,
       DesgID: 0,
-      HODID: 101,
+      HODID: "0",
       DOB: "",
       DOJ: "",
       DOJAct: "",
@@ -146,7 +146,7 @@ const Employee = () => {
       NIC: "",
       BasicSalary: "",
       ActualSalary: "",
-      ManagerSalary: 0,
+      ManagerSalary: "0",
       IncomeTax: "",
       HaveOT: false,
       HaveOTAct: false,
@@ -156,7 +156,7 @@ const Employee = () => {
       BankAccountNo: "",
       CompanyBankID: "",
       Isactive: false,
-      IsactiveAct: 0,
+      IsactiveAct: false,
       DOL: "",
       DOLAct: "",
       LeftRemarks: "",
@@ -192,7 +192,7 @@ const Employee = () => {
       FNameUrdu: "",
       AddressUrdu: "",
       DesignationTitle: "",
-      OldCode: "EMP_OLD_01",
+      OldCode: "-",
       MotherName: "",
       NextToKin: "",
       IsTransport: false,
@@ -202,8 +202,8 @@ const Employee = () => {
       IsManager: false,
       IsShowForAudit: false,
       IsStopSalary: false,
-      OTRate: "",
-      OTRateOFF: "",
+      OTRate: "0",
+      OTRateOFF: "0",
       NICExpairy: "",
       BusDeduction: false,
       BlackList: false,
@@ -219,7 +219,6 @@ const Employee = () => {
       LocationID: Yup.string()
         .notOneOf(["-1"], "Location is required")
         .required("Required"),
-      EmpCode: Yup.string().required("Employee Code is required"),
       EName: Yup.string().required("Employee Name is required"),
       FName: Yup.string().required("Father Name is required"),
       JobType: Yup.string().required("Job Type is required"),
@@ -232,79 +231,91 @@ const Employee = () => {
       DOB: Yup.date().required("Date of Birth is required"),
       DOJ: Yup.date().required("Date of Joining is required"),
       HireType: Yup.string().required("Hire Type is required"),
+      OffDay1: Yup.number()
+        .min(1, "Off Day 1 is required")
+        .required("Required"),
+      OffDay2: Yup.number()
+        .min(1, "Off Day 2 is required")
+        .required("Required"),
       NIC: Yup.string()
         .matches(
           /^[0-9]{5}-[0-9]{7}-[0-9]$/,
           "NIC must be in the format 12345-1234567-1"
         )
         .required("NIC is required"),
-      BasicSalary: Yup.number()
-        .min(0, "Salary must be positive")
-        .required("Basic Salary is required"),
-      CellPhone: Yup.string()
-        .matches(/^[0-9]{11}$/, "Phone must be 11 digits")
-        .required("Phone is required"),
-      IcePhone: Yup.string()
-        .matches(/^[0-9]{11}$/, "Emergency phone must be 11 digits")
-        .required("Emergency phone is required"),
-      Address: Yup.string().required("Address is required"),
+      NICExpairy: Yup.date().required("Date of NIC Expairy is required"),
       Gender: Yup.string().required("Gender is required"),
       ReligionID: Yup.number()
         .min(1, "Religion is required")
         .required("Required"),
-      BankAccountNo: Yup.string().when("IsBank", {
-        is: true,
-        then: Yup.string().required(
-          "Bank Account is required when Bank is checked"
-        ),
-      }),
-      CompanyBankID: Yup.string().when("IsBank", {
-        is: true,
-        then: Yup.string().required(
-          "Company Bank is required when Bank is checked"
-        ),
-      }),
-      PFAmount: Yup.number().when("IsPFund", {
-        is: true,
-        then: Yup.number()
-          .min(0, "PF Amount must be positive")
-          .required("PF Amount is required when PF is checked"),
-      }),
-      TransportRoute: Yup.string().when("IsTransport", {
-        is: true,
-        then: Yup.string().required(
-          "Transport Route is required when Transport is checked"
-        ),
-      }),
-      TransportLocation: Yup.string().when("IsTransport", {
-        is: true,
-        then: Yup.string().required(
-          "Transport Location is required when Transport is checked"
-        ),
-      }),
-      OTRate: Yup.number().when("HaveOT", {
-        is: true,
-        then: Yup.number()
-          .min(0, "OT Rate must be positive")
-          .required("OT Rate is required when OT is checked"),
-      }),
-      OTRateOFF: Yup.number().when("HaveOTOFF", {
-        is: true,
-        then: Yup.number()
-          .min(0, "OT Rate OFF must be positive")
-          .required("OT Rate OFF is required when OT OFF is checked"),
-      }),
-      ExemptMinuts: Yup.number().when("ExemptLate", {
-        is: true,
-        then: Yup.number()
-          .min(0, "Exempt Minutes must be positive")
-          .required("Exempt Minutes is required when Exempt Late is checked"),
-      }),
-    }),
 
-    onSubmit: (values) => {
+      BankAccountNo: Yup.string().test(
+        "bank-account-required",
+        "Bank Account is required when Bank is checked",
+        function (value) {
+          const { IsBank } = this.parent;
+          return !IsBank || (IsBank && !!value);
+        }
+      ),
+      CompanyBankID: Yup.string().test(
+        "company-bank-required",
+        "Company Bank is required when Bank is checked",
+        function (value) {
+          const { IsBank } = this.parent;
+          return !IsBank || (IsBank && value !== "-1" && !!value);
+        }
+      ),
+      ShiftID: Yup.number()
+        .min(1, "Shift type is required")
+        .required("Required"),
+      ProbitionStatus: Yup.string().required(
+        "Probition Status  Type is required"
+      ),
+      // ProbitionDate: Yup.date().required("Probition Date is required"),
+      GradeID: Yup.number()
+        .min(1, "Grade type is required")
+        .required("Required"),
+      MartialStatus: Yup.string().required("Martial Status Type is required"),
+      // PFundEntitledDate: Yup.date().required("PFund Entitled Date is required"),
+      // PessiDate: Yup.date().required("Pessi Date is required"),
+      BasicSalary: Yup.number()
+        .nullable()
+        .required("Required")
+        .min(0, "Basic Salary must be positive")
+        .max(9999999999, "Basic Salary must be less than 10 digits"),
+
+      ActualSalary: Yup.number()
+        .nullable()
+        .notRequired()
+        .min(0, "Actual Salary must be positive")
+        .max(9999999999, "Actual Salary must be less than 10 digits"),
+
+      IncomeTax: Yup.number()
+        .nullable()
+        .required("Required")
+        .min(0, "Income Tax must be positive")
+        .max(999999999999999999, "Income Tax must be less than 18 digits"),
+
+      OTRate: Yup.number()
+        .nullable()
+        .notRequired()
+        .min(0, "OT Rate must be positive")
+        .max(99.99, "OT Rate must be less than 100"),
+
+      OTRateOFF: Yup.number()
+        .nullable()
+        .notRequired()
+        .min(0, "OT Rate OFF must be positive")
+        .max(99.99, "OT Rate OFF must be less than 100"),
+    }),
+    onSubmit: async (values, { setSubmitting }) => {
       const transformedValues = {
         ...values,
+        ActualSalary: values.ActualSalary ? Number(values.ActualSalary) : 0,
+        CompanyBankID: values.CompanyBankID ? Number(values.CompanyBankID) : 0,
+        PFAmount: values.PFAmount ? Number(values.PFAmount) : 0,
+        OTRate: values.OTRate ? Number(values.OTRate) : 0,
+        OTRateOFF: values.OTRateOFF ? Number(values.OTRateOFF) : 0,
         Isactive: values.Isactive ? 1 : 0,
         IsactiveAct: values.IsactiveAct ? 1 : 0,
         HaveOT: values.HaveOT ? 1 : 0,
@@ -326,18 +337,67 @@ const Employee = () => {
         BusDeduction: values.BusDeduction ? 1 : 0,
         BlackList: values.BlackList ? 1 : 0,
       };
-      if (editingGroup) {
-        dispatch(
-          updateEmployee({ ...transformedValues, VID: editingGroup.VID })
-        );
-         // Only navigate if update was successful
-          navigate(-1);
-        // setEditingGroup(null); // Reset after submission
-      } else {
-        dispatch(submitEmployee(transformedValues));
+
+      try {
+        if (editingGroup) {
+          await dispatch(
+            updateEmployee({ ...transformedValues, VID: editingGroup.VID })
+          ).unwrap();
+
+          // ✅ Reset form only on success
+          formik.resetForm();
+          setEditingGroup(null);
+        } else {
+          await dispatch(submitEmployee(transformedValues)).unwrap();
+
+          // ✅ Reset form only on success
+          formik.resetForm();
+        }
+      } catch (error) {
+        // ❌ Don't reset form, show error if needed
+        console.error("Error in form submission:", error);
+      } finally {
+        setSubmitting(false);
       }
-      formik.resetForm();
     },
+
+    // onSubmit: (values) => {
+    //   const transformedValues = {
+    //     ...values,
+    //     Isactive: values.Isactive ? 1 : 0,
+    //     IsactiveAct: values.IsactiveAct ? 1 : 0,
+    //     HaveOT: values.HaveOT ? 1 : 0,
+    //     HaveOTAct: values.HaveOTAct ? 1 : 0,
+    //     HaveOTOFF: values.HaveOTOFF ? 1 : 0,
+    //     IsBank: values.IsBank ? 1 : 0,
+    //     IsGroupInsurance: values.IsGroupInsurance ? 1 : 0,
+    //     IsPFundEntitled: values.IsPFundEntitled ? 1 : 0,
+    //     IsPFund: values.IsPFund ? 1 : 0,
+    //     IsPessi: values.IsPessi ? 1 : 0,
+    //     IsExempt: values.IsExempt ? 1 : 0,
+    //     IsShiftEmployee: values.IsShiftEmployee ? 1 : 0,
+    //     IsShiftEmployeeAct: values.IsShiftEmployeeAct ? 1 : 0,
+    //     ExemptLate: values.ExemptLate ? 1 : 0,
+    //     IsTransport: values.IsTransport ? 1 : 0,
+    //     IsManager: values.IsManager ? 1 : 0,
+    //     IsShowForAudit: values.IsShowForAudit ? 1 : 0,
+    //     IsStopSalary: values.IsStopSalary ? 1 : 0,
+    //     BusDeduction: values.BusDeduction ? 1 : 0,
+    //     BlackList: values.BlackList ? 1 : 0,
+    //   };
+    //   if (editingGroup) {
+    //     dispatch(
+    //       updateEmployee({ ...transformedValues, VID: editingGroup.VID })
+    //     );
+    //     // Only navigate if update was successful
+    //     // navigate(-1);
+    //     setEditingGroup(null); // Reset after submission
+    //   } else {
+    //     // console.log(transformedValues);
+    //     dispatch(submitEmployee(transformedValues));
+    //   }
+    //   formik.resetForm();
+    // },
   });
 
   // Set date format
@@ -360,14 +420,16 @@ const Employee = () => {
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                    <PreviewCardHeader
+                  <PreviewCardHeader
                     title={editingGroup ? "Edit Employee" : "Employee Details"}
-                     onCancel={editingGroup ? handleCancel : () => formik.resetForm()}
+                    onCancel={
+                      editingGroup ? handleCancel : () => formik.resetForm()
+                    }
                     isEditMode={!!editingGroup} // Pass whether we're in edit mode
                   />
                   <CardBody className="card-body">
@@ -380,7 +442,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="ETypeID" className="form-label">
-                                  E-Type
+                                  E-Type<span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -419,7 +481,7 @@ const Employee = () => {
                                   htmlFor="LocationID"
                                   className="form-label"
                                 >
-                                  Location
+                                  Location<span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   name="LocationID"
@@ -462,14 +524,10 @@ const Employee = () => {
                                   id="EmpCode"
                                   name="EmpCode"
                                   placeholder="Emp Code"
+                                  readOnly
+                                  disabled
                                   {...formik.getFieldProps("EmpCode")}
                                 />
-                                {formik.touched.EmpCode &&
-                                formik.errors.EmpCode ? (
-                                  <div className="text-danger">
-                                    {formik.errors.EmpCode}
-                                  </div>
-                                ) : null}
                               </div>
                             </Col>
 
@@ -488,14 +546,10 @@ const Employee = () => {
                                   id="MachineCode"
                                   name="MachineCode"
                                   placeholder="Machine Code"
+                                  readOnly
+                                  disabled
                                   {...formik.getFieldProps("MachineCode")}
                                 />
-                                {formik.touched.MachineCode &&
-                                formik.errors.MachineCode ? (
-                                  <div className="text-danger">
-                                    {formik.errors.MachineCode}
-                                  </div>
-                                ) : null}
                               </div>
                             </Col>
 
@@ -503,7 +557,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="EName" className="form-label">
-                                  Name
+                                  Name<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="text"
@@ -526,6 +580,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="FName" className="form-label">
                                   Father Name
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="text"
@@ -547,7 +602,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="JobType" className="form-label">
-                                  Job Type
+                                  Job Type<span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -563,6 +618,12 @@ const Employee = () => {
                                   </option>
                                   <option value="Permanent">Permanent</option>
                                 </select>
+                                {formik.touched.JobType &&
+                                formik.errors.JobType ? (
+                                  <div className="text-danger">
+                                    {formik.errors.JobType}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
@@ -571,6 +632,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="DeptID" className="form-label">
                                   Department
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -593,6 +655,12 @@ const Employee = () => {
                                     </option>
                                   )}
                                 </select>
+                                {formik.touched.DeptID &&
+                                formik.errors.DeptID ? (
+                                  <div className="text-danger">
+                                    {formik.errors.DeptID}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
@@ -601,6 +669,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="DesgID" className="form-label">
                                   Designation
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -623,6 +692,12 @@ const Employee = () => {
                                     </option>
                                   )}
                                 </select>
+                                {formik.touched.DesgID &&
+                                formik.errors.DesgID ? (
+                                  <div className="text-danger">
+                                    {formik.errors.DesgID}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
                             {/* HOD */}
@@ -637,8 +712,7 @@ const Employee = () => {
                                   id="HODID"
                                   name="HODID"
                                   placeholder="HOD"
-                                  readOnly
-                                  value="039"
+                                  {...formik.getFieldProps("HODID")}
                                 />
                               </div>
                             </Col>
@@ -646,7 +720,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="DOB" className="form-label">
-                                  DOB
+                                  DOB<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="date"
@@ -666,7 +740,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="DOJ" className="form-label">
-                                  DOJ
+                                  DOJ<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="date"
@@ -691,6 +765,7 @@ const Employee = () => {
                                   className="form-label"
                                 >
                                   Hire Type
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -704,6 +779,12 @@ const Employee = () => {
                                   <option value="Full-time">Full-time</option>
                                   <option value="Part-time">Part-time</option>
                                 </select>
+                                {formik.touched.HireType &&
+                                formik.errors.HireType ? (
+                                  <div className="text-danger">
+                                    {formik.errors.HireType}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
                             {/* Replacement Of */}
@@ -730,6 +811,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="OffDay1" className="form-label">
                                   Off Day- 1
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -748,6 +830,12 @@ const Employee = () => {
                                   <option value="6">Saturday</option>
                                   <option value="7">Sunday</option>
                                 </select>
+                                {formik.touched.OffDay1 &&
+                                formik.errors.OffDay1 ? (
+                                  <div className="text-danger">
+                                    {formik.errors.OffDay1}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
@@ -756,6 +844,7 @@ const Employee = () => {
                               <div>
                                 <Label htmlFor="OffDay2" className="form-label">
                                   Off Day- 2
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <select
                                   className="form-select form-select-sm"
@@ -774,6 +863,12 @@ const Employee = () => {
                                   <option value="6">Saturday</option>
                                   <option value="7">Sunday</option>
                                 </select>
+                                {formik.touched.OffDay2 &&
+                                formik.errors.OffDay2 ? (
+                                  <div className="text-danger">
+                                    {formik.errors.OffDay2}
+                                  </div>
+                                ) : null}
                               </div>
                             </Col>
 
@@ -781,7 +876,7 @@ const Employee = () => {
                             <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="NIC" className="form-label">
-                                  NIC
+                                  NIC<span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="text"
@@ -806,6 +901,7 @@ const Employee = () => {
                                   className="form-label"
                                 >
                                   NIC Expairy
+                                  <span className="text-danger">*</span>
                                 </Label>
                                 <Input
                                   type="date"
@@ -868,7 +964,7 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="BasicSalary" className="form-label">
-                              Basic Salary
+                              Basic Salary<span className="text-danger">*</span>
                             </Label>
                             <Input
                               type="number"
@@ -878,6 +974,12 @@ const Employee = () => {
                               placeholder="00 "
                               {...formik.getFieldProps("BasicSalary")}
                             />
+                            {formik.touched.BasicSalary &&
+                            formik.errors.BasicSalary ? (
+                              <div className="text-danger">
+                                {formik.errors.BasicSalary}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -885,7 +987,7 @@ const Employee = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="IncomeTax" className="form-label">
-                              Income Tax
+                              Income Tax<span className="text-danger">*</span>
                             </Label>
                             <Input
                               type="number"
@@ -895,6 +997,12 @@ const Employee = () => {
                               placeholder="00"
                               {...formik.getFieldProps("IncomeTax")}
                             />
+                            {formik.touched.IncomeTax &&
+                            formik.errors.IncomeTax ? (
+                              <div className="text-danger">
+                                {formik.errors.IncomeTax}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -947,6 +1055,12 @@ const Employee = () => {
                               placeholder="Bank Account"
                               {...formik.getFieldProps("BankAccountNo")}
                             />
+                            {formik.touched.BankAccountNo &&
+                            formik.errors.BankAccountNo ? (
+                              <div className="text-danger">
+                                {formik.errors.BankAccountNo}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         {/* Company Bank */}
@@ -979,6 +1093,12 @@ const Employee = () => {
                                 </option>
                               )}
                             </select>
+                            {formik.touched.CompanyBankID &&
+                            formik.errors.CompanyBankID ? (
+                              <div className="text-danger">
+                                {formik.errors.CompanyBankID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1008,6 +1128,11 @@ const Employee = () => {
                                 </option>
                               )}
                             </select>
+                            {formik.touched.ShiftID && formik.errors.ShiftID ? (
+                              <div className="text-danger">
+                                {formik.errors.ShiftID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1088,6 +1213,12 @@ const Employee = () => {
                               <option value="">--- Select ---</option>
                               <option value="Completed">Completed</option>
                             </select>
+                            {formik.touched.ProbitionStatus &&
+                            formik.errors.ProbitionStatus ? (
+                              <div className="text-danger">
+                                {formik.errors.ProbitionStatus}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1105,8 +1236,14 @@ const Employee = () => {
                               className="form-control-sm"
                               id="ProbitionDate"
                               name="ProbitionDate"
-                              {...formik.getFieldProps("DateTo")}
+                              {...formik.getFieldProps("ProbitionDate")}
                             />
+                            {/* {formik.touched.ProbitionDate &&
+                            formik.errors.ProbitionDate ? (
+                              <div className="text-danger">
+                                {formik.errors.ProbitionDate}
+                              </div>
+                            ) : null} */}
                           </div>
                         </Col>
 
@@ -1223,6 +1360,11 @@ const Employee = () => {
                                 </option>
                               )}
                             </select>
+                            {formik.touched.Gender && formik.errors.Gender ? (
+                              <div className="text-danger">
+                                {formik.errors.Gender}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1252,6 +1394,12 @@ const Employee = () => {
                                 </option>
                               )}
                             </select>
+                            {formik.touched.ReligionID &&
+                            formik.errors.ReligionID ? (
+                              <div className="text-danger">
+                                {formik.errors.ReligionID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1265,8 +1413,9 @@ const Employee = () => {
                               type="text"
                               className="form-control-sm"
                               id="OldCode"
-                              placeholder="5535"
+                              placeholder="Old Code"
                               readOnly
+                              disabled
                             />
                           </div>
                         </Col>
@@ -1313,6 +1462,11 @@ const Employee = () => {
                                 </option>
                               )}
                             </select>
+                            {formik.touched.GradeID && formik.errors.GradeID ? (
+                              <div className="text-danger">
+                                {formik.errors.GradeID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1409,6 +1563,12 @@ const Employee = () => {
                               <option value="Married">Married</option>
                               <option value="Single">Single</option>
                             </select>
+                            {formik.touched.MartialStatus &&
+                            formik.errors.MartialStatus ? (
+                              <div className="text-danger">
+                                {formik.errors.MartialStatus}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         {/* Blan column for adjustment  */}
@@ -1448,6 +1608,12 @@ const Employee = () => {
                               name="PFundEntitledDate"
                               {...formik.getFieldProps("PFundEntitledDate")}
                             />
+                            {/* {formik.touched.PFundEntitledDate &&
+                            formik.errors.PFundEntitledDate ? (
+                              <div className="text-danger">
+                                {formik.errors.PFundEntitledDate}
+                              </div>
+                            ) : null} */}
                           </div>
                         </Col>
 
@@ -1515,6 +1681,12 @@ const Employee = () => {
                               name="PessiDate"
                               {...formik.getFieldProps("PessiDate")}
                             />
+                            {/* {formik.touched.PessiDate &&
+                            formik.errors.PessiDate ? (
+                              <div className="text-danger">
+                                {formik.errors.PessiDate}
+                              </div>
+                            ) : null} */}
                           </div>
                         </Col>
 
@@ -1678,12 +1850,6 @@ const Employee = () => {
                               placeholder="Transport Route"
                               {...formik.getFieldProps("TransportRoute")}
                             />
-                            {formik.touched.TransportRoute &&
-                            formik.errors.TransportRoute ? (
-                              <div className="text-danger">
-                                {formik.errors.TransportRoute}
-                              </div>
-                            ) : null}
                           </div>
                         </Col>
 
@@ -1704,12 +1870,6 @@ const Employee = () => {
                               name="TransportLocation"
                               {...formik.getFieldProps("TransportLocation")}
                             />
-                            {formik.touched.TransportLocation &&
-                            formik.errors.TransportLocation ? (
-                              <div className="text-danger">
-                                {formik.errors.TransportLocation}
-                              </div>
-                            ) : null}
                           </div>
                         </Col>
 
@@ -1882,6 +2042,12 @@ const Employee = () => {
                               placeholder="Actual Salary"
                               {...formik.getFieldProps("ActualSalary")}
                             />
+                            {formik.touched.ActualSalary &&
+                            formik.errors.ActualSalary ? (
+                              <div className="text-danger">
+                                {formik.errors.ActualSalary}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1899,6 +2065,11 @@ const Employee = () => {
                               placeholder="OT Rate"
                               {...formik.getFieldProps("OTRate")}
                             />
+                            {formik.touched.OTRate && formik.errors.OTRate ? (
+                              <div className="text-danger">
+                                {formik.errors.OTRate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
 
@@ -1916,6 +2087,12 @@ const Employee = () => {
                               placeholder="OT Rate OFF"
                               {...formik.getFieldProps("OTRateOFF")}
                             />
+                            {formik.touched.OTRateOFF &&
+                            formik.errors.OTRateOFF ? (
+                              <div className="text-danger">
+                                {formik.errors.OTRateOFF}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         {/* IsShowForAudit */}
