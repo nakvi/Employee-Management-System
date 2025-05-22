@@ -127,7 +127,7 @@ const Employee = () => {
       EmpID: 0,
       ETypeID: 0,
       LocationID: "-1",
-      EmpCode: "1111111",
+      EmpCode: "0",
       AccCode: "0",
       MachineCode: "0",
       EName: "",
