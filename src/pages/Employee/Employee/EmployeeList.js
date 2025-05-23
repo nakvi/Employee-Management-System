@@ -95,8 +95,8 @@ const EmployeeList = () => {
   }, [searchText, employee]); // 🔁 FIXED dependency
   // Edit Click
   const handleEditClick = (row) => {
-    // navigate("/employee", { state: { employee: row } });
-    window.open(`/employee?EmpID=${row.EmpID}`, '_blank', 'noopener,noreferrer');
+    navigate("/employee", { state: { employee: row } });
+    // window.open(`/employee?EmpID=${row.EmpID}`, '_blank', 'noopener,noreferrer');
 
   };
 
@@ -444,6 +444,10 @@ const EmployeeList = () => {
                     </Button>
                     <Button color="dark" className="add-btn me-1 py-1"  onClick={() => {
                           formik.resetForm();
+                              setFilteredData(employee);
+                              setCol(false); 
+                              setAccordionDisabled(false); 
+                              setSearchDisabled(false); 
                         }}>
                       
                       <i className="align-bottom me-1"></i> Cancel
