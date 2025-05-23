@@ -93,7 +93,7 @@ export const deleteSalaryIncrement =createAsyncThunk("salaryIncrement/deleteSala
       headers : {
         "Content-Type" : "application/json",
       },
-      body : JSON.stringify({ id }),
+      body : JSON.stringify({ VID: id }),
     });
     
     if(!response.ok){

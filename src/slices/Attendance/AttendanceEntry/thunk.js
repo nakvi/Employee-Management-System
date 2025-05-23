@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import config from "../../../config";
+import { resetAttendanceData } from "./reducer"; // Import the action from the reducer
 
 const API_ENDPOINT = `${config.api.API_URL}attEntry/`;
 
@@ -76,8 +77,9 @@ export const getAttendanceEntry = createAsyncThunk(
         dateto: params.dateto || "",
         deptids: params.deptids || "",
         employeeidlist: params.employeeidlist || "",
-        companyid:  "1",
-        locationid: params.locationid || "1",
+        companyid: "1",
+        // locationid: params.locationid || "1",
+        locationid: "4",
         etypeid: params.etypeid || "0",
         empid: params.empid || "1",
         isau: params.isau || "0",
@@ -154,15 +156,19 @@ export const saveAttendanceEntry = createAsyncThunk(
       const payload = {
         empid: Number(record.empid),
         vdate: vdateFormatted,
-        vid1: 0,
-        vid2: 0,
+        vid1: record.vid1 || 0,
+        vid2: record.vid2 || 0,
         shiftID: 3,
-        dateIn1: record.dateIn1 ? "2025-05-20 08:00:00" : "1900-01-01",
-        dateOut1: "1900-01-01",
-        dateIn2: "1900-01-01",
-        dateOut2: "1900-01-01",
+        // dateIn1: record.dateIn1 ? "2025-05-20 08:00:00" : "1900-01-01",
+        // dateOut1: "1900-01-01",
+        // dateIn2: "1900-01-01",
+        // dateOut2: "1900-01-01",
+        dateIn1: record.dateIn1 ? record.dateIn1 : "1900-01-01",
+        dateOut1: record.dateOut1 ? record.dateOut1 : "1900-01-01",
+        dateIn2: record.dateIn2 ? record.dateIn2 : "1900-01-01",
+        dateOut2: record.dateOut2 ? record.dateOut2 : "1900-01-01",
         remarks: String(record.remarks || "Today attendance"),
-        uID: 101,
+        uID: record.uID || 1,
         computerName: "HR-PC-001",
       };
 
@@ -210,3 +216,6 @@ export const saveAttendanceEntry = createAsyncThunk(
     }
   }
 );
+
+// Re-export the resetAttendanceData action
+export { resetAttendanceData };

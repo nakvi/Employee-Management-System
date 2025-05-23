@@ -162,7 +162,6 @@ export const updateDepartment = createAsyncThunk(
         return rejectWithValue(responseData.error || responseData.message);
       }
 
-      return rejectWithValue("Unexpected response from server.");
     } catch (error) {
       toast.error(
         error.message || "Failed to update department. Please try again!"

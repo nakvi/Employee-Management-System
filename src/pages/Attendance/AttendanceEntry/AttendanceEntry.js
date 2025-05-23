@@ -15,12 +15,13 @@ import {
   ModalBody,
   ModalFooter,
 } from "reactstrap";
+import Select from "react-select";
 import { useDispatch, useSelector } from "react-redux";
 import { getLocation } from "../../../slices/setup/location/thunk";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getDesignation } from "../../../slices/setup/designation/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
-import { getAttendanceEntry, saveAttendanceEntry } from "../../../slices/Attendance/AttendanceEntry/thunk";
+import { getAttendanceEntry, saveAttendanceEntry, resetAttendanceData } from "../../../slices/Attendance/AttendanceEntry/thunk";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 
 const AttendanceEntry = () => {
@@ -30,16 +31,17 @@ const AttendanceEntry = () => {
   // Form state
   const [formData, setFormData] = useState({
     location: "",
-    department: "",
+    department: [],
     employeeType: "",
-    designation: "",
+    designation: [],
     vdate: "",
-    vType: "BOTH",
+    vType: "2", // Default to "Both"
   });
 
   // Validation error state
   const [errors, setErrors] = useState({
     employeeType: "",
+    vdate: "", // Add vdate to errors state
     timeErrors: [],
     apiError: "",
   });
@@ -79,7 +81,6 @@ const AttendanceEntry = () => {
       setErrors((prev) => ({ ...prev, apiError: error }));
     } else if (attendanceData.length > 0 && !loading) {
       console.log("Fetch success, data:", attendanceData);
-      // alert("Attendance data fetched successfully!");
     }
   }, [error, attendanceData, loading]);
 
@@ -100,6 +101,14 @@ const AttendanceEntry = () => {
     }
   };
 
+  // Handle multi-select changes
+  const handleMultiChange = (name, selectedOptions) => {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: selectedOptions ? selectedOptions.map((option) => option.value) : [],
+    }));
+  };
+
   // Handle radio button changes
   const handleRadioChange = (e) => {
     setFormData((prev) => ({ ...prev, vType: e.target.value }));
@@ -108,10 +117,18 @@ const AttendanceEntry = () => {
   // Validate form for fetch
   const validateForm = () => {
     let isValid = true;
-    const newErrors = { employeeType: "", timeErrors: [], apiError: "" };
+    const newErrors = { employeeType: "", vdate: "", timeErrors: [], apiError: "" };
 
     if (!formData.employeeType) {
       newErrors.employeeType = "Employee Type is required";
+      isValid = false;
+    }
+
+    if (!formData.vdate) {
+      newErrors.vdate = "Date is required";
+      isValid = false;
+    } else if (isNaN(new Date(formData.vdate).getTime())) {
+      newErrors.vdate = "Invalid date";
       isValid = false;
     }
 
@@ -119,21 +136,65 @@ const AttendanceEntry = () => {
     return isValid;
   };
 
+  // Construct employeeidlist string
+  const buildEmployeeIdList = () => {
+    const conditions = [];
+
+    if (formData.location) {
+      // conditions.push(`E."LocationID" = ${formData.location}`);
+      conditions.push(`E."LocationID" = 4`);
+    }
+
+    if (formData.department.length > 0) {
+      if (formData.department.length === 1) {
+        conditions.push(`E."DeptID" = ${formData.department[0]}`);
+      } else {
+        conditions.push(`E."DeptID" IN (${formData.department.join(",")})`);
+      }
+    }
+
+    if (formData.designation.length > 0) {
+      if (formData.designation.length === 1) {
+        conditions.push(`E."DesgID" = ${formData.designation[0]}`);
+      } else {
+        conditions.push(`E."DesgID" IN (${formData.designation.join(",")})`);
+      }
+    }
+
+    if (formData.employeeType) {
+      conditions.push(`E."ETypeID" = ${formData.employeeType}`);
+    }
+
+    return conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+  };
+
   // Handle fetch
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Fetch button clicked");
     if (!validateForm()) {
       console.log("Validation failed:", errors);
       return;
     }
+
+    // Set vdate, datefrom, dateto, vid1, and vid2
+    const vdate = formData.vdate;
+    const datefrom = `${formData.vdate} 01:00:00`;
+    const datetoDate = new Date(`${formData.vdate}T01:00:00`);
+    datetoDate.setHours(datetoDate.getHours() + 9);
+    const dateto = `${formData.vdate} ${datetoDate.getHours().toString().padStart(2, "0")}:${datetoDate.getMinutes().toString().padStart(2, "0")}:00`;
+    const vid1 = datefrom; // Same as datefrom
+    const vid2 = dateto; // Same as dateto
+
+    // Map vType to inflage
+    const inflage = formData.vType; // vType directly maps to inflage (0, 1, or 2)
+
     const params = {
       orgini: "LTT",
-      vdate: formData.vdate,
-      datefrom: formData.vdate,
-      dateto: formData.vdate,
-      deptids: formData.department,
-      employeeidlist: "",
+      vdate: vdate,
+      datefrom: datefrom,
+      dateto: dateto,
+      deptids: formData.department.join(","),
+      employeeidlist: buildEmployeeIdList(),
       companyid: "0",
       locationid: formData.location,
       etypeid: formData.employeeType,
@@ -142,7 +203,9 @@ const AttendanceEntry = () => {
       onlyot: "0",
       isexport: "0",
       uid: "0",
-      inflage: "0",
+      inflage: inflage,
+      vid1: vid1,
+      vid2: vid2,
     };
     console.log("Dispatching getAttendanceEntry with params:", params);
     dispatch(getAttendanceEntry(params));
@@ -235,10 +298,10 @@ const AttendanceEntry = () => {
           vid1: original.vid1,
           vid2: original.vid2,
           shiftID: original.shiftID || 3,
-          dateIn1: record.timeIn || original.timeIn || "",
-          dateOut1: record.timeOut || original.timeOut || "",
-          dateIn2: record.timeIn2 || original.timeIn2 || "",
-          dateOut2: record.timeOut2 || original.timeOut2 || "",
+          dateIn1: record.timeIn ? `${formData.vdate} ${record.timeIn}:00` : original.timeIn ? `${formData.vdate} ${original.timeIn}:00` : "",
+          dateOut1: record.timeOut ? `${formData.vdate} ${record.timeOut}:00` : original.timeOut ? `${formData.vdate} ${original.timeOut}:00` : "",
+          dateIn2: record.timeIn2 ? `${formData.vdate} ${record.timeIn2}:00` : original.timeIn2 ? `${formData.vdate} ${original.timeIn2}:00` : "",
+          dateOut2: record.timeOut2 ? `${formData.vdate} ${record.timeOut2}:00` : original.timeOut2 ? `${formData.vdate} ${original.timeOut2}:00` : "",
           remarks: record.remarks || original.remarks || "",
           uID: 101,
           computerName: "HR-PC-001",
@@ -259,7 +322,6 @@ const AttendanceEntry = () => {
     }
 
     if (!hasChanges()) {
-      // alert("No changes detected. No data will be saved.");
       return;
     }
 
@@ -275,7 +337,6 @@ const AttendanceEntry = () => {
   const confirmSave = async () => {
     const changedData = getChangedData();
     if (!changedData || changedData.length === 0) {
-      // alert("No changes to save.");
       setIsSaveModalOpen(false);
       return;
     }
@@ -287,7 +348,6 @@ const AttendanceEntry = () => {
         console.log("Saving record:", JSON.stringify(record, null, 2));
         await dispatch(saveAttendanceEntry(record)).unwrap();
       }
-      // alert("All attendance records saved successfully!");
     } catch (error) {
       console.error("Failed to save some records:", error);
       setErrors((prev) => ({ ...prev, apiError: `Failed to save records: ${error.message}` }));
@@ -330,14 +390,15 @@ const AttendanceEntry = () => {
   const resetForm = () => {
     setFormData({
       location: "",
-      department: "",
+      department: [],
       employeeType: "",
-      designation: "",
+      designation: [],
       vdate: "",
-      vType: "BOTH",
+      vType: "2",
     });
     setChangedRecords({});
     setErrors({ employeeType: "", timeErrors: [], apiError: "" });
+    dispatch(resetAttendanceData()); // Reset the attendance data in Redux store
   };
 
   // Confirm cancel action
@@ -400,24 +461,22 @@ const AttendanceEntry = () => {
                             <Label htmlFor="departmentGroupInput" className="form-label">
                               Department
                             </Label>
-                            <select
-                              className="form-select form-select-sm"
+                            <Select
+                              isMulti
                               name="department"
                               id="departmentGroupInput"
-                              value={formData.department}
-                              onChange={handleInputChange}
-                            >
-                              <option value="">---Select---</option>
-                              {departmentList.length > 0 ? (
-                                departmentList.map((dept) => (
-                                  <option key={dept.VID} value={dept.VID}>
-                                    {dept.VName || dept.DepartmentName || dept.title}
-                                  </option>
-                                ))
-                              ) : (
-                                <option disabled>No departments available</option>
-                              )}
-                            </select>
+                              value={departmentList
+                                .filter((dept) => formData.department.includes(dept.VID))
+                                .map((dept) => ({
+                                  value: dept.VID,
+                                  label: dept.VName || dept.DepartmentName || dept.title,
+                                }))}
+                              onChange={(selected) => handleMultiChange("department", selected)}
+                              options={departmentList.map((dept) => ({
+                                value: dept.VID,
+                                label: dept.VName || dept.DepartmentName || dept.title,
+                              }))}
+                            />
                           </div>
                         </Col>
 
@@ -455,28 +514,26 @@ const AttendanceEntry = () => {
                             <Label htmlFor="designationInput" className="form-label">
                               Designation
                             </Label>
-                            <select
-                              className="form-select form-select-sm"
+                            <Select
+                              isMulti
                               name="designation"
                               id="designationInput"
-                              value={formData.designation}
-                              onChange={handleInputChange}
-                            >
-                              <option value="">---Select---</option>
-                              {designation.length > 0 ? (
-                                designation.map((desig) => (
-                                  <option key={desig.VID} value={desig.VID}>
-                                    {desig.VName || desig.DesignationName || desig.title}
-                                  </option>
-                                ))
-                              ) : (
-                                <option disabled>No designations available</option>
-                              )}
-                            </select>
+                              value={designation
+                                .filter((desig) => formData.designation.includes(desig.VID))
+                                .map((desig) => ({
+                                  value: desig.VID,
+                                  label: desig.VName || desig.DesignationName || desig.title,
+                                }))}
+                              onChange={(selected) => handleMultiChange("designation", selected)}
+                              options={designation.map((desig) => ({
+                                value: desig.VID,
+                                label: desig.VName || desig.DesignationName || desig.title,
+                              }))}
+                            />
                           </div>
                         </Col>
 
-                        <Col xxl={2} md={2} className="px-1">
+                        {/* <Col xxl={2} md={2} className="px-1">
                           <div>
                             <Label htmlFor="vdate" className="form-label">
                               Date
@@ -490,6 +547,23 @@ const AttendanceEntry = () => {
                               onChange={handleInputChange}
                             />
                           </div>
+                        </Col> */}
+
+                        <Col xxl={2} md={2} className="px-1">
+                          <div className="mb-3">
+                            <Label htmlFor="vdate" className="form-label">
+                              Date
+                            </Label>
+                            <Input
+                              type="date"
+                              className={`form-control-sm ${errors.vdate ? "is-invalid" : ""}`}
+                              id="vdate"
+                              name="vdate"
+                              value={formData.vdate}
+                              onChange={handleInputChange}
+                            />
+                            {errors.vdate && <FormFeedback>{errors.vdate}</FormFeedback>}
+                          </div>
                         </Col>
 
                         <Col xxl={2} md={2} className="px-1">
@@ -500,12 +574,12 @@ const AttendanceEntry = () => {
                                 className="form-check-input"
                                 id="VIN"
                                 name="vType"
-                                value="VIN"
-                                checked={formData.vType === "VIN"}
+                                value="0"
+                                checked={formData.vType === "0"}
                                 onChange={handleRadioChange}
                               />
                               <Label className="form-check-label" htmlFor="VIN">
-                                For In
+                                In
                               </Label>
                             </div>
                             <div className="form-check mt-3" dir="ltr">
@@ -514,12 +588,12 @@ const AttendanceEntry = () => {
                                 className="form-check-input"
                                 id="VOUT"
                                 name="vType"
-                                value="VOUT"
-                                checked={formData.vType === "VOUT"}
+                                value="1"
+                                checked={formData.vType === "1"}
                                 onChange={handleRadioChange}
                               />
                               <Label className="form-check-label" htmlFor="VOUT">
-                                For Out
+                                Out
                               </Label>
                             </div>
                             <div className="form-check mt-3" dir="ltr">
@@ -528,8 +602,8 @@ const AttendanceEntry = () => {
                                 className="form-check-input"
                                 id="BOTH"
                                 name="vType"
-                                value="BOTH"
-                                checked={formData.vType === "BOTH"}
+                                value="2"
+                                checked={formData.vType === "2"}
                                 onChange={handleRadioChange}
                               />
                               <Label className="form-check-label" htmlFor="BOTH">
@@ -585,9 +659,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeIn1 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeIn1 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeIn || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeIn", e.target.value)
@@ -602,9 +675,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeOut1 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeOut1 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeOut || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeOut", e.target.value)
@@ -619,9 +691,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeIn2 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeIn2 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeIn2 || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeIn2", e.target.value)
@@ -636,9 +707,8 @@ const AttendanceEntry = () => {
                                 <td>
                                   <Input
                                     type="time"
-                                    className={`form-control form-control-sm ${
-                                      errors.timeErrors[index]?.timeOut2 ? "is-invalid" : ""
-                                    }`}
+                                    className={`form-control form-control-sm ${errors.timeErrors[index]?.timeOut2 ? "is-invalid" : ""
+                                      }`}
                                     defaultValue={entry.timeOut2 || ""}
                                     onChange={(e) =>
                                       handleTimeChange(index, "timeOut2", e.target.value)
