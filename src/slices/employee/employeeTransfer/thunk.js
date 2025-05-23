@@ -6,7 +6,8 @@ import config from "../../../config"; // ✅ correct
 // const API_ENDPOINT = "http://192.168.18.65:8001/ems/empLocationTransfer/";
 const API_ENDPOINT = `${config.api.API_URL}empLocationTransfer/`;
 
-export const getEmployeeLocationTransfer = createAsyncThunk("employeeLocationTransfer/getEmployeeLocationTransfer",
+export const getEmployeeLocationTransfer = createAsyncThunk(
+  "employeeLocationTransfer/getEmployeeLocationTransfer",
   async (_, { rejectWithValue }) => {
     try {
       const response = await fetch(API_ENDPOINT);
@@ -28,87 +29,174 @@ export const getEmployeeLocationTransfer = createAsyncThunk("employeeLocationTra
         return rejectWithValue("Warning: Data may not be complete.");
       }
     } catch (error) {
-      toast.error("Failed to fetch Employee Location Transfer. Please try again!");
+      toast.error(
+        "Failed to fetch Employee Location Transfer. Please try again!"
+      );
       // Pass the error to the rejected action payload
       return rejectWithValue(error.message);
     }
   }
 );
 // Submit Salary Increment
-export const submitEmployeeLocationTransfer =createAsyncThunk("employeeLocationTransfer/submitEmployeeLocationTransfer", async (payload, { rejectWithValue }) => {
-  try {
-    const response = await fetch(API_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+export const submitEmployeeLocationTransfer = createAsyncThunk(
+  "employeeLocationTransfer/submitEmployeeLocationTransfer",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const response = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+      if (!response.ok) {
+        // Handle 400 validation error specifically
+        if (response.status === 400) {
+          const errorData = await response.json();
+          const message =
+            typeof errorData.error === "object"
+              ? JSON.stringify(errorData.error)
+              : errorData.error || errorData.message || "Validation failed!";
+          toast.error(message);
+          return rejectWithValue(message);
+        }
+
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      // Handle API response based on status field
+      if (data.status === "0") {
+        toast.success(
+          typeof data.message === "object"
+            ? JSON.stringify(data.message)
+            : data.message || "Employee Location Transfer added successfully!"
+        );
+        return data.data;
+      } else if (data.status === "1") {
+        const errorMessage =
+          typeof data.error === "object"
+            ? JSON.stringify(data.error)
+            : data.error || data.message || "An error occurred!";
+        toast.error(errorMessage);
+        return rejectWithValue(errorMessage);
+      } else if (data.status === "2") {
+        const warningMessage =
+          typeof data.error === "object"
+            ? JSON.stringify(data.error)
+            : data.error || data.message || "Warning: Please check your input!";
+        toast.warning(warningMessage);
+        return rejectWithValue(warningMessage);
+      }
+    } catch (error) {
+      const errorMessage =
+        typeof error.message === "object"
+          ? JSON.stringify(error.message)
+          : error.message || "Unknown error occurred";
+      toast.error(
+        "Failed to add Employee Location Transfer. Please try again!\n" +
+          errorMessage
+      );
+      return rejectWithValue(errorMessage);
     }
-
-    const data = await response.json();
-    toast.success(data.message || "Employee Location Transfer added successfully!");
-    return data.data; // Return the newly created Designation
-  } catch (error) {
-    toast.error("Failed to add  Employee LocationTransfer. Please try again!");
-    return rejectWithValue(error.message);
   }
-}
 );
 
 // Update Employee
-export const updateEmployeeLocationTransfer = createAsyncThunk("employeeLocationTransfer/updateEmployeeLocationTransfer",async ( groupData,{ rejectWithValue}) =>{
-  try{
-    const response= await fetch(`${API_ENDPOINT}`,{
-      method : "PUT",
-      headers : {
-        "Content-Type" : "application/json",
-      },
-      body : JSON.stringify(groupData),
-    });
-    
-    if(!response.ok){
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const  responseData = await response.json();
-    toast.success(data.message || "Employee Location Transfer updated successfully!");
-    return responseData.data; // Assuming the updated data is in 'data'
+export const updateEmployeeLocationTransfer = createAsyncThunk(
+  "employeeLocationTransfer/updateEmployeeLocationTransfer",
+  async (groupData, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_ENDPOINT}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(groupData),
+      });
 
-  } catch(error) {
-    toast.error("Failed to update Employee Location Transfer. Please try again!");
-    return rejectWithValue(error.message);
+      if (!response.ok) {
+        // Handle 400 validation error specifically
+        if (response.status === 400) {
+          const errorData = await response.json();
+          const message =
+            typeof errorData.error === "object"
+              ? JSON.stringify(errorData.error)
+              : errorData.error || errorData.message || "Validation failed!";
+          toast.error(message);
+          return rejectWithValue(message);
+        }
+
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.status === "0") {
+        toast.success(
+          typeof data.message === "object"
+            ? JSON.stringify(data.message)
+            : data.message || "Employee Location Transfer updated successfully!"
+        );
+        return data.data;
+      } else if (data.status === "1") {
+        const errorMessage =
+          typeof data.error === "object"
+            ? JSON.stringify(data.error)
+            : data.error || data.message || "An error occurred!";
+        toast.error(errorMessage);
+        return rejectWithValue(errorMessage);
+      } else if (data.status === "2") {
+        const warningMessage =
+          typeof data.error === "object"
+            ? JSON.stringify(data.error)
+            : data.error || data.message || "Warning: Please check your input!";
+        toast.warning(warningMessage);
+        return rejectWithValue(warningMessage);
+      }
+    } catch (error) {
+      const errorMessage =
+        typeof error.message === "object"
+          ? JSON.stringify(error.message)
+          : error.message || "Unknown error occurred";
+      toast.error(
+        "Failed to update Employee Location Transfer. Please try again!\n" +
+          errorMessage
+      );
+      return rejectWithValue(errorMessage);
+    }
   }
-})
+);
 
 // Delete Employee
-export const deleteEmployeeLocationTransfer =createAsyncThunk("employeeLocationTransfer/deleteEmployeeLocationTransfer", async(id, { rejectWithValue}) => {
-  try{
-    const response =await fetch(`${API_ENDPOINT}`, {
-      method: "DELETE",
-      headers : {
-        "Content-Type" : "application/json",
-      },
-      body : JSON.stringify({ id }),
-    });
-    
-    if(!response.ok){
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const responseData = await response.json();
-    if (responseData.status) {
-      toast.success("Employee Location Transfer deleted successfully!");
-      return id; 
-    } else {
-      throw new Error(responseData.message || "Failed to delete data.");
-    }
+export const deleteEmployeeLocationTransfer = createAsyncThunk(
+  "employeeLocationTransfer/deleteEmployeeLocationTransfer",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await fetch(`${API_ENDPOINT}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ VID:id }),
+      });
 
-  } catch(error) {
-    toast.error("Failed to delete Employee Location Transfer. Please try again!");
-    return rejectWithValue(error.message);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      if (responseData.status) {
+        toast.success("Employee Location Transfer deleted successfully!");
+        return id;
+      } else {
+        throw new Error(responseData.message || "Failed to delete data.");
+      }
+    } catch (error) {
+      toast.error(
+        "Failed to delete Employee Location Transfer. Please try again!"
+      );
+      return rejectWithValue(error.message);
+    }
   }
-});
+);
