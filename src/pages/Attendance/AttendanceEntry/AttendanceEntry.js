@@ -177,11 +177,30 @@ const AttendanceEntry = () => {
     }
 
     // Set vdate, datefrom, dateto, vid1, and vid2
+    // const vdate = formData.vdate;
+    // const datefrom = `${formData.vdate} 01:00:00`;
+    // const datetoDate = new Date(`${formData.vdate}T01:00:00`);
+    // datetoDate.setHours(datetoDate.getHours() + 9);
+    // const dateto = `${formData.vdate} ${datetoDate.getHours().toString().padStart(2, "0")}:${datetoDate.getMinutes().toString().padStart(2, "0")}:00`;
+
+    // Validate vdate
     const vdate = formData.vdate;
-    const datefrom = `${formData.vdate} 01:00:00`;
-    const datetoDate = new Date(`${formData.vdate}T01:00:00`);
-    datetoDate.setHours(datetoDate.getHours() + 9);
-    const dateto = `${formData.vdate} ${datetoDate.getHours().toString().padStart(2, "0")}:${datetoDate.getMinutes().toString().padStart(2, "0")}:00`;
+    if (!vdate || !/^\d{4}-\d{2}-\d{2}$/.test(vdate)) {
+      throw new Error("Invalid vdate format. Expected YYYY-MM-DD");
+    }
+
+    // Set datefrom as vdate
+    const datefrom = vdate;
+
+    // Create datetoDate and add one day
+    const datetoDate = new Date(vdate);
+    if (isNaN(datetoDate.getTime())) {
+      throw new Error("Invalid date in vdate");
+    }
+    datetoDate.setDate(datetoDate.getDate() + 1);
+
+    // Format dateto as YYYY-MM-DD
+    const dateto = `${datetoDate.getFullYear()}-${(datetoDate.getMonth() + 1).toString().padStart(2, "0")}-${datetoDate.getDate().toString().padStart(2, "0")}`;
     const vid1 = datefrom; // Same as datefrom
     const vid2 = dateto; // Same as dateto
 
@@ -232,10 +251,10 @@ const AttendanceEntry = () => {
       }
 
       // Validation 2: TimeOut1 required if TimeIn1 is filled
-      if (timeIn1 && !timeOut1) {
-        errorsForRow.timeOut1 = "Invalid Time Out 1: Time Out 1 is required when Time In 1 is filled";
-        isValid = false;
-      }
+      // if (timeIn1 && !timeOut1) {
+      //   errorsForRow.timeOut1 = "Invalid Time Out 1: Time Out 1 is required when Time In 1 is filled";
+      //   isValid = false;
+      // }
 
       // Validation 3: TimeOut1 must be later than TimeIn1
       if (timeIn1 && timeOut1 && timeOut1 <= timeIn1) {
