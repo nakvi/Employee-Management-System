@@ -176,7 +176,7 @@ const AllowanceDeduction = () => {
                         <Col xxl={2} md={3}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
-                              Date From
+                              Date 
                             </Label>
                             <Input
                               type="date"
@@ -187,7 +187,7 @@ const AllowanceDeduction = () => {
                             />
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
+                        {/* <Col xxl={2} md={3}>
                           <div>
                             <Label htmlFor="DateFrom" className="form-label">
                               To
@@ -200,7 +200,7 @@ const AllowanceDeduction = () => {
                               value={selectedDate}
                             />
                           </div>
-                        </Col>
+                        </Col> */}
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label

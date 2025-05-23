@@ -95,8 +95,8 @@ const EmployeeList = () => {
   }, [searchText, employee]); // 🔁 FIXED dependency
   // Edit Click
   const handleEditClick = (row) => {
-    // navigate("/employee", { state: { employee: row } });
-    window.open(`/employee?EmpID=${row.EmpID}`, '_blank', 'noopener,noreferrer');
+    navigate("/employee", { state: { employee: row } });
+    // window.open(`/employee?EmpID=${row.EmpID}`, '_blank', 'noopener,noreferrer');
 
   };
 
