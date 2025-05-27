@@ -1,11 +1,13 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import config from "../../../config";
 import { resetAttendanceChange } from "./reducer";
 
-const API_ENDPOINT = "http://192.168.18.65:8001/ems/attChange";
+// const API_ENDPOINT = "http://192.168.18.65:8001/ems/attChange";
 
-// Helper function to format timestamps to HH:mm
+const API_ENDPOINT = `${config.api.API_URL}attChange/`;
+
 const formatTime = (timestamp) => {
   if (!timestamp || timestamp === "1900-01-01T00:00:00" || timestamp === "1900-01-01") {
     console.log("formatTime: Empty or default timestamp:", timestamp);
@@ -94,6 +96,44 @@ export const getAttendanceChange = createAsyncThunk(
     } catch (error) {
       console.error("API Error:", error);
       toast.error(`Failed to fetch attendance change data: ${error.message}`);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const postAttendanceChange = createAsyncThunk(
+  "attendanceChange/postAttendanceChange",
+  async (payload, { rejectWithValue }) => {
+    try {
+      console.log("Posting to:", API_ENDPOINT, "with payload:", JSON.stringify(payload, null, 2));
+      const response = await fetch(API_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("HTTP Error:", response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Post API Response:", JSON.stringify(data, null, 2));
+
+      if (Array.isArray(data) && data.length > 0 && data[0].status === "200") {
+        toast.success(data[0].msg || "Attendance change saved successfully.");
+        return data;
+      } else {
+        const errorMessage = data[0]?.msg || "Failed to save attendance change.";
+        toast.error(errorMessage);
+        return rejectWithValue(errorMessage);
+      }
+    } catch (error) {
+      console.error("Post API Error:", error);
+      toast.error(`Failed to save attendance change: ${error.message}`);
       return rejectWithValue(error.message);
     }
   }

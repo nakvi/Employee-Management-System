@@ -12,7 +12,8 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
-import { getAttendanceChange, resetAttendanceChange } from "../../../slices/Attendance/AttendanceChange/thunk";
+import { getAttendanceChange, postAttendanceChange, resetAttendanceChange } from "../../../slices/Attendance/AttendanceChange/thunk";
+import { toast } from "react-toastify";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 
 const ChangeAttendance = () => {
@@ -22,13 +23,13 @@ const ChangeAttendance = () => {
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = Array.isArray(department.data) ? department.data : [];
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
-  const { attendanceData = [], loading, error } = useSelector((state) => state.AttendanceChange || { attendanceData: [], loading: false, error: null });
+  const { attendanceData = [], loading, error, postLoading, postError } = useSelector((state) => state.AttendanceChange || { attendanceData: [], loading: false, error: null, postLoading: false, postError: null });
 
   // Form state
   const [formData, setFormData] = useState({
     etypeid: "",
     deptids: "",
-    vdate: "",
+    vdate: new Date().toISOString().split("T")[0], // Set current date as default
   });
 
   // Validation errors state
@@ -37,15 +38,27 @@ const ChangeAttendance = () => {
     vdate: "",
   });
 
+  // State to manage table data with editable fields and checkbox status
+  const [tableData, setTableData] = useState([]);
+
   useEffect(() => {
     dispatch(getDepartment());
     dispatch(getEmployeeType());
   }, [dispatch]);
 
+  useEffect(() => {
+    // Update tableData when attendanceData changes
+    setTableData(
+      attendanceData.map((item) => ({
+        ...item,
+        post: item.post || false,
+      }))
+    );
+  }, [attendanceData]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear validation error when user starts typing
     setValidationErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
@@ -72,7 +85,6 @@ const ChangeAttendance = () => {
       return;
     }
 
-    // Calculate dateto as vdate + 1 day
     let datefrom = formData.vdate || "";
     let dateto = "";
     if (datefrom) {
@@ -80,7 +92,7 @@ const ChangeAttendance = () => {
         const dateObj = new Date(datefrom);
         if (!isNaN(dateObj.getTime())) {
           dateObj.setDate(dateObj.getDate() + 1);
-          dateto = dateObj.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+          dateto = dateObj.toISOString().split("T")[0];
         }
       } catch (error) {
         console.error("Error calculating dateto:", error);
@@ -105,21 +117,78 @@ const ChangeAttendance = () => {
 
   const handleCancel = () => {
     console.log("Cancel button clicked, resetting form and Redux state");
-    setFormData({ etypeid: "", deptids: "", vdate: "" });
+    setFormData({ 
+      etypeid: "", 
+      deptids: "", 
+      vdate: new Date().toISOString().split("T")[0] // Reset to current date
+    });
     setValidationErrors({ etypeid: "", vdate: "" });
     dispatch(resetAttendanceChange());
+    setTableData([]);
     console.log("Form data after reset:", formData);
   };
 
-  // No-op for Save button (not implemented)
   const handleSave = () => {
-    console.log("Save button clicked (no functionality implemented)");
+    // Check for changes by comparing tableData with attendanceData
+    const changedRows = tableData.filter((row, index) => {
+      const originalRow = attendanceData[index];
+      return (
+        row.post &&
+        (row.timeIn !== originalRow.timeIn ||
+         row.timeOut !== originalRow.timeOut ||
+         row.remarks !== originalRow.remarks)
+      );
+    });
+
+    if (changedRows.length === 0) {
+      toast.info("No changes detected.");
+      return;
+    }
+
+    // Loop through changed rows and dispatch POST request for each
+    changedRows.forEach((row) => {
+      const payload = {
+        vid: 0,
+        empid: row.empid || 1,
+        vdate: formData.vdate || new Date().toISOString().split("T")[0],
+        vid1: row.vid1 || 0,
+        vid2: 0,
+        shiftID: 3, // Assuming a default shiftID as per your example
+        dateIn1: row.timeIn ? `${formData.vdate} ${row.timeIn}:00` : "1900-01-01 00:00:00",
+        dateOut1: row.timeOut ? `${formData.vdate} ${row.timeOut}:00` : "1900-01-01 00:00:00",
+        dateIn2: "1900-01-01",
+        dateOut2: "1900-01-01",
+        remarks: row.remarks || "",
+        uID: 101, // As per your example
+        computerName: "HR-PC-001", // As per your example
+      };
+      dispatch(postAttendanceChange(payload));
+    });
   };
 
-  // Prevent form submission to avoid page refresh
   const handleFormSubmit = (e) => {
     e.preventDefault();
     console.log("Form submission prevented");
+  };
+
+  // Handle changes in table inputs
+  const handleTableInputChange = (index, field, value) => {
+    setTableData((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? { ...item, [field]: value, post: true } // Auto-check post checkbox
+          : item
+      )
+    );
+  };
+
+  // Handle checkbox toggle
+  const handleCheckboxChange = (index) => {
+    setTableData((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, post: !item.post } : item
+      )
+    );
   };
 
   return (
@@ -128,6 +197,8 @@ const ChangeAttendance = () => {
         <Container fluid>
           {loading && <p>Loading...</p>}
           {error && <p className="text-danger">{error}</p>}
+          {postLoading && <p>Saving changes...</p>}
+          {postError && <p className="text-danger">{postError}</p>}
           <Row>
             <Col lg={12}>
               <Card>
@@ -239,7 +310,7 @@ const ChangeAttendance = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          {Array.isArray(attendanceData) && attendanceData.map((item, index) => (
+                          {Array.isArray(tableData) && tableData.map((item, index) => (
                             <tr key={index}>
                               <td>{index + 1}</td>
                               <td>{item.employee || "N/A"}</td>
@@ -251,7 +322,9 @@ const ChangeAttendance = () => {
                                   type="time"
                                   className="form-control form-control-sm"
                                   value={item.timeIn || ""}
-                                  readOnly
+                                  onChange={(e) =>
+                                    handleTableInputChange(index, "timeIn", e.target.value)
+                                  }
                                 />
                               </td>
                               <td>
@@ -259,7 +332,9 @@ const ChangeAttendance = () => {
                                   type="time"
                                   className="form-control form-control-sm"
                                   value={item.timeOut || ""}
-                                  readOnly
+                                  onChange={(e) =>
+                                    handleTableInputChange(index, "timeOut", e.target.value)
+                                  }
                                 />
                               </td>
                               <td>
@@ -267,7 +342,9 @@ const ChangeAttendance = () => {
                                   className="form-control-sm w-75"
                                   type="text"
                                   value={item.remarks || ""}
-                                  readOnly
+                                  onChange={(e) =>
+                                    handleTableInputChange(index, "remarks", e.target.value)
+                                  }
                                 />
                               </td>
                               <td>
@@ -275,14 +352,14 @@ const ChangeAttendance = () => {
                                   className="form-check-input"
                                   type="checkbox"
                                   checked={item.post || false}
-                                  readOnly
+                                  onChange={() => handleCheckboxChange(index)}
                                 />
                               </td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
-                      {(!Array.isArray(attendanceData) || attendanceData.length === 0) && !loading && (
+                      {(!Array.isArray(tableData) || tableData.length === 0) && !loading && (
                         <div className="noresult">
                           <div className="text-center">
                             <lord-icon
@@ -292,10 +369,6 @@ const ChangeAttendance = () => {
                               style={{ width: "75px", height: "75px" }}
                             ></lord-icon>
                             <h5 className="mt-2">Sorry! No Result Found</h5>
-                            {/* <p className="text-muted mb-0">
-                              We've searched more than 150+ Orders We did not find
-                              any orders for you search.
-                            </p> */}
                           </div>
                         </div>
                       )}
