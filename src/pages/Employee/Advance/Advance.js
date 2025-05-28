@@ -13,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useDispatch, useSelector } from "react-redux";
@@ -112,10 +113,35 @@ const Advance = () => {
       }
     },
   });
+    // edit
+  const handleEditClick = (group) => {
+  // Find the employee record to get the ETypeID
+  const selectedEmployee = employee.find(
+    (emp) => String(emp.EmpID) === String(group.EmpID)
+  );
+  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+
+  setEditingGroup(group);
+  formik.setValues({
+    VID: group.VID,
+    VName: group.VName,
+    Amount: group.Amount,
+    VDate: group.VDate.split("T")[0],
+    EmpID: group.EmpID,
+    ETypeID: employeeTypeId, // Set ETypeID from employee data
+    AllowDedID: 6,
+    UID: 202,
+    CompanyID: 3001,
+    Tranzdatetime: "2025-04-24T10:19:32.099586Z",
+  });
+};
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
+  const formatDate = (dateString) => {
+                 return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+               };
   // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);

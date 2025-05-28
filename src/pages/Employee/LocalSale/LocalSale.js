@@ -13,6 +13,7 @@ import {
 import { Link } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useDispatch, useSelector } from "react-redux";
@@ -60,7 +61,12 @@ const LocalSale = () => {
       VName: Yup.string().required("Remarks is required"),
       RefNo: Yup.string().required("Invoice No is required"),
       EmpID: Yup.string().required("Employee is required"),
-      Amount: Yup.number().required("Amount is required"),
+      Amount: Yup.number()
+              .min(1, "Amount must be greater than 0") // Updated to enforce > 0
+              .required("Amount is required"),
+              Qty: Yup.number()
+                      .min(1, "Qty must be greater than 0") // Updated to enforce > 0
+                      .required("Qty is required"),
       VDate: Yup.date().required("Date is required"),
     }),
     onSubmit: (values) => {
@@ -80,6 +86,31 @@ const LocalSale = () => {
       }
     },
   });
+  // edit
+  const handleEditClick = (group) => {
+  // Find the employee record to get the ETypeID
+  const selectedEmployee = employee.find(
+    (emp) => String(emp.EmpID) === String(group.EmpID)
+  );
+  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+
+  setEditingGroup(group);
+  formik.setValues({
+    VID: group.VID,
+    VName: group.VName,
+    Amount: group.Amount,
+    AccountID: group.AccountID,
+    Qty: group.Qty,
+    RefNo: group.RefNo,
+    VDate: group.VDate.split("T")[0],
+    EmpID: group.EmpID,
+    ETypeID: employeeTypeId, // Set ETypeID from employee data
+    AllowDedID: 16,
+    UID: 202,
+    CompanyID: 3001,
+    Tranzdatetime: "2025-04-24T10:19:32.099586Z",
+  });
+};
     // Delete Data
     const handleDeleteClick = (id) => {
       setDeleteId(id);
@@ -93,6 +124,9 @@ const LocalSale = () => {
       }
       setDeleteModal(false);
     };
+       const formatDate = (dateString) => {
+               return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+             };
   document.title = "Local Sale | EMS";
   return (
     <React.Fragment>
@@ -318,14 +352,14 @@ const LocalSale = () => {
                                   {employee.find((emp) => String(emp.EmpID) === String(group.EmpID))?.EName|| "N/A"}
                                 </td>
                                 <td>{group.Amount}</td>
-                                <td>02/02/2025</td>
-                                <td>33</td>
-                                <td>3300</td>
+                                 <td>{formatDate(group.VDate)}</td>
+                                <td>{group.RefNo}</td>
+                                <td>{group.Qty}</td>
                                 <td>{group.VName}</td>
                                 <td>
                                   <div className="d-flex gap-2">
                                     <div className="edit ">
-                                      <Button className="btn btn-soft-info">
+                                      <Button className="btn btn-soft-info" onClick={() => handleEditClick(group)}>
                                         <i className="bx bx-edit"></i>
                                       </Button>
                                     </div>
