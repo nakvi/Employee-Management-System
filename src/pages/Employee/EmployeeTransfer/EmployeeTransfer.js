@@ -161,6 +161,11 @@ const EmployeeTransfer = () => {
 
   // Handle edit click
   const handleEditClick = (group) => {
+      // Find the employee record to get the ETypeID
+  const selectedEmployee = employee.find(
+    (emp) => String(emp.EmpID) === String(group.EmpID)
+  );
+  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
     setEditingGroup(group);
     formik.setValues({
       VID: group.VID,
@@ -168,7 +173,7 @@ const EmployeeTransfer = () => {
       VNo: group.VNo,
       VDate: group.VDate.split("T")[0], // Adjust date format for input
       EmpID: group.EmpID,
-      ETypeID: group.ETypeID || employeeType[0]?.VID || "",
+      ETypeID: employeeTypeId, 
       CurrentLocationID: group.CurrentLocationID,
       LocationID: group.LocationID,
       IsPosted: group.IsPosted,
@@ -191,11 +196,9 @@ const EmployeeTransfer = () => {
   const handleDeleteConfirm = async () => {
     try {
       await dispatch(deleteEmployeeLocationTransfer(deleteId)).unwrap();
-      toast.success("Employee transfer deleted successfully!");
       setShowDeleteModal(false);
       setDeleteId(null);
     } catch (err) {
-      toast.error("Failed to delete employee transfer.");
     }
   };
   const columns = [
