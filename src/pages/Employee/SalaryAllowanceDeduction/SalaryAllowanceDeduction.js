@@ -129,12 +129,12 @@ const SalaryAllowanceDeduction = () => {
   }, [formik.values.VType, formik.values.GroupID, dispatch]);
 
   // Set default ETypeID and reset EmpID, GroupID, and AllowDedID when employeeType changes
-  useEffect(() => {
-    if (employeeType.length > 0 && !formik.values.ETypeID) {
-      formik.setFieldValue("ETypeID", employeeType[0].VID);
-    }
-    formik.setFieldValue("EmpID", "");
-  }, [employeeType, formik.values.ETypeID]);
+  // useEffect(() => {
+  //   if (employeeType.length > 0 && !formik.values.ETypeID) {
+  //     formik.setFieldValue("ETypeID", employeeType[0].VID);
+  //   }
+  //   formik.setFieldValue("EmpID", "");
+  // }, [employeeType, formik.values.ETypeID]);
      const formatDate = (dateString) => {
          return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
        };
@@ -143,13 +143,18 @@ const SalaryAllowanceDeduction = () => {
     };
 // Handle edit button click
   const handleEditClick = (group) => {
+       // Find the employee record to get the ETypeID
+  const selectedEmployee = employee.find(
+    (emp) => String(emp.EmpID) === String(group.EmpID)
+  );
+  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
     setEditingGroup(group);
     console.log("date",group);
     formik.setValues({
       VName: group.VName || "",
       VDate: group.VDate || "",
       EmpID: group.EmpID || "",
-      ETypeID: group.ETypeID || "",
+      ETypeID: employeeTypeId,
       VType: group.VType || "",
       GroupID: group.GroupID || "",
       AllowDedID: group.AllowDedID || "",

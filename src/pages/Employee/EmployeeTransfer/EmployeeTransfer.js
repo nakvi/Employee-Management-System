@@ -130,12 +130,12 @@ const EmployeeTransfer = () => {
   });
 
   // Set default ETypeID and reset EmpID when employeeType loads or ETypeID changes
-  useEffect(() => {
-    if (employeeType.length > 0 && !formik.values.ETypeID) {
-      formik.setFieldValue("ETypeID", employeeType[0].VID);
-    }
-    formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
-  }, [employeeType, formik.values.ETypeID]);
+  // useEffect(() => {
+  //   if (employeeType.length > 0 && !formik.values.ETypeID) {
+  //     formik.setFieldValue("ETypeID", employeeType[0].VID);
+  //   }
+  //   formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
+  // }, [employeeType, formik.values.ETypeID]);
 
   // Set CurrentLocationID based on selected EmpID
   useEffect(() => {
