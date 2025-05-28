@@ -62,37 +62,31 @@ const LoanDisbursement = () => {
       CompanyID: "1001",
     },
     validationSchema: Yup.object({
-      // ETypeID: Yup.number()
-      //   .min(1, "Employee Type is required")
-      //   .required("Required"),
-      // VName: Yup.string().required("Remarks is required"),
-      // AccountID: Yup.number()
-      //   .min(1, "Bank Type is required")
-      //   .required("Required"),
-      // EmpID: Yup.string().required("Employee is required"),
-      // ChequeNo: Yup.string().required("Cheque is required"),
-      // ChequeDate: Yup.date().required("Date is required"),
-      // Amount: Yup.number()
-      //   .min(1, "Amount must be greater than 0") // Updated to enforce > 0
-      //   .required("Amount is required"),
-      // Installment: Yup.number()
-      //   .min(1, "Installment must be greater than 0") // Updated to enforce > 0
-      //   .required("Installment is required"),
-      // VDate: Yup.date().required("Date is required"),
+      ETypeID: Yup.number()
+        .min(1, "Employee Type is required")
+        .required("Required"),
+      VName: Yup.string().required("Remarks is required"),
+      AccountID: Yup.number()
+        .min(1, "Bank Type is required")
+        .required("Required"),
+      EmpID: Yup.string().required("Employee is required"),
+      ChequeNo: Yup.string().required("Cheque is required"),
+      ChequeDate: Yup.date().required("Date is required"),
+      Amount: Yup.number()
+        .min(1, "Amount must be greater than 0") // Updated to enforce > 0
+        .required("Amount is required"),
+      Installment: Yup.number()
+        .min(1, "Installment must be greater than 0") // Updated to enforce > 0
+        .required("Installment is required"),
+      VDate: Yup.date().required("Date is required"),
     }),
     onSubmit: (values) => {
       if (editingGroup) {
-        dispatch(
-          updateLoanDisbursement({ ...values, VID: editingGroup.VID })
-        ).then(() => {
-          setEditingGroup(null); // Reset editing state
-          formik.resetForm(); // Reset form
-        });
+        dispatch(updateLoanDisbursement({ ...values, VID: editingGroup.VID }));
       } else {
-        dispatch(submitLoanDisbursement(values)).then(() => {
-          formik.resetForm(); // Reset form
-        });
+        dispatch(submitLoanDisbursement(values)).then(() => {});
       }
+      formik.resetForm();
     },
   });
   // Delete Data
@@ -103,7 +97,6 @@ const LoanDisbursement = () => {
   const handleDeleteConfirm = () => {
     if (deleteId) {
       dispatch(deleteLoanDisbursement(deleteId)).then(() => {
-        dispatch(getLocalSale());
       });
     }
     setDeleteModal(false);
@@ -322,6 +315,7 @@ const LoanDisbursement = () => {
                               id="Installment"
                               name="Installment"
                               placeholder="00"
+                              {...formik.getFieldProps("Installment")}
                             />
                             {formik.touched.Installment &&
                             formik.errors.Installment ? (
