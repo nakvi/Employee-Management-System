@@ -67,7 +67,7 @@ const LoanDisbursementSlice = createSlice({
       .addCase(deleteLoanDisbursement.rejected, (state, action) => {
         state.loading = false;
         state.error =
-          action.payload || "Failed to delete Employee Location Transfer.";
+          action.payload || "Failed to delete Loan Disbursement.";
       });
   },
 });

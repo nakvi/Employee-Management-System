@@ -5,7 +5,7 @@ import config from "../../../config"; // ✅ correct
 
 // Define the API endpoint
 
-const API_ENDPOINT = `${config.api.API_URL}localSale/`;
+const API_ENDPOINT = `${config.api.API_URL}salaryLoan/`;
 
 // Create the async thunk
 export const getLoanDisbursement = createAsyncThunk(
@@ -17,8 +17,7 @@ export const getLoanDisbursement = createAsyncThunk(
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      console.log("Fetched Loan Disbursement data:", data);
-      return data;
+      return data.data;
     } catch (error) {
       console.error(
         "Error fetching Loan Disbursement :",
@@ -37,6 +36,7 @@ export const getLoanDisbursement = createAsyncThunk(
 export const submitLoanDisbursement = createAsyncThunk(
   "loanDisbursement/submitLoanDisbursement",
   async (payload, { rejectWithValue }) => {
+    console.log("data",payload);
     try {
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
