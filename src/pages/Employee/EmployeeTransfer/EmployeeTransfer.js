@@ -58,17 +58,33 @@ const EmployeeTransfer = () => {
     dispatch(getEmployeeType());
     dispatch(getEmployee());
   }, [dispatch]);
+
+  // Filter employeeLocationTransfer based on searchText
   useEffect(() => {
-  if (employeeLocationTransfer) {
-    const filtered = employeeLocationTransfer.filter((item) =>
-      Object.values(item)
-        .join(" ")
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
-    );
-    setFilteredData(filtered);
-  }
-}, [employeeLocationTransfer, searchText]);
+    if (employeeLocationTransfer) {
+      const filtered = employeeLocationTransfer.filter((item) => {
+        // Get employee name
+        const empName = employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "";
+        // Get old location name
+        const oldLoc = location.find(loc => String(loc.VID) === String(item.CurrentLocationID))?.VName || "";
+        // Get new location name
+        const newLoc = location.find(loc => String(loc.VID) === String(item.LocationID))?.VName || "";
+
+        // Combine all searchable fields
+        const searchString = [
+          item.EmpID,
+          empName,
+          oldLoc,
+          newLoc,
+          item.VDate,
+          item.VName
+        ].join(" ").toLowerCase();
+
+        return searchString.includes(searchText.toLowerCase());
+      });
+      setFilteredData(filtered);
+    }
+  }, [employeeLocationTransfer, searchText, employee, location]);
 
   // Formik setup
   const formik = useFormik({
@@ -204,17 +220,17 @@ const EmployeeTransfer = () => {
   const columns = [
   {
     name: "Employee",
-    selector: row => employee?.find(emp => emp.EmpID === row.EmpID)?.EName || "",
+    selector: row => employee?.find(emp => String(emp.EmpID) === String(row.EmpID))?.EName || "", 
     sortable: true,
   },
   {
     name: "Old Location",
-    selector: row => location?.find(loc => loc.VID === row.CurrentLocationID)?.VName || "",
+    selector: row => location?.find(loc => String(loc.VID) === String(row.CurrentLocationID))?.VName || "",
     sortable: true,
   },
   {
     name: "New Location",
-    selector: row => location?.find(loc => loc.VID === row.LocationID)?.VName || "",
+    selector: row => location?.find(loc => String(loc.VID) === String(row.LocationID))?.VName || "",
     sortable: true,
   },
   {
