@@ -93,12 +93,9 @@ const EmployeeTransfer = () => {
               VID: editingGroup.VID,
             })
           ).unwrap();
-          toast.success("Employee transfer updated successfully!");
           setEditingGroup(null);
         } else {
-          await dispatch(submitEmployeeLocationTransfer(transformedValues)).unwrap();
-          toast.success("Employee transfer submitted successfully!");
-        }
+          await dispatch(submitEmployeeLocationTransfer(transformedValues)).unwrap();        }
         resetForm({
           values: {
             ...formik.initialValues,
@@ -390,10 +387,8 @@ const EmployeeTransfer = () => {
                             
                             <tr key={group.VID}>
                               <td>
-                                {employee?.find(
-                                  (emp) => emp.EmpID === group.EmpID
-                                )?.EName || ""}
-                              </td>
+                                  {employee.find((emp) => String(emp.EmpID) === String(group.EmpID))?.EName|| "N/A"}
+                                </td>
                               <td>
                                 {location?.find(
                                   (loc) => loc.VID === group.CurrentLocationID
