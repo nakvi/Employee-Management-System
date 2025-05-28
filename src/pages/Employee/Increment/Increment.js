@@ -96,7 +96,7 @@ const Increment = () => {
         .min(1, "Employee Type is required")
         .required("Required"),
       EmpID: Yup.string().required("Employee Name is required"),
-       VDate: Yup.date().required("Date is required"),
+      VDate: Yup.date().required("Date is required"),
       DateFrom: Yup.date().required("Effective date is required"),
       CurrentSalary: Yup.number().required("Current salary is required"),
       IncrementAmount: Yup.number().required("Increment amount is required"),
@@ -132,11 +132,16 @@ const Increment = () => {
     }
     formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
   }, [employeeType, formik.values.ETypeID]);
+
   const handleEditClick = (group) => {
     setEditingGroup(group);
     const formatDateForInput = (dateString) => {
       return dateString ? dateString.split("T")[0] : "";
     };
+     const selectedEmployee = employee.find(
+    (emp) => String(emp.EmpID) === String(group.EmpID)
+  );
+  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
     formik.setValues({
       EmpID: group.EmpID,
       DateFrom: formatDateForInput(group.DateFrom),
@@ -146,6 +151,7 @@ const Increment = () => {
       IncrementSpecial: group.IncrementSpecial,
       IncrementPromotional: group.IncrementPromotional,
       FirstAmount: group.FirstAmount,
+       ETypeID: employeeTypeId,
       CompanyID: group.CompanyID,
       UID: group.UID,
       IsActive: group.IsActive === 1,
