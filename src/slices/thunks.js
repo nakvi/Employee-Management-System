@@ -86,15 +86,20 @@ export * from "./setup/shift/thunk";
 export * from "./setup/attendanceGroup/thunk";
 export * from "./setup/allowanceDeductionGroup/thunk";
 export * from "./setup/allowanceDeductionCategory/thunk";
+export * from "./setup/allowanceDeductionCategoryByName/thunk";
 export * from "./setup/holidayType/thunk";
 // Employee
 export * from "./employee/employee/thunk";
 export * from "./employee/loanDisbursement/thunk";
 export * from "./employee/salaryIncrement/thunk";
+export * from "./employee/salaryAllowanceDeduction/thunk";
+export * from "./employee/allowanceDeductionDetails/thunk";
 export * from "./employee/employeeTransfer/thunk";
 export * from "./employee/employeeType/thunk";
 export * from "./employee/religion/thunk";
 export * from "./employee/gender/thunk";
+export * from "./employee/advance/thunk";
+export * from "./employee/localSales/thunk";
 
 // Administration
 export * from "./administration/roles/thunk";

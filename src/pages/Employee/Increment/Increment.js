@@ -54,7 +54,8 @@ const Increment = () => {
 
   // get salary increment
   const { loading, error, salaryIncrement } = useSelector(
-    (state) => state.SalaryIncrement );
+    (state) => state.SalaryIncrement
+  );
   const { employeeType } = useSelector((state) => state.EmployeeType);
   const { employee = {} } = useSelector((state) => state.Employee || {});
   useEffect(() => {
@@ -80,7 +81,7 @@ const Increment = () => {
     initialValues: {
       EmpID: "",
       DateFrom: "",
-      DateTo: "",
+      VDate: "",
       CurrentSalary: "",
       IncrementAmount: "",
       IncrementSpecial: "",
@@ -94,7 +95,8 @@ const Increment = () => {
       ETypeID: Yup.number()
         .min(1, "Employee Type is required")
         .required("Required"),
-      EName: Yup.string().required("Employee Name is required"),
+      EmpID: Yup.string().required("Employee Name is required"),
+       VDate: Yup.date().required("Date is required"),
       DateFrom: Yup.date().required("Effective date is required"),
       CurrentSalary: Yup.number().required("Current salary is required"),
       IncrementAmount: Yup.number().required("Increment amount is required"),
@@ -123,6 +125,13 @@ const Increment = () => {
     },
   });
 
+  // Set default ETypeID and reset EmpID when employeeType loads or ETypeID changes
+  useEffect(() => {
+    if (employeeType.length > 0 && !formik.values.ETypeID) {
+      formik.setFieldValue("ETypeID", employeeType[0].VID);
+    }
+    formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
+  }, [employeeType, formik.values.ETypeID]);
   const handleEditClick = (group) => {
     setEditingGroup(group);
     const formatDateForInput = (dateString) => {
@@ -476,27 +485,28 @@ const Increment = () => {
                       <Row className="gy-4">
                         {/* E-Type */}
                         <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="eType" className="form-label">
+                          <div className="mb-3">
+                            <Label htmlFor="ETypeID" className="form-label">
                               E-Type
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              id="eType"
-                              onChange={(e) => {
-                                // Filter employees based on selected type
-                              }}
+                              name="ETypeID"
+                              id="ETypeID"
+                              value={formik.values.ETypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">--- Select ---</option>
-                              {employeeType?.map((type) => (
-                                <option key={type.VID} value={type.VID}>
-                                  {type.VName}
+                              <option value="">---Select---</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
                                 </option>
                               ))}
                             </select>
-                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
                               <div className="text-danger">
-                                {formik.errors.EmpID}
+                                {formik.errors.ETypeID}
                               </div>
                             ) : null}
                           </div>
@@ -507,16 +517,25 @@ const Increment = () => {
                               Employee
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="EmpID"
                               id="EmpID"
+                              value={formik.values.EmpID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="-1">---Select--- </option>
-                              {employee.map((item) => (
-                                <option key={item.EmpID} value={item.EmpID}>
-                                  {item.EName}
-                                </option>
-                              ))}
+                              <option value="">---Select---</option>
+                              {employee
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
+                                .map((item) => (
+                                  <option key={item.EmpID} value={item.EmpID}>
+                                    {item.EName}
+                                  </option>
+                                ))}
                             </select>
                             {formik.touched.EmpID && formik.errors.EmpID ? (
                               <div className="text-danger">
@@ -537,7 +556,6 @@ const Increment = () => {
                               min={getMinDate()}
                               value={selectedDate}
                               {...formik.getFieldProps("VDate")}
-                              
                             />
                           </div>
                         </Col>

@@ -11,29 +11,104 @@ import {
   Form,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useDispatch, useSelector } from "react-redux";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
 import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
+import {
+  deleteLoanDisbursement,
+  getLoanDisbursement,
+  submitLoanDisbursement,
+  updateLoanDisbursement,
+} from "../../../slices/employee/loanDisbursement/thunk";
 
 const LoanDisbursement = () => {
-  document.title = "Loan Disbursement | EMS";
   const dispatch = useDispatch();
-
+  const [editingGroup, setEditingGroup] = useState(null);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  // redux to get data
+  const { loading, error, loanDisbursement } = useSelector(
+    (state) => state.LoanDisbursement
+  );
   const { employeeType } = useSelector((state) => state.EmployeeType);
-    const { employee = {} } = useSelector((state) => state.Employee || {});
-    const { loading, error, salaryBank } = useSelector(
-        (state) => state.SalaryBank
-      );
-  
-    useEffect(() => {
-      dispatch(getSalaryBank());
-      dispatch(getEmployeeType());
-      dispatch(getEmployee());
-    }, [dispatch]);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { salaryBank } = useSelector((state) => state.SalaryBank);
 
+  useEffect(() => {
+    dispatch(getSalaryBank());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getLoanDisbursement());
+  }, [dispatch]);
 
+  // form
+  const formik = useFormik({
+    initialValues: {
+      VName: "",
+      VDate: "",
+      EmpID: "",
+      ETypeID: "",
+      Amount: 0,
+      AccountID: 0,
+      ChequeNo: "",
+      ChequeDate: "",
+      Installment: 0,
+      UID: 501,
+      CompanyID: "1001",
+    },
+    validationSchema: Yup.object({
+      // ETypeID: Yup.number()
+      //   .min(1, "Employee Type is required")
+      //   .required("Required"),
+      // VName: Yup.string().required("Remarks is required"),
+      // AccountID: Yup.number()
+      //   .min(1, "Bank Type is required")
+      //   .required("Required"),
+      // EmpID: Yup.string().required("Employee is required"),
+      // ChequeNo: Yup.string().required("Cheque is required"),
+      // ChequeDate: Yup.date().required("Date is required"),
+      // Amount: Yup.number()
+      //   .min(1, "Amount must be greater than 0") // Updated to enforce > 0
+      //   .required("Amount is required"),
+      // Installment: Yup.number()
+      //   .min(1, "Installment must be greater than 0") // Updated to enforce > 0
+      //   .required("Installment is required"),
+      // VDate: Yup.date().required("Date is required"),
+    }),
+    onSubmit: (values) => {
+      if (editingGroup) {
+        dispatch(
+          updateLoanDisbursement({ ...values, VID: editingGroup.VID })
+        ).then(() => {
+          setEditingGroup(null); // Reset editing state
+          formik.resetForm(); // Reset form
+        });
+      } else {
+        dispatch(submitLoanDisbursement(values)).then(() => {
+          formik.resetForm(); // Reset form
+        });
+      }
+    },
+  });
+  // Delete Data
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      dispatch(deleteLoanDisbursement(deleteId)).then(() => {
+        dispatch(getLocalSale());
+      });
+    }
+    setDeleteModal(false);
+  };
+  document.title = "Loan Disbursement | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -43,59 +118,75 @@ const LoanDisbursement = () => {
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
+                <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                     title="Loan Disbursement"
-                    // onCancel={formik.resetForm}
+                    onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="ETypeID" className="form-label">
                               E-Type
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="ETypeID"
+                              id="ETypeID"
+                              value={formik.values.ETypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {employeeType.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={4}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="EmpID" className="form-label">
                               Employee
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="EmpID"
+                              id="EmpID"
+                              value={formik.values.EmpID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
-                              {employee.map((item) => (
-                                <option key={item.EmpID} value={item.EmpID}>
-                                  {item.EName}
-                                </option>
-                              ))}
+                              <option value="">---Select---</option>
+                              {employee
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
+                                .map((item) => (
+                                  <option key={item.EmpID} value={item.EmpID}>
+                                    {item.EName}
+                                  </option>
+                                ))}
                             </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        {/* <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -113,91 +204,131 @@ const LoanDisbursement = () => {
                               <option value="Choices2">Short term Loan</option>
                             </select>
                           </div>
-                        </Col>
+                        </Col> */}
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="DateFrom" className="form-label">
+                            <Label htmlFor="VDate" className="form-label">
                               Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="DateFrom"
+                              id="VDate"
+                              name="VDate"
+                              {...formik.getFieldProps("VDate")}
                             />
+                            {formik.touched.VDate && formik.errors.VDate ? (
+                              <div className="text-danger">
+                                {formik.errors.VDate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="AccountID" className="form-label">
                               Bank
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="AccountID"
+                              id="AccountID"
+                              {...formik.getFieldProps("AccountID")}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {salaryBank.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.AccountID &&
+                            formik.errors.AccountID ? (
+                              <div className="text-danger">
+                                {formik.errors.AccountID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
-
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={3}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="ChequeNo" className="form-label">
                               Cheque No
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="VName"
+                              id="ChequeNo"
+                              name="ChequeNo"
                               placeholder="Cheque No"
+                              {...formik.getFieldProps("ChequeNo")}
                             />
+                            {formik.touched.ChequeNo &&
+                            formik.errors.ChequeNo ? (
+                              <div className="text-danger">
+                                {formik.errors.ChequeNo}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={3}>
                           <div>
-                            <Label htmlFor="DateFrom" className="form-label">
-                               Date
+                            <Label htmlFor="ChequeDate" className="form-label">
+                              Cheque Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="DateFrom"
+                              id="ChequeDate"
+                              name="ChequeDate"
+                              {...formik.getFieldProps("ChequeDate")}
                             />
+                            {formik.touched.ChequeDate &&
+                            formik.errors.ChequeDate ? (
+                              <div className="text-danger">
+                                {formik.errors.ChequeDate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="Amount" className="form-label">
                               Amount
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
-                              placeholder="Amount"
+                              id="Amount"
+                              name="Amount"
+                              placeholder="00"
+                              {...formik.getFieldProps("Amount")}
                             />
+                            {formik.touched.Amount && formik.errors.Amount ? (
+                              <div className="text-danger">
+                                {formik.errors.Amount}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="Installment" className="form-label">
                               Installment
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
-                              placeholder="Cheque No"
+                              id="Installment"
+                              name="Installment"
+                              placeholder="00"
                             />
+                            {formik.touched.Installment &&
+                            formik.errors.Installment ? (
+                              <div className="text-danger">
+                                {formik.errors.Installment}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={4}>
@@ -209,11 +340,17 @@ const LoanDisbursement = () => {
                               type="text"
                               className="form-control-sm"
                               id="VName"
-                              placeholder="Cheque No"
+                              name="VName"
+                              placeholder="Remarks"
+                              {...formik.getFieldProps("VName")}
                             />
+                            {formik.touched.VName && formik.errors.VName ? (
+                              <div className="text-danger">
+                                {formik.errors.VName}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
-                   
                       </Row>
                     </div>
                   </CardBody>
@@ -246,7 +383,6 @@ const LoanDisbursement = () => {
                         <thead className="table-light">
                           <tr>
                             <th>Employee</th>
-                            <th>Type</th>
                             <th>Date </th>
                             <th>Bank</th>
                             <th>Cheque No</th>
@@ -258,31 +394,50 @@ const LoanDisbursement = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          <tr>
-                          <td>001:Sir Amir:Hr</td>
-                            <td>Loan</td>
-                            <td>02/02/2025</td>
-                            <td>Habib</td>
-                            <td>84843</td>
-                            <td>02/03/2025</td>
-                            <td>2000</td>
-                            <td>1000</td>
-                            <td>Ok</td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <div className="edit ">
-                                  <Button className="btn btn-soft-info">
-                                    <i className="bx bx-edit"></i>
-                                  </Button>
-                                </div>
-                                <div className="delete">
-                                  <Button className="btn btn-soft-danger">
-                                    <i className="ri-delete-bin-2-line"></i>
-                                  </Button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
+                          {loanDisbursement?.length > 0 ? (
+                            loanDisbursement.map((group) => (
+                              <tr key={group.VID}>
+                                <td>
+                                  {employee.find(
+                                    (emp) =>
+                                      String(emp.EmpID) === String(group.EmpID)
+                                  )?.EName || "N/A"}
+                                </td>
+                                <td>02/02/2025</td>
+                                <td>Habib</td>
+                                <td>84843</td>
+                                <td>02/03/2025</td>
+                                <td>2000</td>
+                                <td>1000</td>
+                                <td>{group.VName}</td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <div className="edit ">
+                                      <Button className="btn btn-soft-info">
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="11" className="text-center">
+                                No Loan found.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                       <div className="noresult" style={{ display: "none" }}>
@@ -323,6 +478,11 @@ const LoanDisbursement = () => {
           </Row>
         </Container>
       </div>
+      <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };

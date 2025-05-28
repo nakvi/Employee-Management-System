@@ -5,10 +5,10 @@ import config from "../../../config"; // ✅ correct
 
 // Define an Endpoint of API
 // const API_ENDPOINT = "http://192.168.18.65:8001/ems/salaryIncrement/";
-const API_ENDPOINT = `${config.api.API_URL}salaryIncrement/`;
+const API_ENDPOINT = `${config.api.API_URL}salaryAllowDed/`;
 
-export const getSalaryIncrement = createAsyncThunk(
-  "salaryIncrement/getSalaryIncrement",
+export const getSalaryAllowanceDeduction = createAsyncThunk(
+  "salaryAllowanceDeduction/getSalaryAllowanceDeduction",
   async (_, { rejectWithValue }) => {
     try {
       const response = await fetch(API_ENDPOINT);
@@ -16,6 +16,7 @@ export const getSalaryIncrement = createAsyncThunk(
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
+      console.log("thunk",data)
 
       if (data.status === "0") {
         // Success: Return the data
@@ -30,15 +31,15 @@ export const getSalaryIncrement = createAsyncThunk(
         return rejectWithValue("Warning: Data may not be complete.");
       }
     } catch (error) {
-      toast.error("Failed to fetch Salary Increment. Please try again!");
+      toast.error("Failed to fetch Salary Allowance Deduction. Please try again!");
       // Pass the error to the rejected action payload
       return rejectWithValue(error.message);
     }
   }
 );
-// Submit Salary Increment
-export const submitSalaryIncrement = createAsyncThunk(
-  "salaryIncrement/SubmitSalaryIncrement",
+// Submit SalaryAllowanceDeduction
+export const submitSalaryAllowanceDeduction = createAsyncThunk(
+  "salaryAllowanceDeduction/SubmitSalaryAllowanceDeduction",
   async (payload, { rejectWithValue }) => {
     try {
       const response = await fetch(API_ENDPOINT, {
@@ -70,7 +71,7 @@ export const submitSalaryIncrement = createAsyncThunk(
         toast.success(
           typeof data.message === "object"
             ? JSON.stringify(data.message)
-            : data.message || "Salary Increment added successfully!"
+            : data.message || "Salary Allowance Deduction added successfully!"
         );
         return data.data;
       } else if (data.status === "1") {
@@ -94,16 +95,16 @@ export const submitSalaryIncrement = createAsyncThunk(
           ? JSON.stringify(error.message)
           : error.message || "Unknown error occurred";
       toast.error(
-        "Failed to add Salary Increment. Please try again!\n" + errorMessage
+        "Failed to add Salary Allowance Deduction. Please try again!\n" + errorMessage
       );
       return rejectWithValue(errorMessage);
     }
   }
 );
 
-// Update Salary Increment
-export const updateSalaryIncrement = createAsyncThunk(
-  "salaryIncrement/updateSalaryIncrement",
+// Update Salary Allowance Deduction
+export const updateSalaryAllowanceDeduction = createAsyncThunk(
+  "salaryAllowanceDeduction/updateSalaryAllowanceDeduction",
   async (groupData, { rejectWithValue }) => {
     try {
       const response = await fetch(`${API_ENDPOINT}`, {
@@ -135,7 +136,7 @@ export const updateSalaryIncrement = createAsyncThunk(
         toast.success(
           typeof data.message === "object"
             ? JSON.stringify(data.message)
-            : data.message || "Salary Increment updated successfully!"
+            : data.message || "Salary Allowance Deduction updated successfully!"
         );
         return data.data;
       } else if (data.status === "1") {
@@ -159,16 +160,16 @@ export const updateSalaryIncrement = createAsyncThunk(
           ? JSON.stringify(error.message)
           : error.message || "Unknown error occurred";
       toast.error(
-        "Failed to update Salary Increment. Please try again!\n" + errorMessage
+        "Failed to update Salary Allowance Deduction. Please try again!\n" + errorMessage
       );
       return rejectWithValue(errorMessage);
     }
   }
 );
 
-// Delete Salary Increment
-export const deleteSalaryIncrement = createAsyncThunk(
-  "salaryIncrement/deleteSalaryIncrement",
+// Delete Salary Allowance Deduction
+export const deleteSalaryAllowanceDeduction = createAsyncThunk(
+  "salaryAllowanceDeduction/deleteSalaryAllowanceDeduction",
   async (id, { rejectWithValue }) => {
     try {
       const response = await fetch(`${API_ENDPOINT}`, {
@@ -185,13 +186,13 @@ export const deleteSalaryIncrement = createAsyncThunk(
 
       const responseData = await response.json();
       if (responseData.status) {
-        toast.success("Salary Increment deleted successfully!");
+        toast.success("Salary Allowance Deduction deleted successfully!");
         return id;
       } else {
         throw new Error(responseData.message || "Failed to delete data.");
       }
     } catch (error) {
-      toast.error("Failed to delete Salary Increment. Please try again!");
+      toast.error("Failed to delete Salary Allowance Deduction. Please try again!");
       return rejectWithValue(error.message);
     }
   }

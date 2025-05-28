@@ -251,9 +251,9 @@ const Navdata = () => {
           parentId: "employees",
         },
         {
-          id: "allowanceDeduction",
+          id: "salaryAllowanceDeduction",
           label: "Allowance Deduction",
-          link: "/allowance-deduction",
+          link: "/salary-allowance-deduction",
           parentId: "employees",
         },
         {

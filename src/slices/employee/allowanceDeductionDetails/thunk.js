@@ -1,37 +1,32 @@
+// slices/setup/allowanceDeductionDetails/thunk.js
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import config from "../../../config"; // ✅ correct
+import config from "../../../config";
 
-// Define an Endpoint of API
-// const API_ENDPOINT = "http://192.168.18.65:8001/ems/salaryIncrement/";
-const API_ENDPOINT = `${config.api.API_URL}localSale/`;
+const API_ENDPOINT = `${config.api.API_URL}allowDedByCat/`; 
 
-export const getLocalSale = createAsyncThunk(
-  "localSale/getLocalSale",
-  async (_, { rejectWithValue }) => {
+export const getAllowanceDeductionDetails = createAsyncThunk(
+  "allowanceDeductionDetails/getAllowanceDeductionDetails",
+  async ({ VType, GroupID }, { rejectWithValue }) => {
     try {
-      const response = await fetch(API_ENDPOINT);
+      const response = await fetch(`${API_ENDPOINT}?Vtype=${VType}&GroupID=${GroupID}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
 
       if (data.status === "0") {
-        // Success: Return the data
         return data.data;
       } else if (data.status === "1") {
-        // Error: Show an error message on toast
-        toast.error("An error occurred while fetching data.");
+        toast.error("An error occurred while fetching allowance deduction details.");
         return rejectWithValue("An error occurred while fetching data.");
       } else if (data.status === "2") {
-        // Warning: Show a warning message on toast
         toast.warn("Warning: Data may not be complete.");
         return rejectWithValue("Warning: Data may not be complete.");
       }
     } catch (error) {
-      toast.error("Failed to fetch Local Sale . Please try again!");
-      // Pass the error to the rejected action payload
+      toast.error("Failed to fetch Allowance Deduction Details. Please try again!");
       return rejectWithValue(error.message);
     }
   }

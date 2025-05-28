@@ -11,14 +11,31 @@ import {
   Form,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useDispatch, useSelector } from "react-redux";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
-
+import {
+  getAdvance,
+  submitAdvance,
+  updateAdvance,
+} from "../../../slices/employee/advance/thunk";
+import {
+  submitSalaryAllowanceDeduction,
+  updateSalaryAllowanceDeduction,
+  deleteSalaryAllowanceDeduction,
+} from "../../../slices/employee/salaryAllowanceDeduction/thunk";
 const Advance = () => {
   const dispatch = useDispatch();
+  const [editingGroup, setEditingGroup] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  // redux to get data
+  const { loading, error, advance } = useSelector((state) => state.Advance);
   const { employeeType } = useSelector((state) => state.EmployeeType);
   const { employee = {} } = useSelector((state) => state.Employee || {});
   useEffect(() => {
@@ -29,99 +46,178 @@ const Advance = () => {
   useEffect(() => {
     dispatch(getEmployeeType());
     dispatch(getEmployee());
+    dispatch(getAdvance());
   }, [dispatch]);
-
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      VName: "",
+      VDate: "",
+      EmpID: "",
+      ETypeID: "",
+      Amount: 0,
+      AllowDedID: 6,
+      UID: 501,
+      CompanyID: "1001",
+    },
+    validationSchema: Yup.object({
+      ETypeID: Yup.number()
+        .min(1, "Employee Type is required")
+        .required("Required"),
+      VName: Yup.string().required("Remarks is required"),
+      EmpID: Yup.string().required("Employee is required"),
+      Amount: Yup.number().required("Amount is required"),
+      VDate: Yup.date().required("Date is required"),
+    }),
+    onSubmit: (values) => {
+      if (editingGroup) {
+        dispatch(
+          updateSalaryAllowanceDeduction({ ...values, VID: editingGroup.VID })
+        ).then(() => {
+          dispatch(getAdvance()); // Fetch updated data after update
+          setEditingGroup(null); // Reset editing state
+          formik.resetForm(); // Reset form
+        });
+      } else {
+        dispatch(submitSalaryAllowanceDeduction(values)).then(() => {
+          dispatch(getAdvance()); // Fetch updated data after submission
+          formik.resetForm(); // Reset form
+        });
+      }
+    },
+  });
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
+  };
+  // Delete Data
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      dispatch(deleteSalaryAllowanceDeduction(deleteId)).then(() => {
+        dispatch(getAdvance());
+      });
+    }
+    setDeleteModal(false);
   };
   document.title = "Advance| EMS";
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
+          {loading && <p>Loading...</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
+                <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
                     title="Advance"
-                  // onCancel={formik.resetForm}
+                    onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="ETypeID" className="form-label">
                               E-Type
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="ETypeID"
+                              id="ETypeID"
+                              value={formik.values.ETypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {employeeType.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={4}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="EmpID" className="form-label">
                               Employee
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="EmpID"
+                              id="EmpID"
+                              value={formik.values.EmpID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
-                              {employee.map((item) => (
-                                <option key={item.EmpID} value={item.EmpID}>
-                                  {item.EName}
-                                </option>
-                              ))}
+                              <option value="">---Select---</option>
+                              {employee
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
+                                .map((item) => (
+                                  <option key={item.EmpID} value={item.EmpID}>
+                                    {item.EName}
+                                  </option>
+                                ))}
                             </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="Amount" className="form-label">
                               Amount
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
-                              id="VName"
+                              id="Amount"
                               placeholder="Amount"
+                              {...formik.getFieldProps("Amount")}
                             />
+                            {formik.touched.Amount && formik.errors.Amount ? (
+                              <div className="text-danger">
+                                {formik.errors.Amount}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="DateFrom" className="form-label">
+                            <Label htmlFor="VDate" className="form-label">
                               Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="DateFrom"
+                              id="VDate"
                               min={getMinDate()} // Prevent past dates
                               value={selectedDate}
+                              {...formik.getFieldProps("VDate")}
                             />
+                            {formik.touched.VDate && formik.errors.VDate ? (
+                              <div className="text-danger">
+                                {formik.errors.VDate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -133,8 +229,14 @@ const Advance = () => {
                               type="text"
                               className="form-control-sm"
                               id="VName"
-                              placeholder="Cheque No"
+                              placeholder="Remarks"
+                              {...formik.getFieldProps("VName")}
                             />
+                            {formik.touched.VName && formik.errors.VName ? (
+                              <div className="text-danger">
+                                {formik.errors.VName}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                       </Row>
@@ -168,7 +270,6 @@ const Advance = () => {
                       >
                         <thead className="table-light">
                           <tr>
-                            <th>E-Type</th>
                             <th>Employee</th>
                             <th>Amount</th>
                             <th>Date</th>
@@ -177,27 +278,43 @@ const Advance = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          <tr>
-                            <td>Staff</td>
-                            <td>001:Sir Amir:Hr</td>
-                            <td>2000</td>
-                            <td>02/02/2025</td>
-                            <td>Ok</td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <div className="edit ">
-                                  <Button className="btn btn-soft-info">
-                                    <i className="bx bx-edit"></i>
-                                  </Button>
-                                </div>
-                                <div className="delete">
-                                  <Button className="btn btn-soft-danger">
-                                    <i className="ri-delete-bin-2-line"></i>
-                                  </Button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
+                          {advance?.length > 0 ? (
+                            advance.map((group) => (
+                              <tr key={group.VID}>
+                                 <td>
+                                  {employee.find((emp) => String(emp.EmpID) === String(group.EmpID))?.EName|| "N/A"}
+                                </td>
+                                <td>{group.Amount}</td>
+                                <td>02/02/2025</td>
+                                <td>{group.VName}</td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <div className="edit ">
+                                      <Button className="btn btn-soft-info">
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="11" className="text-center">
+                                No Advance found.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                       <div className="noresult" style={{ display: "none" }}>
@@ -238,6 +355,11 @@ const Advance = () => {
           </Row>
         </Container>
       </div>
+      <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };
