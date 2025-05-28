@@ -181,7 +181,7 @@ const Advance = () => {
       name: "Action",
       cell: row => (
         <div className="d-flex gap-2">
-          <Button className="btn btn-soft-info btn-sm">
+          <Button className="btn btn-soft-info btn-sm" onClick={() => handleEditClick(row)}>
             <i className="bx bx-edit"></i>
           </Button>
           <Button
