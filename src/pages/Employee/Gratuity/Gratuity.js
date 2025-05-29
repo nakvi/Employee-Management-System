@@ -11,6 +11,9 @@ import {
   Form,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
+import { format } from "date-fns";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { FiRefreshCw } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,17 +26,68 @@ const Gratuity = () => {
   const dispatch = useDispatch();
 
   const { employeeType } = useSelector((state) => state.EmployeeType);
-    const { employee = {} } = useSelector((state) => state.Employee || {});
-    const { loading, error, salaryBank } = useSelector(
-        (state) => state.SalaryBank
-      );
-  
-    useEffect(() => {
-      dispatch(getSalaryBank());
-      dispatch(getEmployeeType());
-      dispatch(getEmployee());
-    }, [dispatch]);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { salaryBank } = useSelector((state) => state.SalaryBank);
 
+  useEffect(() => {
+    dispatch(getSalaryBank());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
+
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      VName: "",
+      VDate: "",
+      EmpID: "",
+      ETypeID: "",
+      VType: "",
+      GroupID: "",
+      AllowDedID: "",
+      Amount: 0,
+      AccountID: "",
+      ChequeNo: "",
+      ChequeDate: "",
+      IsActive: true,
+      UID: 501,
+      CompanyID: "1001",
+      Tranzdatetime: "2024-02-02T12:30:00Z",
+    },
+    validationSchema: Yup.object({
+      ETypeID: Yup.number()
+        .min(1, "Employee Type is required")
+        .required("Required"),
+      EmpID: Yup.string().required("Employee is required"),
+      VType: Yup.string().required("Type is required"),
+      GroupID: Yup.string().required("Effect is required"),
+      AllowDedID: Yup.string().required("Details is required"),
+      Amount: Yup.number().required("Amount is required"),
+      AccountID: Yup.number()
+        .min(1, "Bank Type is required")
+        .required("Required"),
+      VDate: Yup.date().required("Date is required"),
+      ChequeNo: Yup.string().required("Cheque No is required"),
+      ChequeDate: Yup.date().required("Cheque Date is required"),
+      IsActive: Yup.boolean(),
+    }),
+     onSubmit: (values) => {
+         // Add your form submission logic here
+         const transformedValues = {
+           ...values,
+           IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+         };
+         if (editingGroup) {
+           dispatch(
+             update({ ...transformedValues, VID: editingGroup.VID })
+           );
+           setEditingGroup(null); // Reset after submission
+         } else {
+           dispatch(submitSalaryAllowanceDeduction(transformedValues));
+         }
+         formik.resetForm();
+       },
+    });
   return (
     <React.Fragment>
       <div className="page-content">
@@ -46,53 +100,69 @@ const Gratuity = () => {
                 <Form>
                   <PreviewCardHeader
                     title="Gratuity"
-                    // onCancel={formik.resetForm}
+                    onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="ETypeID" className="form-label">
                               E-Type
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="ETypeID"
+                              id="ETypeID"
+                              value={formik.values.ETypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {employeeType.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={4}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="EmpID" className="form-label">
                               Employee
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="EmpID"
+                              id="EmpID"
+                              value={formik.values.EmpID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
-                             {employee.map((item) => (
-                                <option key={item.EmpID} value={item.EmpID}>
-                                  {item.EName}
-                                </option>
-                              ))}
+                              <option value="">---Select---</option>
+                              {employee
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
+                                .map((item) => (
+                                  <option key={item.EmpID} value={item.EmpID}>
+                                    {item.EName}
+                                  </option>
+                                ))}
                             </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -217,7 +287,7 @@ const Gratuity = () => {
                             />
                           </div>
                         </Col>
-                        <Col xxl={2} md={6}>
+                        <Col xxl={2} md={4}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
                               Remarks
