@@ -103,7 +103,6 @@ const SalaryAllowanceDeduction = () => {
            IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
          };
          if (editingGroup) {
-           console.log("Editing Group", transformedValues);
            dispatch(
              updateSalaryAllowanceDeduction({ ...transformedValues, VID: editingGroup.VID })
            );
