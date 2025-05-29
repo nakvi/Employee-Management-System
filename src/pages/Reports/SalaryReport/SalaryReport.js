@@ -256,10 +256,7 @@ const SalaryReport = () => {
                             />
                           </div>
                         </Col>
-                      </Row>
-                      {/* Heading */}
-                      <Row>
-                        <Col xxl={2} md={9}>
+                        <Col xxl={4} md={9}>
                           <div className="mb-3 mt-2">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -276,6 +273,8 @@ const SalaryReport = () => {
                           </div>
                         </Col>
                       </Row>
+                      {/* Heading */}
+
                       {/* checkbox grid */}
                       <Row style={{ border: "1px dotted lightgray" }}>
                         <Col xxl={2} md={2}>
@@ -326,6 +325,7 @@ const SalaryReport = () => {
                       </Row>
                       {/* Optional grid */}
                       <Row>
+                        <Row>
                         <Col xxl={2} md={2}>
                           <div className="form-check mt-3" dir="ltr">
                             <Input
@@ -341,48 +341,6 @@ const SalaryReport = () => {
                             </Label>
                           </div>
                         </Col>
-                        {/* <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Salary Sheet (PDF)
-                            </Label>
-                          </div>
-                        </Col> */}
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Summary
-                            </Label>
-                          </div>
-                        </Col>
-                        {/* <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                            Summary (PDF)
-                            </Label>
-                          </div>
-                        </Col> */}
                         <Col xxl={2} md={2}>
                           <div className="form-check mt-3" dir="ltr">
                             <Input
@@ -397,34 +355,6 @@ const SalaryReport = () => {
                             </Label>
                           </div>
                         </Col>
-                        {/* <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Final Settlement (PDF)
-                            </Label>
-                          </div>
-                        </Col> */}
-                        {/* <Col xxl={2} md={2}>
-                          <div className="form-check " dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Salary Slip (PDF)
-                            </Label>
-                          </div>
-                        </Col> */}
                         <Col xxl={2} md={2}>
                           <div className="form-check mt-3" dir="ltr">
                             <Input
@@ -435,7 +365,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Salary Slip Urdu
+                              Stop Salary
                             </Label>
                           </div>
                         </Col>
@@ -449,7 +379,92 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Salary Slip English
+                              Salary All
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Summary Sheet
+                            </Label>
+                          </div>
+                        </Col>
+                      </Row>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Final Settlement Summary
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Stop Salary Summary
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Salary All Summary
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Payment Slip English
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Payment Slip Urdu
                             </Label>
                           </div>
                         </Col>
@@ -477,7 +492,7 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              OverTime Sheet
+                              OT Sheet
                             </Label>
                           </div>
                         </Col>
@@ -491,7 +506,78 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              OverTime Summary
+                              OT Sheet OFF
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              OT Sheet AL
+                            </Label>
+                          </div>
+                        </Col>
+
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              OT Summary
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              OT Summary OFF
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              OT Summary ALL
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Emp Final Settlement
                             </Label>
                           </div>
                         </Col>
@@ -519,11 +605,27 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Employee Format
+                              Attendance Allowance
                             </Label>
                           </div>
                         </Col>
-
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Bonus Sheet
+                            </Label>
+                          </div>
+                        </Col>
+                      {/* </Row> */}
+                      {/* Second Grid */}
+                      {/* <Row> */}
                         <Col xxl={2} md={2}>
                           <div className="form-check mt-3" dir="ltr">
                             <Input
@@ -548,26 +650,56 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Attendance Allowance
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check " dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
                               Increment List
                             </Label>
                           </div>
                         </Col>
+                        <Row> 
+                          <Col xxl={2} md={2}>
+                            <div className="form-check mt-3" dir="ltr">
+                              <Input
+                                type="radio"
+                                className="form-check-input"
+                                id="VIN"
+                                name="VType"
+                                value="VIN"
+                              />
+                              <Label className="form-check-label" htmlFor="VIN">
+                                Allows / Deduction list
+                              </Label>
+                            </div>
+                          </Col>
+                          <Col xxl={2} md={2}>
+                            <div className="form-check mt-3" dir="ltr">
+                              <Input
+                                type="radio"
+                                className="form-check-input"
+                                id="VIN"
+                                name="VType"
+                                value="VIN"
+                              />
+                              <Label className="form-check-label" htmlFor="VIN">
+                                Allows / Deduction Summary
+                              </Label>
+                            </div>
+                          </Col>
+                          <Col xxl={2} md={2}>
+                            <div className="form-check mt-3" dir="ltr">
+                              <Input
+                                type="radio"
+                                className="form-check-input"
+                                id="VIN"
+                                name="VType"
+                                value="VIN"
+                              />
+                              <Label className="form-check-label" htmlFor="VIN">
+                                Gratuity Details
+                              </Label>
+                            </div>
+                          </Col>
+                        </Row>
                         <Col xxl={2} md={2}>
-                          <div className="form-check " dir="ltr">
+                          <div className="form-check mt-3" dir="ltr">
                             <Input
                               type="radio"
                               className="form-check-input"
@@ -576,71 +708,12 @@ const SalaryReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Advance/Loan List
+                              Hygiene Card Format
                             </Label>
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <div className="form-check " dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Advance/Loan Summary
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check " dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Allowance List
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check " dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Allowance Summary
-                            </Label>
-                          </div>
-                        </Col>
-                      </Row>
-                      {/* Second Grid */}
-                      <Row style={{ border: "1px dotted lightgray" }}>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-2 mb-2" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Hygiene Card
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-2 mb-2" dir="ltr">
+                          <div className="form-check mt-3" dir="ltr">
                             <Input
                               type="radio"
                               className="form-check-input"
@@ -654,7 +727,7 @@ const SalaryReport = () => {
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <div className="form-check mt-2 mb-2" dir="ltr">
+                          <div className="form-check mt-3" dir="ltr">
                             <Input
                               type="radio"
                               className="form-check-input"
@@ -664,20 +737,6 @@ const SalaryReport = () => {
                             />
                             <Label className="form-check-label" htmlFor="VIN">
                               SS Contribution
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-2 mb-2" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Bounce Sheet
                             </Label>
                           </div>
                         </Col>
