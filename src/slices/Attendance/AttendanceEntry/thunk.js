@@ -2,6 +2,7 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import config from "../../../config";
+import { resetAttendanceData } from "./reducer"; // Import the action from the reducer
 
 const API_ENDPOINT = `${config.api.API_URL}attEntry/`;
 
@@ -76,7 +77,7 @@ export const getAttendanceEntry = createAsyncThunk(
         dateto: params.dateto || "",
         deptids: params.deptids || "",
         employeeidlist: params.employeeidlist || "",
-        companyid:  "1",
+        companyid: "1",
         // locationid: params.locationid || "1",
         locationid: "4",
         etypeid: params.etypeid || "0",
@@ -215,3 +216,6 @@ export const saveAttendanceEntry = createAsyncThunk(
     }
   }
 );
+
+// Re-export the resetAttendanceData action
+export { resetAttendanceData };

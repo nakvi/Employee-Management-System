@@ -225,7 +225,7 @@ export const deleteEmployee = createAsyncThunk(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ EmpID: id  }),
       });
 
       if (!response.ok) {

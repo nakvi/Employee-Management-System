@@ -18,7 +18,7 @@ export const getAllowanceDeductionGroup = createAsyncThunk(
       }
       const data = await response.json();
       console.log("Fetched Allowance Deduction Group data:", data);
-      return data;
+      return data.data;
     } catch (error) {
       console.error("Error fetching Allowance Deduction Group :", error.message);
       // Show error message using toast

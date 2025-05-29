@@ -30,7 +30,6 @@ import Holiday from "../pages/Setup/Holiday/Holiday";
 import AllowanceDeductionTypes from "../pages/Setup/AllowanceDeductionTypes/AllowanceDeductionTypes";
 import Leave from "../pages/Attendance/Leaves/Leaves";
 import LoanDisbursement from "../pages/Employee/LoanDisbursement/LoanDisbursement";
-import AllowanceDeduction from "../pages/Employee/AllowanceDeduction/AllowanceDeduction";
 import LocalSale from "../pages/Employee/LocalSale/LocalSale";
 import Advance from "../pages/Employee/Advance/Advance";
 import EmployeeTransfer from "../pages/Employee/EmployeeTransfer/EmployeeTransfer";
@@ -66,7 +65,8 @@ import OTDaily from "../pages/Attendance/OTDaily/OTDaily";
 import LateComingExemptAttendance from "../pages/Attendance/LateComingExemptAttendance/LateComingExemptAttendance";
 import Configuration from "../pages/Administration/Configuration/Configuration";
 import EmployeeList from "../pages/Employee/Employee/EmployeeList";
-
+import EmployeeProfile from "../pages/Employee/Employee/EmployeeProfile";
+import SalaryAllowanceDeduction from "../pages/Employee/SalaryAllowanceDeduction/SalaryAllowanceDeduction";
 const authProtectedRoutes = [
   // my routes setup
   { path: "/company", component: <Company /> },
@@ -84,10 +84,11 @@ const authProtectedRoutes = [
   { path: "/leave-balances", component: <LeaveBalance /> },
   // Employee routes 
   { path: "/employee", component: <Employee /> },
+  { path: "/employee/:id", component: <EmployeeProfile /> },
   { path: "/employee-list", component: <EmployeeList /> },
   { path: "/increment", component: <Increment /> },
   { path: "/loan-disbursement", component: <LoanDisbursement /> },
-  { path: "/allowance-deduction", component: <AllowanceDeduction /> },
+  { path: "/salary-allowance-deduction", component: <SalaryAllowanceDeduction /> },
   { path: "/local-sales", component: <LocalSale /> },
   { path: "/advance", component: <Advance /> },
   { path: "/employee-transfer", component: <EmployeeTransfer /> },

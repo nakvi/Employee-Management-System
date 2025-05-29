@@ -17,13 +17,6 @@ import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useDispatch, useSelector } from "react-redux";
-import DataTable from "react-data-table-component";
-import * as XLSX from "xlsx";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
-import { saveAs } from "file-saver";
-import { CSVLink } from "react-csv";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
 import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
@@ -39,9 +32,6 @@ const LoanDisbursement = () => {
   const [editingGroup, setEditingGroup] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [searchText, setSearchText] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
-
   // redux to get data
   const { loading, error, loanDisbursement } = useSelector(
     (state) => state.LoanDisbursement
@@ -56,27 +46,6 @@ const LoanDisbursement = () => {
     dispatch(getEmployee());
     dispatch(getLoanDisbursement());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (loanDisbursement && employee && salaryBank) {
-      const filtered = loanDisbursement.filter((item) => {
-        const empName = employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "";
-        const bankName = salaryBank.find(bank => bank.VID === item.AccountID)?.VName || "";
-        const searchString = [
-          empName,
-          item.VDate,
-          bankName,
-          item.ChequeNo,
-          item.ChequeDate,
-          item.Amount,
-          item.Installment,
-          item.VName
-        ].join(" ").toLowerCase();
-        return searchString.includes(searchText.toLowerCase());
-      });
-      setFilteredData(filtered);
-    }
-  }, [loanDisbursement, employee, salaryBank, searchText]);
 
   // form
   const formik = useFormik({
@@ -116,38 +85,38 @@ const LoanDisbursement = () => {
       if (editingGroup) {
         dispatch(updateLoanDisbursement({ ...values, VID: editingGroup.VID }));
       } else {
-        dispatch(submitLoanDisbursement(values)).then(() => { });
+        dispatch(submitLoanDisbursement(values)).then(() => {});
       }
       formik.resetForm();
     },
   });
-  // Handle edit click
-  // Handle edit click
-  const handleEditClick = (group) => {
-    // Find the employee record to get the ETypeID
-    const selectedEmployee = employee.find(
-      (emp) => String(emp.EmpID) === String(group.EmpID)
-    );
-    const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+    // Handle edit click
+// Handle edit click
+const handleEditClick = (group) => {
+  // Find the employee record to get the ETypeID
+  const selectedEmployee = employee.find(
+    (emp) => String(emp.EmpID) === String(group.EmpID)
+  );
+  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
 
-    setEditingGroup(group);
-    formik.setValues({
-      VID: group.VID,
-      VName: group.VName,
-      Amount: group.Amount,
-      AccountID: group.AccountID,
-      ChequeNo: group.ChequeNo,
-      Installment: group.Installment,
-      ChequeDate: group.ChequeDate.split("T")[0],
-      VDate: group.VDate.split("T")[0],
-      EmpID: group.EmpID,
-      ETypeID: employeeTypeId, // Set ETypeID from employee data
-      UID: 202,
-      CompanyID: 3001,
-      Tranzdatetime: "2025-04-24T10:19:32.099586Z",
-    });
-  };
-
+  setEditingGroup(group);
+  formik.setValues({
+    VID: group.VID,
+    VName: group.VName,
+    Amount: group.Amount,
+    AccountID: group.AccountID,
+    ChequeNo: group.ChequeNo,
+    Installment: group.Installment,
+    ChequeDate: group.ChequeDate.split("T")[0],
+    VDate: group.VDate.split("T")[0],
+    EmpID: group.EmpID,
+    ETypeID: employeeTypeId, // Set ETypeID from employee data
+    UID: 202,
+    CompanyID: 3001,
+    Tranzdatetime: "2025-04-24T10:19:32.099586Z",
+  });
+};
+  
   // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
@@ -160,235 +129,9 @@ const LoanDisbursement = () => {
     }
     setDeleteModal(false);
   };
-  const formatDate = (dateString) => {
-    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
-  };
-
-  const columns = [
-    {
-      name: "Employee",
-      selector: row => employee.find(emp => String(emp.EmpID) === String(row.EmpID))?.EName || "",
-      sortable: true,
-    },
-    {
-      name: "Date",
-      selector: row => formatDate(row.VDate),
-      sortable: true,
-    },
-    {
-      name: "Bank",
-      selector: row => salaryBank.find(bank => bank.VID === row.AccountID)?.VName || "",
-      sortable: true,
-    },
-    {
-      name: "Cheque No",
-      selector: row => row.ChequeNo,
-      sortable: true,
-    },
-    {
-      name: "Cheque Date",
-      selector: row => formatDate(row.ChequeDate),
-      sortable: true,
-    },
-    {
-      name: "Amount",
-      selector: row => row.Amount,
-      sortable: true,
-    },
-    {
-      name: "Installment",
-      selector: row => row.Installment,
-      sortable: true,
-    },
-    {
-      name: "Remarks",
-      selector: row => row.VName,
-      sortable: true,
-    },
-    {
-      name: "Action",
-      cell: row => (
-        <div className="d-flex gap-2">
-          <Button className="btn btn-soft-info btn-sm" onClick={() => handleEditClick(row)}>
-            <i className="bx bx-edit"></i>
-          </Button>
-          <Button
-            className="btn btn-soft-danger btn-sm"
-            onClick={() => handleDeleteClick(row.VID)}
-          >
-            <i className="ri-delete-bin-2-line"></i>
-          </Button>
-        </div>
-      ),
-      ignoreRowClick: true,
-      allowOverflow: true,
-      button: true,
-    },
-  ];
-
-  const customStyles = {
-    table: {
-      style: {
-        border: '1px solid #dee2e6',
-      },
-    },
-    headRow: {
-      style: {
-        backgroundColor: '#f8f9fa',
-        borderBottom: '1px solid #dee2e6',
-        fontWeight: '600',
-      },
-    },
-    rows: {
-      style: {
-        minHeight: '48px',
-        borderBottom: '1px solid #dee2e6',
-      },
-    },
-    cells: {
-      style: {
-        paddingLeft: '16px',
-        paddingRight: '16px',
-        borderRight: '1px solid #dee2e6',
-      },
-    },
-  };
-
-  const exportToExcel = () => {
-    const exportData = (loanDisbursement || []).map(item => ({
-      Employee: employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "",
-      Date: item.VDate,
-      Bank: salaryBank.find(bank => bank.VID === item.AccountID)?.VName || "",
-      ChequeNo: item.ChequeNo,
-      ChequeDate: item.ChequeDate,
-      Amount: item.Amount,
-      Installment: item.Installment,
-      Remarks: item.VName
-    }));
-    const worksheet = XLSX.utils.json_to_sheet(exportData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "LoanDisbursement");
-    XLSX.writeFile(workbook, "LoanDisbursement.xlsx");
-  };
-
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Loan Disbursement Report", 105, 15, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
-
-    const headers = [["Employee", "Date", "Bank", "Cheque No", "Cheque Date", "Amount", "Installment", "Remarks"]];
-    const data = (loanDisbursement || []).map(item => [
-      employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "",
-      item.VDate,
-      salaryBank.find(bank => bank.VID === item.AccountID)?.VName || "",
-      item.ChequeNo,
-      item.ChequeDate,
-      item.Amount,
-      item.Installment,
-      item.VName
-    ]);
-
-    autoTable(doc, {
-      head: headers,
-      body: data,
-      startY: 30,
-      margin: { top: 30 },
-      styles: { cellPadding: 4, fontSize: 10, valign: "middle", halign: "left" },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 10, fontStyle: "bold", halign: "center" },
-      didDrawPage: (data) => {
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(
-          `Page ${data.pageCount}`,
-          doc.internal.pageSize.width / 2,
-          doc.internal.pageSize.height - 10,
-          { align: "center" }
-        );
-      }
-    });
-
-    doc.save(`LoanDisbursement_${new Date().toISOString().slice(0, 10)}.pdf`);
-  };
-
-  const exportToWord = () => {
-    const data = loanDisbursement || [];
-    const tableRows = [];
-    const headers = ["Employee", "Date", "Bank", "Cheque No", "Cheque Date", "Amount", "Installment", "Remarks"];
-    // Header row
-    const headerCells = headers.map(key =>
-      new TableCell({
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: key,
-                bold: true,
-                size: 20,
-              }),
-            ],
-            alignment: AlignmentType.CENTER,
-          }),
-        ],
-        width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
-      })
-    );
-    tableRows.push(new TableRow({ children: headerCells }));
-
-    // Data rows
-    data.forEach(item => {
-      const rowCells = [
-        employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "",
-        item.VDate,
-        salaryBank.find(bank => bank.VID === item.AccountID)?.VName || "",
-        item.ChequeNo,
-        item.ChequeDate,
-        item.Amount,
-        item.Installment,
-        item.VName
-      ].map(value =>
-        new TableCell({
-          children: [
-            new Paragraph({
-              children: [
-                new TextRun({
-                  text: String(value ?? ""),
-                  size: 18,
-                }),
-              ],
-              alignment: AlignmentType.LEFT,
-            }),
-          ],
-          width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
-        })
-      );
-      tableRows.push(new TableRow({ children: rowCells }));
-    });
-
-    const doc = new Document({
-      sections: [
-        {
-          children: [
-            new Paragraph({
-              text: "Loan Disbursement Report",
-              heading: "Heading1",
-            }),
-            new Table({
-              rows: tableRows,
-              width: { size: 100, type: WidthType.PERCENTAGE },
-            }),
-          ],
-        },
-      ],
-    });
-
-    Packer.toBlob(doc).then(blob => {
-      saveAs(blob, "LoanDisbursement.docx");
-    });
-  };
+    const formatDate = (dateString) => {
+           return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+         };
   document.title = "Loan Disbursement | EMS";
   return (
     <React.Fragment>
@@ -524,7 +267,7 @@ const LoanDisbursement = () => {
                               ))}
                             </select>
                             {formik.touched.AccountID &&
-                              formik.errors.AccountID ? (
+                            formik.errors.AccountID ? (
                               <div className="text-danger">
                                 {formik.errors.AccountID}
                               </div>
@@ -545,7 +288,7 @@ const LoanDisbursement = () => {
                               {...formik.getFieldProps("ChequeNo")}
                             />
                             {formik.touched.ChequeNo &&
-                              formik.errors.ChequeNo ? (
+                            formik.errors.ChequeNo ? (
                               <div className="text-danger">
                                 {formik.errors.ChequeNo}
                               </div>
@@ -565,7 +308,7 @@ const LoanDisbursement = () => {
                               {...formik.getFieldProps("ChequeDate")}
                             />
                             {formik.touched.ChequeDate &&
-                              formik.errors.ChequeDate ? (
+                            formik.errors.ChequeDate ? (
                               <div className="text-danger">
                                 {formik.errors.ChequeDate}
                               </div>
@@ -606,7 +349,7 @@ const LoanDisbursement = () => {
                               {...formik.getFieldProps("Installment")}
                             />
                             {formik.touched.Installment &&
-                              formik.errors.Installment ? (
+                            formik.errors.Installment ? (
                               <div className="text-danger">
                                 {formik.errors.Installment}
                               </div>
@@ -642,42 +385,122 @@ const LoanDisbursement = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                  <div className="d-flex flex-wrap gap-2 mb-2">
-                    <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
-                    <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
-                    <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
-                    <CSVLink
-                      data={loanDisbursement || []}
-                      filename="LoanDisbursement.csv"
-                      className="btn btn-sm btn-secondary"
-                    >
-                      Export to CSV
-                    </CSVLink>
-                  </div>
-                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                    <div></div>
-                    <div>
-                      <input
-                        type="text"
-                        placeholder="Search"
-                        className="form-control form-control-sm"
-                        style={{ width: "200px" }}
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                      />
+                  <div className="Location-table" id="customerList">
+                    <Row className="g-4 mb-3">
+                      <Col className="col-sm">
+                        <div className="d-flex justify-content-sm-end">
+                          <div className="search-box ms-2">
+                            <input
+                              type="text"
+                              className="form-control-sm search"
+                            />
+                            <i className="ri-search-line search-icon"></i>
+                          </div>
+                        </div>
+                      </Col>
+                    </Row>
+
+                    <div className="table-responsive table-card mt-3 mb-1">
+                      <table
+                        className="table align-middle table-nowrap table-sm"
+                        id="customerTable"
+                      >
+                        <thead className="table-light">
+                          <tr>
+                            <th>Employee</th>
+                            <th>Date </th>
+                            <th>Bank</th>
+                            <th>Cheque No</th>
+                            <th> Date</th>
+                            <th>Amount</th>
+                            <th>Installment</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody className="list form-check-all">
+                          {loanDisbursement?.length > 0 ? (
+                            loanDisbursement.map((group) => (
+                              <tr key={group.VID}>
+                                <td>
+                                  {employee.find(
+                                    (emp) =>
+                                      String(emp.EmpID) === String(group.EmpID)
+                                  )?.EName || "N/A"}
+                                </td>
+                                <td>{formatDate(group.VDate)}</td>
+                                 <td>
+                                  {salaryBank.find(
+                                    (bank) => bank.VID === group.AccountID
+                                  )?.VName || "N/A"}
+                                </td>
+                                <td>{group.ChequeNo}</td>
+                                 <td>{formatDate(group.ChequeDate)}</td>
+                                <td>{group.Amount}</td>
+                                <td>{group.Installment}</td>
+                                <td>{group.VName}</td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <div className="edit ">
+                                      <Button className="btn btn-soft-info" onClick={() => handleEditClick(group)}>
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="11" className="text-center">
+                                No Loan found.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                      <div className="noresult" style={{ display: "none" }}>
+                        <div className="text-center">
+                          <lord-icon
+                            src="https://cdn.lordicon.com/msoeawqm.json"
+                            trigger="loop"
+                            colors="primary:#121331,secondary:#08a88a"
+                            style={{ width: "75px", height: "75px" }}
+                          ></lord-icon>
+                          <h5 className="mt-2">Sorry! No Result Found</h5>
+                          <p className="text-muted mb-0">
+                            We've searched more than 150+ Orders We did not find
+                            any orders for you search.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end">
+                      <div className="pagination-wrap hstack gap-2">
+                        <Link
+                          className="page-item pagination-prev disabled"
+                          to="#"
+                        >
+                          Previous
+                        </Link>
+                        <ul className="pagination Location-pagination mb-0"></ul>
+                        <Link className="page-item pagination-next" to="#">
+                          Next
+                        </Link>
+                      </div>
                     </div>
                   </div>
-                  <DataTable
-                    title="Loan Disbursement List"
-                    columns={columns}
-                    data={filteredData}
-                    customStyles={customStyles}
-                    pagination
-                    paginationPerPage={100}
-                    paginationRowsPerPageOptions={[100, 200, 500]}
-                    highlightOnHover
-                    responsive
-                  />
                 </CardBody>
               </Card>
             </Col>

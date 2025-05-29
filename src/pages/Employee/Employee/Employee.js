@@ -53,6 +53,7 @@ const Employee = () => {
 
   // Get employee data from location state
   const employeeData = location.state?.employee;
+  const filterValues = location.state?.filterValues; // Retrieve filter values
 
   // Format date for input type="date"
   const formatDate = (dateString) => {
@@ -127,7 +128,7 @@ const Employee = () => {
       EmpID: 0,
       ETypeID: 0,
       LocationID: "-1",
-      EmpCode: "1111111",
+      EmpCode: "0",
       AccCode: "0",
       MachineCode: "0",
       EName: "",
@@ -353,6 +354,7 @@ const Employee = () => {
           // ✅ Reset form only on success
           formik.resetForm();
         }
+         navigate("/employee-list", { state: { filterValues } });
       } catch (error) {
         // ❌ Don't reset form, show error if needed
         console.error("Error in form submission:", error);
@@ -412,7 +414,7 @@ const Employee = () => {
   };
   const handleCancel = () => {
     formik.resetForm();
-    navigate(-1); // Go back to previous page
+    navigate("/employee-list", { state: { filterValues } });
   };
   document.title = "Employee | EMS";
   return (

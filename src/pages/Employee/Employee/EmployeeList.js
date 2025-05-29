@@ -14,12 +14,18 @@ import {
   AccordionItem,
   Collapse,
 } from "reactstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
-import DeleteModal from "../../../Components/Common/DeleteModal";
-
+import { CSVLink } from "react-csv";
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
+import { saveAs } from "file-saver"; import DeleteModal from "../../../Components/Common/DeleteModal";
+import config from "../../../config"; // ✅ correct
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+
 import avatar1 from "../../../assets/images/users/avatar-11.png";
 import { useFormik } from "formik";
 import * as Yup from "yup";
@@ -41,20 +47,23 @@ import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 const EmployeeList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-    const [deleteModal, setDeleteModal] = useState(false);
-    const [deleteId, setDeleteId] = useState(null);
+  const location = useLocation(); // Access location to get filter state
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
   const [selectedDate, setSelectedDate] = useState("");
-  const [editingGroup, setEditingGroup] = useState(null); 
+  const [editingGroup, setEditingGroup] = useState(null);
   const [col, setCol] = useState(false);
   const [accordionDisabled, setAccordionDisabled] = useState(false);
   const [searchDisabled, setSearchDisabled] = useState(false);
+
+
   const t_col = () => {
     setCol(!col);
   };
   // Access Redux state
   const { loading, error, employee } = useSelector((state) => state.Employee);
   const { employeeType } = useSelector((state) => state.EmployeeType);
-  const { location } = useSelector((state) => state.Location);
+  const { location: locations } = useSelector((state) => state.Location);
   const { shift } = useSelector((state) => state.Shift);
   const { department } = useSelector((state) => state.Department);
   const { designation } = useSelector((state) => state.Designation);
@@ -76,6 +85,20 @@ const EmployeeList = () => {
     dispatch(getShift());
     dispatch(getEmployeeType());
   }, [dispatch]);
+  // Restore filter state from location.state
+  useEffect(() => {
+    if (location.state?.filterValues) {
+      console.log("Restoring filter values from state:", location.state.filterValues);
+      formik.setValues(location.state.filterValues);
+      setSearchText(location.state.filterValues.SearchFilter || "");
+      handleFilterSubmit(location.state.filterValues);
+      if (!location.state.filterValues.SearchFilter) {
+        setCol(false);
+        setAccordionDisabled(false);
+        handleAccordionToggle(true);
+      }
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (employee) {
@@ -92,29 +115,117 @@ const EmployeeList = () => {
   }, [searchText, employee]); // 🔁 FIXED dependency
   // Edit Click
   const handleEditClick = (row) => {
-    navigate("/employee", { state: { employee: row } });
+    navigate("/employee", { state: { employee: row, filterValues: formik.values } });
+    // navigate("/employee", { state: { employee: row } });
+    // window.open(`/employee?EmpID=${row.EmpID}`, '_blank', 'noopener,noreferrer');
+
   };
-   // Delete Data
-    const handleDeleteClick = (id) => {
-      setDeleteId(id);
-      setDeleteModal(true);
-    };
-    const handleDeleteConfirm = () => {
-      if (deleteId) {
-        dispatch(deleteEmployee(deleteId));
-      }
-      setDeleteModal(false);
-    };
+
+  const handleFilterSubmit = async (values) => {
+    // let apiUrl = "http://192.168.18.65:8001/ems/employeeSearch/?";
+    const apiUrl = `${config.api.API_URL}employeeSearch/?`;
+    let params = {};
+
+    if (values.SearchFilter && values.SearchFilter.trim() !== "") {
+      // Only use string param, ignore others
+      params.string = values.SearchFilter.trim();
+    } else {
+      // Use all other filters
+      params = {
+        string: "",
+        etypeID: values.ETypeID || 0,
+        ename: values.EmpID || 0,
+        fname: values.FName || "",
+        deptID: values.DeptID || 0,
+        desgID: values.DesgID || 0,
+        hodID: values.HODID || 0,
+        nic: values.NIC || "",
+        locationID: values.LocationID || 0,
+        shiftID: values.ShiftID || 0,
+        regionID: values.ReligionID || 0,
+        gradeID: values.GradeID || 0,
+        leftStatus: values.leftStatusId || "",
+        bloodGroup: values.BloodGroup || "",
+        salaryFrom: values.SalaryFrom || 0,
+        salaryTo: values.SalaryTo || 0,
+        joinDateFrom: values.JoinDateFrom || "1900-01-01",
+        joinDateTo: values.JoinDateTo || "1900-01-01",
+        resignDateFrom: values.ResignDateFrom || "1900-01-01",
+        resignDateTo: values.ResignDateTo || "1900-01-01",
+      };
+    }
+    // Build query string
+    const queryString = Object.entries(params)
+      .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+      .join("&");
+
+    const fullUrl = apiUrl + queryString;
+    console.log("API URL:", fullUrl);
+
+    // Fetch data
+    try {
+      const response = await fetch(fullUrl);
+      const data = await response.json();
+      setFilteredData(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Error fetching employee data:", err);
+    }
+  };
+  // Delete Data
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      dispatch(deleteEmployee(deleteId));
+    }
+    setDeleteModal(false);
+  };
+
   const columns = [
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.EmpID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
     {
       name: "Emp Code",
       selector: (row) => row.EmpCode,
       sortable: true,
     },
     {
-      name: "Emp Name",
-      selector: (row) => row.EName,
+      name: 'Employee Name',
+      selector: row => row.EName,
       sortable: true,
+      cell: row => (
+        <span
+          style={{ cursor: "pointer", color: "#007bff" }}
+          onClick={() => navigate(`/employee/${row.EmpID}`)}
+        >
+          {row.EName}
+        </span>
+      )
+      // name: "Emp Name",
+      // selector: (row) => row.EName,
+      // sortable: true,
     },
     {
       name: "Father Name",
@@ -186,6 +297,7 @@ const EmployeeList = () => {
       selector: (row) => row.BasicSalary,
       sortable: true,
     },
+
     {
       name: "Action",
       cell: (row) => (
@@ -208,7 +320,10 @@ const EmployeeList = () => {
       // allowOverflow: true,
       button: true,
     },
+
   ];
+
+
   const customStyles = {
     table: {
       style: {
@@ -272,27 +387,27 @@ const EmployeeList = () => {
       SalaryFrom: Yup.number().typeError('Must be a number'),
       SalaryTo: Yup.number().typeError('Must be a number'),
     }),
+    onSubmit: handleFilterSubmit,
+    // onSubmit: (values) => {
+    //   let payload = {};
 
-    onSubmit: (values) => {
-      let payload = {};
-      
-      if (values.SearchFilter && values.SearchFilter.trim() !== '') {
-        payload = { Search: values.SearchFilter.trim() };
-      } else {
-        // Create filtered payload without empty values
-        Object.entries(values).forEach(([key, value]) => {
-          if (key !== 'SearchFilter' && value !== '' && value !== null && value !== undefined) {
-            payload[key] = value;
-          }
-        });
-      }
+    //   if (values.SearchFilter && values.SearchFilter.trim() !== '') {
+    //     payload = { Search: values.SearchFilter.trim() };
+    //   } else {
+    //     // Create filtered payload without empty values
+    //     Object.entries(values).forEach(([key, value]) => {
+    //       if (key !== 'SearchFilter' && value !== '' && value !== null && value !== undefined) {
+    //         payload[key] = value;
+    //       }
+    //     });
+    //   }
 
-      console.log("Form submitted with:", payload);
-      // Apply your filters or dispatch actions here
-    },
+    //   console.log("Form submitted with:", payload);
+    //   // Apply your filters or dispatch actions here
+    // },
   });
 
-    // Handle search input changes
+  // Handle search input changes
   const handleSearchChange = (e) => {
     const value = e.target.value;
     formik.setFieldValue("SearchFilter", value);
@@ -316,6 +431,209 @@ const EmployeeList = () => {
     setSelectedDate(today);
   }, []);
 
+  // Export to Excel
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employee List");
+    XLSX.writeFile(workbook, "Employee-List.xlsx");
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Employee List", 105, 15, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
+
+    // Define your employee columns
+    const headers = [[
+      "Emp Code",
+      "Employee Name",
+      "Father Name",
+      "Designation",
+      "Birth Date",
+      "Joining Date",
+      "Probation Date",
+      "CNIC No",
+      "Mobile No",
+      "Email",
+      "Head Name",
+      "Company Code",
+      "Company Name",
+      "Is Active",
+      "Machine Card No",
+      "Basic Salary"
+    ]];
+
+    // Use all employee records for export
+    const data = (employee || []).map(emp => [
+      emp.EmpCode,
+      emp.EName,
+      emp.FName,
+      emp.DesignationTitle,
+      emp.DOB,
+      emp.DOJ,
+      emp.ProbitionDate,
+      emp.NIC,
+      emp.CellPhone,
+      emp.Email,
+      emp.HODName,
+      emp.CompanyCode,
+      emp.CompanyName,
+      emp.IsActive,
+      emp.MachineCardNo,
+      emp.BasicSalary
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 30,
+      margin: { top: 30 },
+      styles: { cellPadding: 4, fontSize: 8, valign: "middle", halign: "left" },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 9, fontStyle: "bold", halign: "center" },
+      columnStyles: {
+        0: { cellWidth: 18, halign: "center" },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 20 },
+        6: { cellWidth: 20 },
+        7: { cellWidth: 28 },
+        8: { cellWidth: 22 },
+        9: { cellWidth: 35 },
+        10: { cellWidth: 25 },
+        11: { cellWidth: 20 },
+        12: { cellWidth: 30 },
+        13: { cellWidth: 15 },
+        14: { cellWidth: 22 },
+        15: { cellWidth: 22 }
+      },
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(
+          `Page ${data.pageCount}`,
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" }
+        );
+      }
+    });
+
+    doc.save(`Employee_List_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+
+  // Export to Word
+  const exportToWord = () => {
+    const data = filteredData || [];
+    const tableRows = [];
+
+    // Define the columns you want to export
+    const headers = [
+      "Emp Code",
+      "Employee Name",
+      "Father Name",
+      "Designation",
+      "Birth Date",
+      "Joining Date",
+      "Probation Date",
+      "CNIC No",
+      "Mobile No",
+      "Email",
+      "Head Name",
+      "Company Code",
+      "Company Name",
+      "Is Active",
+      "Machine Card No",
+      "Basic Salary"
+    ];
+
+    // Add header row
+    const headerCells = headers.map(key =>
+      new TableCell({
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: key,
+                bold: true,
+                size: 20,
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+          }),
+        ],
+        width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
+      })
+    );
+    tableRows.push(new TableRow({ children: headerCells }));
+
+    // Add data rows
+    data.forEach(item => {
+      const rowCells = [
+        item.EmpCode,
+        item.EName,
+        item.FName,
+        item.DesignationTitle,
+        item.DOB,
+        item.DOJ,
+        item.ProbitionDate,
+        item.NIC,
+        item.CellPhone,
+        item.Email,
+        item.HODName,
+        item.CompanyCode,
+        item.CompanyName,
+        item.IsActive,
+        item.MachineCardNo,
+        item.BasicSalary
+      ].map(value =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: String(value ?? ""),
+                  size: 18,
+                }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+          ],
+          width: { size: 100 / headers.length, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
+
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Employee List",
+              heading: "Heading1",
+            }),
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, "Employee-List.docx");
+    });
+  };
+
   const getMinDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
@@ -338,7 +656,7 @@ const EmployeeList = () => {
                   }}
                 >
                   <h4 className="card-title mb-0 flex-grow-1">
-                    Employee Report
+                    Employee Filter
                   </h4>
                   <div className="flex-shrink-0">
                     <Button
@@ -349,7 +667,14 @@ const EmployeeList = () => {
                     >
                       <i className="align-bottom me-1"></i>Fetch
                     </Button>
-                    <Button color="dark" className="add-btn me-1 py-1">
+                    <Button color="dark" className="add-btn me-1 py-1" onClick={() => {
+                      formik.resetForm();
+                      setFilteredData(employee);
+                      setCol(false);
+                      setAccordionDisabled(false);
+                      setSearchDisabled(false);
+                    }}>
+
                       <i className="align-bottom me-1"></i> Cancel
                     </Button>
                     <Button
@@ -361,22 +686,22 @@ const EmployeeList = () => {
                     </Button>
                   </div>
                 </CardHeader>
-             
-              <div className="search-box">
-                <Input
-                  type="text"
-                  className="form-control"
-                  placeholder="Search for name..."
-                  name="SearchFilter"
-                  value={formik.values.SearchFilter}
-                  onChange={handleSearchChange}
-                  onBlur={formik.handleBlur}
-                  disabled={searchDisabled}
-                />
-                <i className="ri-search-line search-icon"></i>
-              </div>
-            </Col>
-            <Accordion className="lefticon-accordion custom-accordionwithicon accordion-border-box">
+
+                <div className="search-box">
+                  <Input
+                    type="text"
+                    className="form-control"
+                    placeholder="Search for name..."
+                    name="SearchFilter"
+                    value={formik.values.SearchFilter}
+                    onChange={handleSearchChange}
+                    onBlur={formik.handleBlur}
+                    disabled={searchDisabled}
+                  />
+                  <i className="ri-search-line search-icon"></i>
+                </div>
+              </Col>
+              <Accordion className="lefticon-accordion custom-accordionwithicon accordion-border-box">
                 <AccordionItem>
                   <h2 className="accordion-header bg-light" id="headingOne">
                     <button
@@ -389,7 +714,7 @@ const EmployeeList = () => {
                       Show Advance Filter
                     </button>
                   </h2>
-  
+
                   <Collapse isOpen={col} className="accordion-collapse">
                     <div className="accordion-body p-0">
                       <Col lg={12}>
@@ -431,7 +756,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.ETypeID &&
-                                    formik.errors.ETypeID ? (
+                                      formik.errors.ETypeID ? (
                                       <div className="text-danger">
                                         {formik.errors.ETypeID}
                                       </div>
@@ -472,7 +797,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.EmpID &&
-                                    formik.errors.EmpID ? (
+                                      formik.errors.EmpID ? (
                                       <div className="text-danger">
                                         {formik.errors.EmpID}
                                       </div>
@@ -495,7 +820,7 @@ const EmployeeList = () => {
                                       placeholder="Father Name"
                                     />
                                     {formik.touched.EmpID &&
-                                    formik.errors.EmpID ? (
+                                      formik.errors.EmpID ? (
                                       <div className="text-danger">
                                         {formik.errors.EmpID}
                                       </div>
@@ -536,7 +861,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.DeptID &&
-                                    formik.errors.DeptID ? (
+                                      formik.errors.DeptID ? (
                                       <div className="text-danger">
                                         {formik.errors.DeptID}
                                       </div>
@@ -576,7 +901,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.DesgID &&
-                                    formik.errors.DesgID ? (
+                                      formik.errors.DesgID ? (
                                       <div className="text-danger">
                                         {formik.errors.DesgID}
                                       </div>
@@ -637,8 +962,8 @@ const EmployeeList = () => {
                                       onBlur={formik.handleBlur} // Track field blur
                                     >
                                       <option value="-1">---Select---</option>
-                                      {location?.length > 0 ? (
-                                        location.map((group) => (
+                                      {locations?.length > 0 ? (
+                                        locations.map((group) => (
                                           <option
                                             key={group.VID}
                                             value={group.VID}
@@ -653,7 +978,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.LocationID &&
-                                    formik.errors.LocationID ? (
+                                      formik.errors.LocationID ? (
                                       <div className="text-danger">
                                         {formik.errors.LocationID}
                                       </div>
@@ -693,7 +1018,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.ShiftID &&
-                                    formik.errors.ShiftID ? (
+                                      formik.errors.ShiftID ? (
                                       <div className="text-danger">
                                         {formik.errors.ShiftID}
                                       </div>
@@ -734,7 +1059,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.ReligionID &&
-                                    formik.errors.ReligionID ? (
+                                      formik.errors.ReligionID ? (
                                       <div className="text-danger">
                                         {formik.errors.ReligionID}
                                       </div>
@@ -775,7 +1100,7 @@ const EmployeeList = () => {
                                       )}
                                     </select>
                                     {formik.touched.GradeID &&
-                                    formik.errors.GradeID ? (
+                                      formik.errors.GradeID ? (
                                       <div className="text-danger">
                                         {formik.errors.GradeID}
                                       </div>
@@ -801,7 +1126,7 @@ const EmployeeList = () => {
                                   </div>
                                 </Col>
                                 <Col xxl={2} md={3}>
-                                 <div className="mb-3">
+                                  <div className="mb-3">
                                     <Label htmlFor="leftStatusId" className="form-label">
                                       Left Status
                                     </Label>
@@ -815,10 +1140,10 @@ const EmployeeList = () => {
                                     >
                                       <option value="-1">---Select---</option>
                                       <option value="1">Left</option>
-                                      <option value="2">Not Left</option> 
+                                      <option value="2">Not Left</option>
                                     </select>
                                     {formik.touched.leftStatusId &&
-                                    formik.errors.leftStatusId ? (
+                                      formik.errors.leftStatusId ? (
                                       <div className="text-danger">
                                         {formik.errors.leftStatusId}
                                       </div>
@@ -839,7 +1164,7 @@ const EmployeeList = () => {
                                       className="form-control-sm"
                                       id="BloodGroup"
                                       name="BloodGroup"
-                                       {...formik.getFieldProps("BloodGroup")}
+                                      {...formik.getFieldProps("BloodGroup")}
                                       placeholder="Blood Group"
                                     />
                                   </div>
@@ -873,7 +1198,7 @@ const EmployeeList = () => {
                                       className="form-control-sm"
                                       id="SalaryFrom"
                                       name="SalaryFrom"
-                                       {...formik.getFieldProps("SalaryFrom")}
+                                      {...formik.getFieldProps("SalaryFrom")}
                                       placeholder="Salary From"
                                     />
                                   </div>
@@ -986,7 +1311,7 @@ const EmployeeList = () => {
                 </AccordionItem>
               </Accordion>
               {/* Optional grid */}
-              <Col lg={12} className="bg-white p-1">
+              {/* <Col lg={12} className="bg-white p-1">
                 <Row className="mt-2 p-2">
                   <Col xxl={2} md={3}>
                     <div className="form-check mt-3" dir="ltr">
@@ -1103,7 +1428,7 @@ const EmployeeList = () => {
                     </div>
                   </Col>
                 </Row>
-              </Col>
+              </Col> */}
             </Form>
           </Row>
         </Container>
@@ -1113,6 +1438,18 @@ const EmployeeList = () => {
             <Col xxl={12} md={12}>
               <Card className="shadow-sm">
                 <CardBody>
+                  <div className="d-flex flex-wrap gap-2 mb-2">
+                    <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
+                    <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
+                    <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
+                    <CSVLink
+                      data={filteredData || []}
+                      filename="designations.csv"
+                      className="btn btn-sm btn-secondary"
+                    >
+                      Export to CSV
+                    </CSVLink>
+                  </div>
                   <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
                     <div></div>
                     <div>
@@ -1129,7 +1466,7 @@ const EmployeeList = () => {
                   <DataTable
                     title="Employee List"
                     columns={columns}
-                    data={filteredData}
+                    data={Array.isArray(filteredData) ? filteredData : []} // <-- Always an array
                     pagination
                     paginationPerPage={100}
                     paginationRowsPerPageOptions={[100, 200, 500]}
@@ -1137,13 +1474,14 @@ const EmployeeList = () => {
                     responsive
                     customStyles={customStyles}
                   />
+
                 </CardBody>
               </Card>
             </Col>
           </Row>
         </Container>
       </div>
-        <DeleteModal
+      <DeleteModal
         show={deleteModal}
         onCloseClick={() => setDeleteModal(!deleteModal)}
         onDeleteClick={handleDeleteConfirm}

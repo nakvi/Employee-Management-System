@@ -86,16 +86,20 @@ import ShiftReducer from "./setup/shift/reducer";
 import AttendanceGroupReducer from "./setup/attendanceGroup/reducer"; 
 import AllowanceDeductionGroupReducer from "./setup/allowanceDeductionGroup/reducer"; 
 import AllowanceDeductionCategoryReducer from "./setup/allowanceDeductionCategory/reducer"; 
+import AllowanceDeductionCategoryByNameReducer from "./setup/allowanceDeductionCategoryByName/reducer";
 import HolidayTypeReducer from "./setup/holidayType/reducer"; 
 // employee
 import EmployeeReducer from "./employee/employee/reducer";
 import LoanDisbursementReducer from "./employee/loanDisbursement/reducer";
 import SalaryIncrementReducer from "./employee/salaryIncrement/reducer";
 import EmployeeLocationTransferReducer from "./employee/employeeTransfer/reducer";
-
+import SalaryAllowanceDeductionReducer from "./employee/salaryAllowanceDeduction/reducer";
+import AllowanceDeductionDetailsSlice from "./employee/allowanceDeductionDetails/reducer";
 import EmployeeTypeReducer from "./employee/employeeType/reducer";
 import ReligionReducer from "./employee/religion/reducer";
 import GenderReducer from "./employee/gender/reducer";
+import AdvanceReducer from "./employee/advance/reducer"
+import LocalSaleReducer from "./employee/localSales/reducer"
 
 // Administration
 import RolesReducer from "./administration/roles/reducer";
@@ -107,6 +111,7 @@ import SecUserLocationReducer from "./administration/secUserLocation/reducer";
 import SecUserRoleReducer from "./administration/secUserRole/reducer";
 // Attendance
 import AttendanceEntryReducer from "./Attendance/AttendanceEntry/reducer"; // Correct import
+import AttendanceChangeReducer from "./Attendance/AttendanceChange/reducer";
 
 
 
@@ -148,6 +153,7 @@ const rootReducer = combineReducers({
     AllowanceDeductionType:AllowanceDeductionTypeReducer,
     AllowanceDeductionGroup: AllowanceDeductionGroupReducer, 
     AllowanceDeductionCategory: AllowanceDeductionCategoryReducer,
+    AllowanceDeductionCategoryByName:AllowanceDeductionCategoryByNameReducer,
     AttendanceCode:AttendanceCodeReducer,
     Ramazan:RamazanReducer,
     Holiday: HolidayReducer, 
@@ -160,19 +166,25 @@ const rootReducer = combineReducers({
     LoanDisbursement: LoanDisbursementReducer, 
     SalaryIncrement: SalaryIncrementReducer,  
     EmployeeLocationTransfer:EmployeeLocationTransferReducer,
+    SalaryAllowanceDeduction:SalaryAllowanceDeductionReducer,
+    AllowanceDeductionDetails:AllowanceDeductionDetailsSlice,
     EmployeeType:EmployeeTypeReducer,
     Religion:ReligionReducer,
+    Advance:AdvanceReducer,
     Gender:GenderReducer,
-    Role: RolesReducer, // Here is my work 01/23/2025
-    RoleRight: RolesRightReducer, // Here is my work 01/23/2025
+    LocalSale:LocalSaleReducer,
+    // Roles And Permission
+    Role: RolesReducer, 
+    RoleRight: RolesRightReducer, 
     PagePermission: PagePermissionReducer, // Here is my work 01/23/2025
     User: UserReducer, // Here is my work 01/23/2025
     SecUserCompany: SecUserCompanyReducer, // Here is my work 01/23/2025
     SecUserLocation: SecUserLocationReducer, // Here is my work 01/23/2025
-    SecUserRole: SecUserRoleReducer, // Here is my work 01/23/2025
+    SecUserRole: SecUserRoleReducer, 
 
     // Add Attendance Entry Reducer
     AttendanceEntry: AttendanceEntryReducer, // Uncomment this line if you have an AttendanceEntry reducer
+    AttendanceChange: AttendanceChangeReducer,
 });
 
 export default rootReducer;

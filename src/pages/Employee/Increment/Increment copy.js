@@ -111,7 +111,7 @@ const Increment = () => {
   };
   // Delete Data
   const handleDeleteClick = (id) => {
-    setDeleteId(id);
+;    setDeleteId(id);
     setDeleteModal(true);
   };
   const handleDeleteConfirm = () => {
@@ -119,7 +119,7 @@ const Increment = () => {
       dispatch(deleteSalaryIncrement(deleteId));
     }
     setDeleteModal(false);
-  };
+  }
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
