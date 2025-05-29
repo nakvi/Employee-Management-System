@@ -24,8 +24,7 @@ const config = {
     APP_ID: "",
   },
   api: {
-    API_URL: "http://192.168.18.65:8001/ems/",
-    
+    API_URL: "https://192.168.18.65:8001/ems/",
   },
 };
 
