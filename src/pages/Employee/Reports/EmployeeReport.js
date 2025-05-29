@@ -387,6 +387,22 @@ const EmployeeReport = () => {
                                     />
                                   </div>
                                 </Col>
+                                <Col xxl={4} md={9}>
+                                  <div className="mb-3">
+                                    <Label
+                                      htmlFor="departmentGroupInput"
+                                      className="form-label"
+                                    >
+                                      Report Title
+                                    </Label>
+                                    <Input
+                                      type="text"
+                                      className="form-control-sm"
+                                      id="VName"
+                                      placeholder="Report Title"
+                                    />
+                                  </div>
+                                </Col>
                                 <Row>
                                   <Col xxl={2} md={2}>
                                     <Label
@@ -508,7 +524,7 @@ const EmployeeReport = () => {
                         checked
                       />
                       <Label className="form-check-label" htmlFor="VIN">
-                        Department wise list
+                        Employee Records
                       </Label>
                     </div>
                   </Col>
@@ -522,7 +538,7 @@ const EmployeeReport = () => {
                         value="BOTH"
                       />
                       <Label className="form-check-label" htmlFor="BOTH">
-                        Export to Excel
+                       Department Strength
                       </Label>
                     </div>
                   </Col>
@@ -536,7 +552,7 @@ const EmployeeReport = () => {
                         value="VOUT"
                       />
                       <Label className="form-check-label" htmlFor="VOUT">
-                        Employee Strength
+                        Employee On Date
                       </Label>
                     </div>
                   </Col>
@@ -565,7 +581,7 @@ const EmployeeReport = () => {
                         value="VIN"
                       />
                       <Label className="form-check-label" htmlFor="VIN">
-                        Employee Transfer
+                        Employee Hierarchy
                       </Label>
                     </div>
                   </Col>
@@ -579,11 +595,11 @@ const EmployeeReport = () => {
                         value="VIN"
                       />
                       <Label className="form-check-label" htmlFor="VIN">
-                        Employee on Date
+                        Trial Employee
                       </Label>
                     </div>
                   </Col>
-                  <Col xxl={2} md={3}>
+                  {/* <Col xxl={2} md={3}>
                     <div className="form-check mt-3" dir="ltr">
                       <Input
                         type="radio"
@@ -610,7 +626,7 @@ const EmployeeReport = () => {
                         Expected OverTime
                       </Label>
                     </div>
-                  </Col>
+                  </Col> */}
                 </Row>
               </Col>
             </Form>

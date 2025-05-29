@@ -288,9 +288,6 @@ const MonthlyAttendanceReport = () => {
                             />
                           </div>
                         </Col>
-                      </Row>
-                      {/* Heading */}
-                      <Row>
                         <Col xxl={2} md={9}>
                           <div className="mb-3 mt-2">
                             <Label
@@ -308,6 +305,7 @@ const MonthlyAttendanceReport = () => {
                           </div>
                         </Col>
                       </Row>
+                      {/* Heading */}
                       {/* checkbox grid */}
                       <Row style={{ border: "1px dotted lightgray" }}>
                         <Col xxl={2} md={2}>
@@ -397,6 +395,62 @@ const MonthlyAttendanceReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
+                              Attendance Card Salary
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Attendance Sheet
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Attendance Summary
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
+                              Latecomers
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mt-3" dir="ltr">
+                            <Input
+                              type="radio"
+                              className="form-check-input"
+                              id="VIN"
+                              name="VType"
+                              value="VIN"
+                            />
+                            <Label className="form-check-label" htmlFor="VIN">
                               Absentee List
                             </Label>
                           </div>
@@ -411,26 +465,13 @@ const MonthlyAttendanceReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Summary
+                              OT List
                             </Label>
                           </div>
                         </Col>
+
                         <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              Attendance Logs
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
+                          <div className="form-check mt-3 " dir="ltr">
                             <Input
                               type="radio"
                               className="form-check-input"
@@ -453,7 +494,7 @@ const MonthlyAttendanceReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              OverTime
+                              Leave Balance
                             </Label>
                           </div>
                         </Col>
@@ -467,22 +508,7 @@ const MonthlyAttendanceReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              OverTime List
-                            </Label>
-                          </div>
-                        </Col>
-
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3 " dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="VIN"
-                              name="VType"
-                              value="VIN"
-                            />
-                            <Label className="form-check-label" htmlFor="VIN">
-                              OverTime Sheet
+                              Leaves of Employee
                             </Label>
                           </div>
                         </Col>
@@ -496,11 +522,11 @@ const MonthlyAttendanceReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Leave Balance Month wise
+                              Leave Balance Month Wise
                             </Label>
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                         <Col xxl={2} md={2}>
                           <div className="form-check mt-3" dir="ltr">
                             <Input
                               type="radio"
@@ -510,11 +536,11 @@ const MonthlyAttendanceReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Leave Balance of Employee
+                              Monthly Hrs
                             </Label>
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                         <Col xxl={2} md={2}>
                           <div className="form-check mt-3" dir="ltr">
                             <Input
                               type="radio"
@@ -524,11 +550,109 @@ const MonthlyAttendanceReport = () => {
                               value="VIN"
                             />
                             <Label className="form-check-label" htmlFor="VIN">
-                              Rester Report
+                              Roster
                             </Label>
                           </div>
                         </Col>
                       </Row>
+                      {/* checkbox grid */}
+                      <Row className="align-items-center mt-2 mb-2" style={{ borderTop: "1px dotted #ccc", paddingTop: "10px" }}>
+                        <Col xs="auto">
+                          <strong style={{ fontSize: "14px" }}>Export</strong>
+                        </Col>
+                        
+                        <Col xs="auto">
+                          <div className="form-check form-check-inline">
+                            <Input className="form-check-input" type="radio" id="exportAttendanceLog" />
+                            <Label className="form-check-label" for="exportAttendanceLog">Attendance Log</Label>
+                          </div>
+                        </Col>
+                        
+                        <Col xs="auto">
+                          <div className="form-check form-check-inline">
+                            <Input className="form-check-input" type="radio" id="exportCard" />
+                            <Label className="form-check-label" for="exportCard">Card</Label>
+                          </div>
+                        </Col>
+                        
+                        <Col xs="auto">
+                          <div className="form-check form-check-inline">
+                            <Input className="form-check-input" type="radio" id="exportDuplicateLeaves" />
+                            <Label className="form-check-label" for="exportDuplicateLeaves">Duplicate Leaves</Label>
+                          </div>
+                        </Col>
+                        
+                        <Col xs="auto">
+                          <div className="form-check form-check-inline">
+                            <Input className="form-check-input" type="radio" id="exportABHDWO" />
+                            <Label className="form-check-label" for="exportABHDWO">Att with AB/HD/WO</Label>
+                          </div>
+                        </Col>
+                      </Row>
+
+                      {/* <Row style={{ border: "1px dotted lightgray" }}>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="SaturdayHalfTime"
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="SaturdayHalfTime"
+                            >
+                              Attendance Log
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="SaturdayHalfTime"
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="SaturdayHalfTime"
+                            >
+                              Card
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="SaturdayHalfTime"
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="SaturdayHalfTime"
+                            >
+                              Duplicate Leaves
+                            </Label>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="form-check mb-2 mt-2 ">
+                            <Input
+                              className="form-check-input"
+                              type="checkbox"
+                              id="SaturdayHalfTime"
+                            />
+                            <Label
+                              className="form-check-label"
+                              for="SaturdayHalfTime"
+                            >
+                              Att with AB/HD/WO
+                            </Label>
+                          </div>
+                        </Col>
+                      </Row> */}
+                      {/* Optional grid */}
                     </div>
                   </CardBody>
                 </Form>
