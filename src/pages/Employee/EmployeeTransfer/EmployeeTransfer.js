@@ -58,17 +58,33 @@ const EmployeeTransfer = () => {
     dispatch(getEmployeeType());
     dispatch(getEmployee());
   }, [dispatch]);
+
+  // Filter employeeLocationTransfer based on searchText
   useEffect(() => {
-  if (employeeLocationTransfer) {
-    const filtered = employeeLocationTransfer.filter((item) =>
-      Object.values(item)
-        .join(" ")
-        .toLowerCase()
-        .includes(searchText.toLowerCase())
-    );
-    setFilteredData(filtered);
-  }
-}, [employeeLocationTransfer, searchText]);
+    if (employeeLocationTransfer) {
+      const filtered = employeeLocationTransfer.filter((item) => {
+        // Get employee name
+        const empName = employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "";
+        // Get old location name
+        const oldLoc = location.find(loc => String(loc.VID) === String(item.CurrentLocationID))?.VName || "";
+        // Get new location name
+        const newLoc = location.find(loc => String(loc.VID) === String(item.LocationID))?.VName || "";
+
+        // Combine all searchable fields
+        const searchString = [
+          item.EmpID,
+          empName,
+          oldLoc,
+          newLoc,
+          item.VDate,
+          item.VName
+        ].join(" ").toLowerCase();
+
+        return searchString.includes(searchText.toLowerCase());
+      });
+      setFilteredData(filtered);
+    }
+  }, [employeeLocationTransfer, searchText, employee, location]);
 
   // Formik setup
   const formik = useFormik({
@@ -113,12 +129,9 @@ const EmployeeTransfer = () => {
               VID: editingGroup.VID,
             })
           ).unwrap();
-          toast.success("Employee transfer updated successfully!");
           setEditingGroup(null);
         } else {
-          await dispatch(submitEmployeeLocationTransfer(transformedValues)).unwrap();
-          toast.success("Employee transfer submitted successfully!");
-        }
+          await dispatch(submitEmployeeLocationTransfer(transformedValues)).unwrap();        }
         resetForm({
           values: {
             ...formik.initialValues,
@@ -133,12 +146,12 @@ const EmployeeTransfer = () => {
   });
 
   // Set default ETypeID and reset EmpID when employeeType loads or ETypeID changes
-  useEffect(() => {
-    if (employeeType.length > 0 && !formik.values.ETypeID) {
-      formik.setFieldValue("ETypeID", employeeType[0].VID);
-    }
-    formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
-  }, [employeeType, formik.values.ETypeID]);
+  // useEffect(() => {
+  //   if (employeeType.length > 0 && !formik.values.ETypeID) {
+  //     formik.setFieldValue("ETypeID", employeeType[0].VID);
+  //   }
+  //   formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
+  // }, [employeeType, formik.values.ETypeID]);
 
   // Set CurrentLocationID based on selected EmpID
   useEffect(() => {
@@ -164,6 +177,11 @@ const EmployeeTransfer = () => {
 
   // Handle edit click
   const handleEditClick = (group) => {
+      // Find the employee record to get the ETypeID
+  const selectedEmployee = employee.find(
+    (emp) => String(emp.EmpID) === String(group.EmpID)
+  );
+  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
     setEditingGroup(group);
     formik.setValues({
       VID: group.VID,
@@ -171,7 +189,7 @@ const EmployeeTransfer = () => {
       VNo: group.VNo,
       VDate: group.VDate.split("T")[0], // Adjust date format for input
       EmpID: group.EmpID,
-      ETypeID: group.ETypeID || employeeType[0]?.VID || "",
+      ETypeID: employeeTypeId, 
       CurrentLocationID: group.CurrentLocationID,
       LocationID: group.LocationID,
       IsPosted: group.IsPosted,
@@ -194,27 +212,25 @@ const EmployeeTransfer = () => {
   const handleDeleteConfirm = async () => {
     try {
       await dispatch(deleteEmployeeLocationTransfer(deleteId)).unwrap();
-      toast.success("Employee transfer deleted successfully!");
       setShowDeleteModal(false);
       setDeleteId(null);
     } catch (err) {
-      toast.error("Failed to delete employee transfer.");
     }
   };
   const columns = [
   {
     name: "Employee",
-    selector: row => employee?.find(emp => emp.EmpID === row.EmpID)?.EName || "",
+    selector: row => employee?.find(emp => String(emp.EmpID) === String(row.EmpID))?.EName || "", 
     sortable: true,
   },
   {
     name: "Old Location",
-    selector: row => location?.find(loc => loc.VID === row.CurrentLocationID)?.VName || "",
+    selector: row => location?.find(loc => String(loc.VID) === String(row.CurrentLocationID))?.VName || "",
     sortable: true,
   },
   {
     name: "New Location",
-    selector: row => location?.find(loc => loc.VID === row.LocationID)?.VName || "",
+    selector: row => location?.find(loc => String(loc.VID) === String(row.LocationID))?.VName || "",
     sortable: true,
   },
   {
@@ -648,10 +664,8 @@ const exportToWord = () => {
                             
                             <tr key={group.VID}>
                               <td>
-                                {employee?.find(
-                                  (emp) => emp.EmpID === group.EmpID
-                                )?.EName || ""}
-                              </td>
+                                  {employee.find((emp) => String(emp.EmpID) === String(group.EmpID))?.EName|| "N/A"}
+                                </td>
                               <td>
                                 {location?.find(
                                   (loc) => loc.VID === group.CurrentLocationID
