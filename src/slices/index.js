@@ -112,6 +112,7 @@ import SecUserLocationReducer from "./administration/secUserLocation/reducer";
 import SecUserRoleReducer from "./administration/secUserRole/reducer";
 // Attendance
 import AttendanceEntryReducer from "./Attendance/AttendanceEntry/reducer"; // Correct import
+import AttendanceChangeReducer from "./Attendance/AttendanceChange/reducer";
 
 
 
@@ -186,6 +187,7 @@ const rootReducer = combineReducers({
 
     // Add Attendance Entry Reducer
     AttendanceEntry: AttendanceEntryReducer, // Uncomment this line if you have an AttendanceEntry reducer
+    AttendanceChange: AttendanceChangeReducer,
 });
 
 export default rootReducer;

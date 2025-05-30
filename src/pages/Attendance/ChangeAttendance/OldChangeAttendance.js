@@ -136,8 +136,6 @@ const ChangeAttendance = () => {
         row.post &&
         (row.timeIn !== originalRow.timeIn ||
          row.timeOut !== originalRow.timeOut ||
-         row.timeIn2 !== originalRow.timeIn2 ||
-         row.timeOut2 !== originalRow.timeOut2 ||
          row.remarks !== originalRow.remarks)
       );
     });
@@ -158,8 +156,8 @@ const ChangeAttendance = () => {
         shiftID: 3, // Assuming a default shiftID as per your example
         dateIn1: row.timeIn ? `${formData.vdate} ${row.timeIn}:00` : "1900-01-01 00:00:00",
         dateOut1: row.timeOut ? `${formData.vdate} ${row.timeOut}:00` : "1900-01-01 00:00:00",
-        dateIn2: row.timeIn2 ? `${formData.vdate} ${row.timeIn2}:00` : "1900-01-01 00:00:00",
-        dateOut2: row.timeOut2 ? `${formData.vdate} ${row.timeOut2}:00` : "1900-01-01 00:00:00",
+        dateIn2: "1900-01-01",
+        dateOut2: "1900-01-01",
         remarks: row.remarks || "",
         uID: 101, // As per your example
         computerName: "HR-PC-001", // As per your example
@@ -304,8 +302,6 @@ const ChangeAttendance = () => {
                             <th>Total Time</th>
                             <th>Time In</th>
                             <th>Time Out</th>
-                            <th>Time In 2</th>
-                            <th>Time Out 2</th>
                             <th>Remarks</th>
                             <th>
                               <Input className="form-check-input me-1" type="checkbox" />
@@ -338,26 +334,6 @@ const ChangeAttendance = () => {
                                   value={item.timeOut || ""}
                                   onChange={(e) =>
                                     handleTableInputChange(index, "timeOut", e.target.value)
-                                  }
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="time"
-                                  className="form-control form-control-sm"
-                                  value={item.timeIn2 || ""}
-                                  onChange={(e) =>
-                                    handleTableInputChange(index, "timeIn2", e.target.value)
-                                  }
-                                />
-                              </td>
-                              <td>
-                                <Input
-                                  type="time"
-                                  className="form-control form-control-sm"
-                                  value={item.timeOut2 || ""}
-                                  onChange={(e) =>
-                                    handleTableInputChange(index, "timeOut2", e.target.value)
                                   }
                                 />
                               </td>

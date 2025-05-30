@@ -115,3 +115,4 @@ export * from "./administration/secUserRole/thunk";
 
 // Attendance
 export * from "./Attendance/AttendanceEntry/thunk";
+export * from "./Attendance/AttendanceChange/thunk";
