@@ -64,7 +64,7 @@ const EmployeeLocationTransferSlice = createSlice({
       })
       .addCase(deleteEmployeeLocationTransfer.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to delete Employee Location Transfer.";
+        state.error = action.payload || "Failed to delete Employee Transfor.";
       });
   },
 });
