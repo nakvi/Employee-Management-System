@@ -53,7 +53,7 @@ const TrialEmployee = () => {
   // Formik setup
   const formik = useFormik({
     initialValues: {
-      EmpID: "",
+      EmpIDOld: "",
       ETypeID: "",
       DeptID: 0,
       HireType: "",
@@ -76,7 +76,7 @@ const TrialEmployee = () => {
       ETypeID: Yup.number()
         .min(1, "Employee Type is required")
         .required("Required"),
-      EmpID: Yup.string().required("Employee is required"),
+      EmpIDOld: Yup.string().required("Employee is required"),
       DeptID: Yup.number()
         .min(1, "Department Type is required")
         .required("Required"),
@@ -118,49 +118,50 @@ const TrialEmployee = () => {
   });
   // Handle edit button click
   const handleEditClick = (group) => {
-       // Find the employee record to get the ETypeID
-  const selectedEmployee = employee.find(
-    (emp) => String(emp.EmpID) === String(group.EmpID)
-  );
-  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+    // Find the employee record to get the ETypeID
+    const selectedEmployee = employee.find(
+      (emp) => String(emp.EmpID) === String(group.EmpIDOld)
+    );
+    const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
     setEditingGroup(group);
     formik.setValues({
-      EmpID:group.EmpID ,
-       ETypeID: employeeTypeId,
-       DeptID: group.DeptID ,
-      HireType:group.HireType ,
-      EName:group.EName ,
-      FName:group.FName ,
-      ShiftID:group.ShiftID ,
-      DOJ:formatDateForInput(group.DOJ),
-      DOB:formatDateForInput(group.DOB) ,
-      Address:group.Address ,
-      Reference:group.Reference ,
-      TelePhone:group.TelePhone ,
-      NIC:group.NIC ,
-      ClosingDate:formatDateForInput(group.ClosingDate) ,
-      ClosingStatus:group.ClosingStatus ,
+      EmpIDOld: group.EmpIDOld,
+      ETypeID: employeeTypeId,
+      DeptID: group.DeptID,
+      HireType: group.HireType,
+      EName: group.EName,
+      FName: group.FName,
+      ShiftID: group.ShiftID,
+      DOJ: formatDateForInput(group.DOJ),
+      DOB: formatDateForInput(group.DOB),
+      Address: group.Address,
+      Reference: group.Reference,
+      TelePhone: group.TelePhone,
+      NIC: group.NIC,
+      ClosingDate: formatDateForInput(group.ClosingDate),
+      ClosingStatus: group.ClosingStatus,
       UID: group.UID || 501,
       CompanyID: group.CompanyID || "1001",
       Tranzdatetime: group.Tranzdatetime || new Date().toISOString(),
     });
-     };
-       // Delete Data
-          const handleDeleteClick = (id) => {
-            setDeleteId(id);
-            setDeleteModal(true);
-          };
-          const handleDeleteConfirm = () => {
-            if (deleteId) {
-              dispatch(deleteEmployeeTrial(deleteId));
-            }
-            setDeleteModal(false);
-          };
-    const formatDate = (dateString) => {
-    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : ""; };
-    const formatDateForInput = (dateString) => {
-      return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
-    };
+  };
+  // Delete Data
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      dispatch(deleteEmployeeTrial(deleteId));
+    }
+    setDeleteModal(false);
+  };
+  const formatDate = (dateString) => {
+    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+  };
+  const formatDateForInput = (dateString) => {
+    return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
+  };
   document.title = "Trial Employee | EMS";
   return (
     <React.Fragment>
@@ -208,14 +209,14 @@ const TrialEmployee = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label htmlFor="EmpID" className="form-label">
+                            <Label htmlFor="EmpIDOld" className="form-label">
                               Employee
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              name="EmpID"
-                              id="EmpID"
-                              value={formik.values.EmpID}
+                              name="EmpIDOld"
+                              id="EmpIDOld"
+                              value={formik.values.EmpIDOld}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                             >
@@ -232,9 +233,10 @@ const TrialEmployee = () => {
                                   </option>
                                 ))}
                             </select>
-                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                            {formik.touched.EmpIDOld &&
+                            formik.errors.EmpIDOld ? (
                               <div className="text-danger">
-                                {formik.errors.EmpID}
+                                {formik.errors.EmpIDOld}
                               </div>
                             ) : null}
                           </div>
@@ -591,18 +593,22 @@ const TrialEmployee = () => {
                             <th>Contact</th>
                             <th>NIC</th>
                             <th>Closing Date</th>
-                             <th>Closing Status</th>
+                            <th>Closing Status</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           {employeeTrial?.length > 0 ? (
                             employeeTrial.map((group) => (
-                              <tr key={group.EmpID}>
-                                 <td>
-                                  {employee.find((emp) => String(emp.EmpID) === String(group.EmpID))?.EName|| "N/A"}
+                              <tr key={group.VID}>
+                                <td>
+                                  {employee.find(
+                                    (emp) =>
+                                      String(emp.EmpID) ===
+                                      String(group.EmpIDOld)
+                                  )?.EName || "N/A"}
                                 </td>
-                               <td>
+                                <td>
                                   {departmentList.find(
                                     (item) => item.VID === group.DeptID
                                   )?.VName || "N/A"}
@@ -619,21 +625,27 @@ const TrialEmployee = () => {
                                 <td>{formatDate(group.DOB)}</td>
                                 <td>{group.Address}</td>
                                 <td>{group.Reference}</td>
-                                 <td>{group.TelePhone}</td>
+                                <td>{group.TelePhone}</td>
                                 <td>{group.NIC}</td>
-                                 <td>{formatDate(group.ClosingDate)}</td>
+                                <td>{formatDate(group.ClosingDate)}</td>
                                 <td>{group.ClosingStatus}</td>
                                 <td>
                                   <div className="d-flex gap-2">
                                     <div className="edit ">
-                                      <Button className="btn btn-soft-info" onClick={() => handleEditClick(group)}>
+                                      <Button
+                                        className="btn btn-soft-info"
+                                        onClick={() => handleEditClick(group)}
+                                      >
                                         <i className="bx bx-edit"></i>
                                       </Button>
                                     </div>
                                     <div className="delete">
-                                      <Button className="btn btn-soft-danger" onClick={() =>
-                                          handleDeleteClick(group.EmpID)
-                                        }>
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
                                         <i className="ri-delete-bin-2-line"></i>
                                       </Button>
                                     </div>
@@ -688,11 +700,11 @@ const TrialEmployee = () => {
           </Row>
         </Container>
       </div>
-        <DeleteModal
-                    show={deleteModal}
-                    onCloseClick={() => setDeleteModal(!deleteModal)}
-                    onDeleteClick={handleDeleteConfirm}
-                  />
+      <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };

@@ -59,7 +59,7 @@ const EmployeeTrialSlice = createSlice({
       .addCase(deleteEmployeeTrial.fulfilled, (state, action) => {
         state.loading = false;
         state.employeeTrial = state.employeeTrial.filter(
-          (group) => group.EmpID !== action.payload // Compare with VID
+          (group) => group.VID !== action.payload // Compare with VID
         );
       })
       .addCase(deleteEmployeeTrial.rejected, (state, action) => {

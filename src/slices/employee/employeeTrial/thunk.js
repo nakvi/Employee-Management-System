@@ -173,7 +173,7 @@ export const deleteEmployeeTrial = createAsyncThunk(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ EmpID: id  }),
+        body: JSON.stringify({ VID: id  }),
       });
 
       if (!response.ok) {

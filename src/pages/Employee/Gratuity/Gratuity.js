@@ -271,7 +271,7 @@ const Gratuity = () => {
                             ) : null}
                           </div>
                         </Col>
-<Col xxl={2} md={2}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="DueAmount" className="form-label">
                               Due Amount
@@ -286,8 +286,11 @@ const Gratuity = () => {
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                             />
-                            {formik.touched.DueAmount && formik.errors.DueAmount ? (
-                              <div className="text-danger">{formik.errors.DueAmount}</div>
+                            {formik.touched.DueAmount &&
+                            formik.errors.DueAmount ? (
+                              <div className="text-danger">
+                                {formik.errors.DueAmount}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -304,70 +307,82 @@ const Gratuity = () => {
                             />
                           </div>
                         </Col>
-                         <Col xxl={2} md={4}>
-                                                  <div className="mb-3">
-                                                    <Label htmlFor="CompanyBankID" className="form-label">
-                                                      Bank
-                                                    </Label>
-                                                    <select
-                                                      className="form-select form-select-sm"
-                                                      name="CompanyBankID"
-                                                      id="CompanyBankID"
-                                                      value={formik.values.CompanyBankID}
-                                                      onChange={formik.handleChange}
-                                                      onBlur={formik.handleBlur}
-                                                    >
-                                                      <option value="">---Select---</option>
-                                                      {salaryBank.map((item) => (
-                                                        <option key={item.VID} value={item.VID}>
-                                                          {item.VName}
-                                                        </option>
-                                                      ))}
-                                                    </select>
-                                                    {formik.touched.CompanyBankID && formik.errors.CompanyBankID ? (
-                                                      <div className="text-danger">{formik.errors.CompanyBankID}</div>
-                                                    ) : null}
-                                                  </div>
-                                                </Col>
-                         <Col xxl={2} md={2}>
-                                                 <div className="mb-3">
-                                                   <Label htmlFor="ChequeNo" className="form-label">
-                                                     Cheque No
-                                                   </Label>
-                                                   <Input
-                                                     type="text"
-                                                     className="form-control-sm"
-                                                     id="ChequeNo"
-                                                     name="ChequeNo"
-                                                     placeholder="Cheque No"
-                                                     value={formik.values.ChequeNo}
-                                                     onChange={formik.handleChange}
-                                                     onBlur={formik.handleBlur}
-                                                   />
-                                                   {formik.touched.ChequeNo && formik.errors.ChequeNo ? (
-                                                     <div className="text-danger">{formik.errors.ChequeNo}</div>
-                                                   ) : null}
-                                                 </div>
-                                               </Col>
-                                               <Col xxl={2} md={2}>
-                                                 <div className="mb-3">
-                                                   <Label htmlFor="ChequeDate" className="form-label">
-                                                     Cheque Date
-                                                   </Label>
-                                                   <Input
-                                                     type="date"
-                                                     className="form-control-sm"
-                                                     id="ChequeDate"
-                                                     name="ChequeDate"
-                                                     value={formik.values.ChequeDate}
-                                                     onChange={formik.handleChange}
-                                                     onBlur={formik.handleBlur}
-                                                   />
-                                                   {formik.touched.ChequeDate && formik.errors.ChequeDate ? (
-                                                     <div className="text-danger">{formik.errors.ChequeDate}</div>
-                                                   ) : null}
-                                                 </div>
-                                               </Col>
+                        <Col xxl={2} md={4}>
+                          <div className="mb-3">
+                            <Label
+                              htmlFor="CompanyBankID"
+                              className="form-label"
+                            >
+                              Bank
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              name="CompanyBankID"
+                              id="CompanyBankID"
+                              value={formik.values.CompanyBankID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            >
+                              <option value="">---Select---</option>
+                              {salaryBank.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
+                            </select>
+                            {formik.touched.CompanyBankID &&
+                            formik.errors.CompanyBankID ? (
+                              <div className="text-danger">
+                                {formik.errors.CompanyBankID}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="ChequeNo" className="form-label">
+                              Cheque No
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="ChequeNo"
+                              name="ChequeNo"
+                              placeholder="Cheque No"
+                              value={formik.values.ChequeNo}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            />
+                            {formik.touched.ChequeNo &&
+                            formik.errors.ChequeNo ? (
+                              <div className="text-danger">
+                                {formik.errors.ChequeNo}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="ChequeDate" className="form-label">
+                              Cheque Date
+                            </Label>
+                            <Input
+                              type="date"
+                              className="form-control-sm"
+                              id="ChequeDate"
+                              name="ChequeDate"
+                              value={formik.values.ChequeDate}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            />
+                            {formik.touched.ChequeDate &&
+                            formik.errors.ChequeDate ? (
+                              <div className="text-danger">
+                                {formik.errors.ChequeDate}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
                         <Col xxl={2} md={4}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
