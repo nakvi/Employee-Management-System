@@ -15,6 +15,7 @@
     "@fullcalendar/react": "^6.1.15",
     "@hello-pangea/dnd": "^17.0.0",
     "@react-google-maps/api": "^2.20.3",
+    "@react-pdf/renderer": "^4.3.0",
     "@reduxjs/toolkit": "^2.3.0",
     "@simonwep/pickr": "^1.9.1",
     "@south-paw/react-vector-maps": "^3.2.0",
