@@ -126,12 +126,12 @@ const Increment = () => {
   });
 
   // Set default ETypeID and reset EmpID when employeeType loads or ETypeID changes
-  useEffect(() => {
-    if (employeeType.length > 0 && !formik.values.ETypeID) {
-      formik.setFieldValue("ETypeID", employeeType[0].VID);
-    }
-    formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
-  }, [employeeType, formik.values.ETypeID]);
+  // useEffect(() => {
+  //   if (employeeType.length > 0 && !formik.values.ETypeID) {
+  //     formik.setFieldValue("ETypeID", employeeType[0].VID);
+  //   }
+  //   formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
+  // }, [employeeType, formik.values.ETypeID]);
 
   const handleEditClick = (group) => {
     setEditingGroup(group);
@@ -145,7 +145,7 @@ const Increment = () => {
     formik.setValues({
       EmpID: group.EmpID,
       DateFrom: formatDateForInput(group.DateFrom),
-      DateTo: formatDateForInput(group.DateTo),
+      VDate: formatDateForInput(group.VDate),
       CurrentSalary: group.CurrentSalary,
       IncrementAmount: group.IncrementAmount,
       IncrementSpecial: group.IncrementSpecial,
@@ -307,7 +307,7 @@ const Increment = () => {
     // Add data rows
     data.forEach((item) => {
       const rowCells = [
-        item.EmpID,
+        employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "",
         formatDate(item.VDate),
         formatDate(item.DateFrom),
         item.CurrentSalary,
@@ -362,7 +362,8 @@ const Increment = () => {
   const columns = [
     {
       name: "Employee",
-      selector: (row) => row.EmpID,
+      selector: (row) => employee.find(emp => String(emp.EmpID) === String(row.EmpID))?.EName || "",
+
       sortable: true,
       width: "150px",
     },
@@ -563,6 +564,12 @@ const Increment = () => {
                               value={selectedDate}
                               {...formik.getFieldProps("VDate")}
                             />
+                             {formik.touched.VDate &&
+                            formik.errors.VDate ? (
+                              <div className="text-danger">
+                                {formik.errors.VDate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -697,7 +704,7 @@ const Increment = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        {/* <Col xxl={2} md={2}>
                           <div className="mt-4 pt-2">
                             <div className="form-check form-switch form-switch-md">
                               <Input
@@ -716,7 +723,7 @@ const Increment = () => {
                               </Label>
                             </div>
                           </div>
-                        </Col>
+                        </Col> */}
                       </Row>
                     </div>
                   </CardBody>

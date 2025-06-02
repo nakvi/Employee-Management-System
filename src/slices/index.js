@@ -100,7 +100,8 @@ import ReligionReducer from "./employee/religion/reducer";
 import GenderReducer from "./employee/gender/reducer";
 import AdvanceReducer from "./employee/advance/reducer"
 import LocalSaleReducer from "./employee/localSales/reducer"
-
+import EmployeeTrialReducer from "./employee/employeeTrial/reducer"
+import GratuityReducer from "./employee/gratuity/reducer"
 // Administration
 import RolesReducer from "./administration/roles/reducer";
 import RolesRightReducer from "./administration/rolesRight/reducer";
@@ -174,6 +175,8 @@ const rootReducer = combineReducers({
     Advance:AdvanceReducer,
     Gender:GenderReducer,
     LocalSale:LocalSaleReducer,
+    EmployeeTrial:EmployeeTrialReducer,
+    Gratuity:GratuityReducer,
     // Roles And Permission
     Role: RolesReducer, 
     RoleRight: RolesRightReducer, 

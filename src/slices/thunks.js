@@ -100,6 +100,8 @@ export * from "./employee/religion/thunk";
 export * from "./employee/gender/thunk";
 export * from "./employee/advance/thunk";
 export * from "./employee/localSales/thunk";
+export * from "./employee/employeeTrial/thunk";
+export * from "./employee/gratuity/thunk";
 
 // Administration
 export * from "./administration/roles/thunk";

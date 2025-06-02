@@ -23,7 +23,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
 import { saveAs } from "file-saver"; import DeleteModal from "../../../Components/Common/DeleteModal";
-
+import config from "../../../config"; // ✅ correct
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 
 import avatar1 from "../../../assets/images/users/avatar-11.png";
@@ -122,7 +122,8 @@ const EmployeeList = () => {
   };
 
   const handleFilterSubmit = async (values) => {
-    let apiUrl = "http://192.168.18.65:8001/ems/employeeSearch/?";
+    // let apiUrl = "http://192.168.18.65:8001/ems/employeeSearch/?";
+    const apiUrl = `${config.api.API_URL}employeeSearch/?`;
     let params = {};
 
     if (values.SearchFilter && values.SearchFilter.trim() !== "") {

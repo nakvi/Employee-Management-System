@@ -324,9 +324,7 @@ const DailyAttendanceReport = () => {
                             />
                           </div>
                         </Col>
-                      </Row>
-                      <Row>
-                        <Col xxl={2} md={9}>
+                        <Col xxl={4} md={9}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -343,6 +341,7 @@ const DailyAttendanceReport = () => {
                           </div>
                         </Col>
                       </Row>
+
                       {/* checkbox grid */}
                       <Row style={{ border: "1px dotted lightgray" }}>
                         <Col xxl={2} md={2}>
@@ -405,7 +404,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="Unposted"
                             >
-                              Unposted
+                              Unposted Attendance
                             </Label>
                           </div>
                         </Col>
@@ -424,7 +423,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="Posted"
                             >
-                              Posted
+                              Posted Attendance
                             </Label>
                           </div>
                         </Col>
@@ -443,7 +442,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="Unposted"
                             >
-                              Unposted Summary
+                              Latecomers
                             </Label>
                           </div>
                         </Col>
@@ -462,7 +461,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="PostedSummary"
                             >
-                              Posted Summary
+                              Absentees
                             </Label>
                           </div>
                         </Col>
@@ -481,7 +480,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="Latecomer"
                             >
-                              Latecomer
+                              Pending For Out
                             </Label>
                           </div>
                         </Col>
@@ -500,7 +499,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="ManualOverTime"
                             >
-                              Manual Overtime
+                              OT List
                             </Label>
                           </div>
                         </Col>
@@ -519,7 +518,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="OverTime"
                             >
-                              OverTime
+                              OT Sheet
                             </Label>
                           </div>
                         </Col>
@@ -538,7 +537,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="OverTimeList"
                             >
-                              OverTime List
+                              Summary-1
                             </Label>
                           </div>
                         </Col>
@@ -557,7 +556,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="OverTimeSheet"
                             >
-                              OverTime Sheet
+                              Summary-2
                             </Label>
                           </div>
                         </Col>
@@ -577,7 +576,7 @@ const DailyAttendanceReport = () => {
                               className="form-check-label"
                               htmlFor="ExportLog"
                             >
-                              Export Log
+                              Log File
                             </Label>
                           </div>
                         </Col>
