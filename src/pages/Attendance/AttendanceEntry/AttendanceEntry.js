@@ -17,7 +17,7 @@ import {
 } from "reactstrap";
 import Select from "react-select";
 import { useDispatch, useSelector } from "react-redux";
-import { getLocation } from "../../../slices/setup/location/thunk";
+  import { getLocation } from "../../../slices/setup/location/thunk";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getDesignation } from "../../../slices/setup/designation/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";

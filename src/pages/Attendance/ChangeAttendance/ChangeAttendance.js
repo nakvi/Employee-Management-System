@@ -12,6 +12,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
 import { getAttendanceChange, postAttendanceChange, resetAttendanceChange } from "../../../slices/Attendance/AttendanceChange/thunk";
 import { toast } from "react-toastify";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
@@ -23,12 +24,14 @@ const ChangeAttendance = () => {
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = Array.isArray(department.data) ? department.data : [];
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
+  const { location = [] } = useSelector((state) => state.Location || {});
   const { attendanceData = [], loading, error, postLoading, postError } = useSelector((state) => state.AttendanceChange || { attendanceData: [], loading: false, error: null, postLoading: false, postError: null });
 
   // Form state
   const [formData, setFormData] = useState({
     etypeid: "",
     deptids: "",
+    location: "",
     vdate: new Date().toISOString().split("T")[0], // Set current date as default
   });
 
@@ -44,6 +47,7 @@ const ChangeAttendance = () => {
   useEffect(() => {
     dispatch(getDepartment());
     dispatch(getEmployeeType());
+    dispatch(getLocation());
   }, [dispatch]);
 
   useEffect(() => {
@@ -102,12 +106,13 @@ const ChangeAttendance = () => {
     const params = {
       etypeid: formData.etypeid || "0",
       deptids: formData.deptids || "",
+      locationid: formData.location || "0", // Include location in params
       vdate: formData.vdate || "",
       datefrom: datefrom,
       dateto: dateto,
       orgini: "LTT",
       companyid: "1",
-      locationid: "1",
+      locationid: formData.location || "1", // Use formData.location
       empid: "0",
       uid: "1",
     };
@@ -117,10 +122,11 @@ const ChangeAttendance = () => {
 
   const handleCancel = () => {
     console.log("Cancel button clicked, resetting form and Redux state");
-    setFormData({ 
-      etypeid: "", 
-      deptids: "", 
-      vdate: new Date().toISOString().split("T")[0] // Reset to current date
+    setFormData({
+      etypeid: "",
+      deptids: "",
+      location: "",
+      vdate: new Date().toISOString().split("T")[0], // Reset to current date
     });
     setValidationErrors({ etypeid: "", vdate: "" });
     dispatch(resetAttendanceChange());
@@ -258,6 +264,31 @@ const ChangeAttendance = () => {
                                   {item.VName}
                                 </option>
                               ))}
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="locationInput" className="form-label">
+                              Location
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              name="location"
+                              id="locationInput"
+                              value={formData.location}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">---Select---</option>
+                              {location.length > 0 ? (
+                                location.map((loc) => (
+                                  <option key={loc.VID} value={loc.VID}>
+                                    {loc.VName || loc.LocationName || loc.title}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>No locations available</option>
+                              )}
                             </select>
                           </div>
                         </Col>
