@@ -1,5 +1,4 @@
 import React from "react";
-import { styles } from "./style.ts";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -11,97 +10,278 @@ export default function Invoice({ employee }) {
     if (!element) return;
     const canvas = await html2canvas(element, { scale: 2 });
     const data = canvas.toDataURL("image/png");
-    const pdf = new jsPDF({ orientation: "portrait", unit: "px", format: "a4" });
+    const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: "a4" });
     const imgProperties = pdf.getImageProperties(data);
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
     pdf.addImage(data, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save("invoice.pdf");
+    pdf.save("salary-slip.pdf");
   };
 
   if (!employee) return <div>No employee selected.</div>;
 
+  // Example data (replace with real employee data as needed)
+  const allowances = [
+    { label: "Gross Salary", value: employee.BasicSalary || 0 },
+    { label: "Bonus", value: employee.Bonus || 0 },
+    { label: "Allowance", value: employee.Allowance || 0 },
+    { label: "Eid Bonus", value: employee.EidBonus || 0 },
+    { label: "Arrears", value: employee.Arrears || 0 },
+  ];
+  const totalAllowances = allowances.reduce((sum, a) => sum + Number(a.value || 0), 0);
+
+  const deductions = [
+    { label: "Income Tax", value: employee.IncomeTax || 0 },
+    { label: "EOBI Deduction", value: employee.EOBI || 0 },
+    { label: "Loan Deduction", value: employee.LoanDeduction || 0 },
+    { label: "Leave Without Pay", value: employee.LeaveWithoutPay || 0 },
+    { label: "Other Deductions", value: employee.OtherDeductions || 0 },
+  ];
+  const totalDeductions = deductions.reduce((sum, d) => sum + Number(d.value || 0), 0);
+
+  const netSalary = totalAllowances - totalDeductions;
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8 flex flex-col items-center">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-2xl">
-        <div ref={printRef} className="p-8 bg-white border border-gray-200">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">INVOICE</h1>
-              <p className="text-sm text-gray-600">Invoice #{employee.EmpCode || "N/A"}</p>
-            </div>
-            <div className="text-right">
-              <h2 className="font-semibold">{employee.CompanyName || "Company Name"}</h2>
-            </div>
+    <div className="d-flex flex-column align-items-center">
+      <div
+        ref={printRef}
+        style={{
+          background: "#fff",
+          padding: 24,
+          border: "1px solid #222",
+          width: 900,
+          margin: "24px auto",
+          fontFamily: "Arial, Helvetica, sans-serif",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", borderBottom: "2px solid #222" }}>
+          <img src="/logo.png" alt="Logo" style={{ height: 60, marginRight: 24 }} />
+          <div style={{ flex: 1, textAlign: "center" }}>
+            <span style={{ fontSize: 32, fontWeight: "bold", letterSpacing: 8, color: "#23336e" }}>
+              ZETA
+            </span>
+            <div style={{ color: "#e74c3c", fontWeight: "bold", fontSize: 18 }}>eCorp</div>
           </div>
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold mb-4">Bill To:</h3>
-            <p className="text-gray-700">
-              {employee.EName} <br />
-              {employee.FName && <>Father: {employee.FName}<br /></>}
-              CNIC: {employee.NIC} <br />
-              Designation: {employee.DesignationTitle} <br />
-              Department: {employee.DepartmentTitle || employee.DeptName || ""}
-            </p>
+          <div style={{ flex: 1, textAlign: "center" }}>
+            <span
+              style={{
+                background: "#e5e5e5",
+                padding: "8px 24px",
+                fontWeight: "bold",
+                fontSize: 22,
+                borderRadius: 4,
+              }}
+            >
+              Salary Slip
+            </span>
           </div>
-          <table className="w-full mb-8 border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-left">Description</th>
-                <th className="border p-2 text-right">Quantity</th>
-                <th className="border p-2 text-right">Unit Price</th>
-                <th className="border p-2 text-right">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border p-2">Basic Salary</td>
-                <td className="border p-2 text-right">1</td>
-                <td className="border p-2 text-right">
-                  {employee.BasicSalary ? `$${employee.BasicSalary}` : "$0.00"}
-                </td>
-                <td className="border p-2 text-right">
-                  {employee.BasicSalary ? `$${employee.BasicSalary}` : "$0.00"}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div className="flex justify-end">
-            <div className="w-64">
-              <div className="flex justify-between mb-2">
-                <span>Subtotal:</span>
-                <span>
-                  {employee.BasicSalary ? `$${employee.BasicSalary}` : "$0.00"}
-                </span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span>Tax (10%):</span>
-                <span>
-                  {employee.BasicSalary
-                    ? `$${(employee.BasicSalary * 0.1).toFixed(2)}`
-                    : "$0.00"}
-                </span>
-              </div>
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total:</span>
-                <span>
-                  {employee.BasicSalary
-                    ? `$${(employee.BasicSalary * 1.1).toFixed(2)}`
-                    : "$0.00"}
-                </span>
-              </div>
+          <div style={{ flex: 1, textAlign: "right" }}>
+            <div style={{ fontSize: 14 }}>For the Month:</div>
+            <div
+              style={{
+                background: "#2563eb",
+                color: "#fff",
+                padding: "4px 16px",
+                borderRadius: 4,
+                fontWeight: "bold",
+                fontSize: 18,
+                display: "inline-block",
+              }}
+            >
+              {employee.Month || "May-2025"}
             </div>
           </div>
         </div>
-        <div className="mt-6 flex justify-center">
-          <button
-            onClick={handleDownloadPdf}
-            className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300"
-          >
-            Download PDF
-          </button>
+
+        {/* Employee Info */}
+        <div style={{ display: "flex", marginTop: 12, marginBottom: 8 }}>
+          <div style={{ flex: 1, border: "1px solid #222", marginRight: 8, padding: 8 }}>
+            <table style={{ width: "100%" }}>
+              <tbody>
+                <tr>
+                  <td>Emp. Code</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.EmpCode}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Name</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.EName}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Designation</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.DesignationTitle}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Grade</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.Grade || ""}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Department</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>
+                      {employee.DepartmentTitle || employee.DeptName || ""}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ flex: 1, border: "1px solid #222", marginRight: 8, padding: 8 }}>
+            <table style={{ width: "100%" }}>
+              <tbody>
+                <tr>
+                  <td>Joining Date</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.DOJ}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Monthly Salary</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.BasicSalary}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Salary Days</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.SalaryDays || 30}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style={{ flex: 1, border: "1px solid #222", padding: 8 }}>
+            <table style={{ width: "100%" }}>
+              <tbody>
+                <tr>
+                  <td>Payment Mode</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.PaymentMode || ""}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Bank Name</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.BankName || ""}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Branch</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.Branch || ""}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>Account No</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.AccountNo || ""}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td>CNIC No.</td>
+                  <td>
+                    <span style={{ background: "#ccc", padding: "2px 8px" }}>{employee.NIC}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Allowances & Deductions */}
+        <div style={{ display: "flex", border: "1px solid #222", marginBottom: 0 }}>
+          {/* Allowances */}
+          <div style={{ flex: 1, borderRight: "1px solid #222" }}>
+            <div
+              style={{
+                background: "#e5e5e5",
+                fontWeight: "bold",
+                textAlign: "center",
+                borderBottom: "1px solid #222",
+                padding: 4,
+              }}
+            >
+              Allowances
+            </div>
+            <table style={{ width: "100%" }}>
+              <tbody>
+                {allowances.map((a, i) => (
+                  <tr key={i}>
+                    <td style={{ padding: "4px 8px" }}>{a.label}</td>
+                    <td style={{ padding: "4px 8px" }}>PKR</td>
+                    <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                      {a.value ? a.value.toLocaleString() : "-"}
+                    </td>
+                  </tr>
+                ))}
+                <tr style={{ fontWeight: "bold", borderTop: "1px solid #222" }}>
+                  <td>Total Allowances</td>
+                  <td>PKR</td>
+                  <td style={{ textAlign: "right" }}>{totalAllowances.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          {/* Deductions */}
+          <div style={{ flex: 1 }}>
+            <div
+              style={{
+                background: "#e5e5e5",
+                fontWeight: "bold",
+                textAlign: "center",
+                borderBottom: "1px solid #222",
+                padding: 4,
+              }}
+            >
+              Deductions
+            </div>
+            <table style={{ width: "100%" }}>
+              <tbody>
+                {deductions.map((d, i) => (
+                  <tr key={i}>
+                    <td style={{ padding: "4px 8px" }}>{d.label}</td>
+                    <td style={{ padding: "4px 8px" }}>PKR</td>
+                    <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                      {d.value ? d.value.toLocaleString() : "-"}
+                    </td>
+                  </tr>
+                ))}
+                <tr style={{ fontWeight: "bold", borderTop: "1px solid #222" }}>
+                  <td>Total Deductions</td>
+                  <td>PKR</td>
+                  <td style={{ textAlign: "right" }}>{totalDeductions.toLocaleString()}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Net Salary */}
+        <div style={{ border: "1px solid #222", borderTop: "none", padding: 8 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ flex: 1, fontSize: 13 }}>
+              &lt;&lt; Note:This is a computer generated Salary Slip and does not require any Signatures and Stamp&gt;&gt;
+            </div>
+            <div style={{ flex: 1, textAlign: "right", fontWeight: "bold", fontSize: 18 }}>
+              Net Salary &nbsp; PKR &nbsp; {netSalary.toLocaleString()}
+            </div>
+          </div>
         </div>
       </div>
+      <button
+        onClick={handleDownloadPdf}
+        className="btn btn-primary mt-3"
+      >
+        Download PDF
+      </button>
     </div>
   );
 }
