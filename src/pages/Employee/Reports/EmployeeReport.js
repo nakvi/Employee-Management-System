@@ -15,6 +15,7 @@ import {
   Collapse,
 } from "reactstrap";
 import Invoice from "../../../Components/pdfsPreviews/invoice";
+import ReportsPreview from "../../../Components/pdfsPreviews/reports";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
@@ -1422,6 +1423,7 @@ const EmployeeList = () => {
                       <Invoice employee={filteredData[0]} />
                     </div>
                   )}
+                  <ReportsPreview />
                 </CardBody>
               </Card>
             </Col>

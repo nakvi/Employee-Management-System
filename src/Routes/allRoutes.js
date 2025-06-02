@@ -68,9 +68,11 @@ import EmployeeList from "../pages/Employee/Employee/EmployeeList";
 import EmployeeProfile from "../pages/Employee/Employee/EmployeeProfile";
 import SalaryAllowanceDeduction from "../pages/Employee/SalaryAllowanceDeduction/SalaryAllowanceDeduction";
 import Invoice from "../Components/pdfsPreviews/invoice";
+import ReportsPreview from "../Components/pdfsPreviews/reports";
 
 const authProtectedRoutes = [
   // my routes setup
+  { path: "/report-preview", component: <ReportsPreview /> },
   { path: "/invoice-preview", component: <Invoice /> },
   { path: "/company", component: <Company /> },
   { path: "/location", component: <Location /> },
