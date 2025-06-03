@@ -434,7 +434,7 @@ const LoanDisbursement = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={4}>
+                        <Col xxl={2} md={4}>Special
                           <div className="mb-3">
                             <Label htmlFor="EmpID" className="form-label">
                               Employee

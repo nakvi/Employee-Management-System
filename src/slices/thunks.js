@@ -116,3 +116,9 @@ export * from "./administration/secUserRole/thunk";
 // Attendance
 export * from "./Attendance/AttendanceEntry/thunk";
 export * from "./Attendance/AttendanceChange/thunk";
+export * from "./Attendance/leaveType/thunk";
+export * from "./Attendance/leave/thunk";
+export * from "./Attendance/specialLeaveEntry/thunk";
+export * from "./Attendance/leaveEntryDepartment/thunk";
+export * from "./Attendance/lateComingExemptAttendance/thunk";
+
