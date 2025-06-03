@@ -113,6 +113,14 @@ import SecUserRoleReducer from "./administration/secUserRole/reducer";
 // Attendance
 import AttendanceEntryReducer from "./Attendance/AttendanceEntry/reducer"; // Correct import
 import AttendanceChangeReducer from "./Attendance/AttendanceChange/reducer";
+import LeaveTypeReducer from "./Attendance/leaveType/reducer";
+import LeaveReducer from "./Attendance/leave/reducer";
+import SpecialLeaveEntryReducer from "./Attendance/specialLeaveEntry/reducer";
+import LeaveEntryDepartmentReducer
+ from "./Attendance/leaveEntryDepartment/reducer";
+ import LateComingExemptAttendanceReducer
+ from "./Attendance/lateComingExemptAttendance/reducer";
+
 
 
 
@@ -188,6 +196,11 @@ const rootReducer = combineReducers({
     // Add Attendance Entry Reducer
     AttendanceEntry: AttendanceEntryReducer, // Uncomment this line if you have an AttendanceEntry reducer
     AttendanceChange: AttendanceChangeReducer,
+    LeaveType: LeaveTypeReducer,
+    Leave:LeaveReducer,
+    SpecialLeaveEntry:SpecialLeaveEntryReducer,
+    LeaveEntryDepartment:LeaveEntryDepartmentReducer,
+    LateComingExemptAttendance:LateComingExemptAttendanceReducer,
 });
 
 export default rootReducer;
