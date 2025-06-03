@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 const dummyData = [
@@ -54,54 +54,82 @@ const dummyData = [
 ];
 
 const ReportsPreview = () => {
+  const reportRef = useRef();
+
+  const handlePrintPDF = async () => {
+    const input = reportRef.current;
+    const canvas = await html2canvas(input, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+
+    // Set a smaller width for the PDF (e.g., 700pt instead of canvas.width)
+    const pdfWidth = 700;
+    // Calculate height to keep aspect ratio
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "pt",
+      format: [pdfWidth, pdfHeight],
+    });
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+    pdf.save("LateComerReport.pdf");
+  };
+
   return (
-    <div style={{ maxWidth: 900, margin: "0 auto", fontFamily: "Arial, sans-serif", fontSize: 13, background: "#fff", border: "1px solid #bbb", padding: 24 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-        <div>
-          <b>LECOMPANY NAME</b>
-          <br />
-          Late Commer for the date 30/05/2025
+    <div style={{ maxWidth: 900, margin: "0 auto" }}>
+      <div ref={reportRef} style={{ fontFamily: "Arial, sans-serif", fontSize: 13, background: "#fff", border: "1px solid #bbb", padding: 24 }}>
+        {/* ...existing report content... */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+          <div>
+            <b>LECOMPANY NAME</b>
+            <br />
+            Late Commer for the date 30/05/2025
+          </div>
+          <div style={{ textAlign: "right", fontSize: 12 }}>
+            Print Date : 02-Jun-2025<br />
+            Print Time : 19:05:53
+          </div>
         </div>
-        <div style={{ textAlign: "right", fontSize: 12 }}>
-          Print Date : 02-Jun-2025<br />
-          Print Time : 19:05:53
+        {dummyData.map((section, idx) => (
+          <div key={section.section} style={{ marginBottom: 10 }}>
+            <div style={{ background: "#5ba4b6", color: "#fff", padding: "4px 8px", fontWeight: "bold", borderTop: idx === 0 ? "1px solid #bbb" : "none", borderBottom: "1px solid #bbb" }}>
+              {section.section}
+            </div>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <thead>
+                <tr style={{ background: "#eaf3f7" }}>
+                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>E-Code</th>
+                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>Name</th>
+                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>Designation</th>
+                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>Time IN</th>
+                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>Time OUT</th>
+                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>Late Time</th>
+                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>Remarks</th>
+                </tr>
+              </thead>
+              <tbody>
+                {section.rows.map((row, i) => (
+                  <tr key={row.ECode} style={{ background: i % 2 === 0 ? "#fff" : "#f7fafd" }}>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.ECode}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>{row.Name}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>{row.Designation}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.TimeIN}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.TimeOUT}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.Late}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>{row.Remarks}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
+        <div style={{ textAlign: "right", fontSize: 12, marginTop: 16 }}>
+          Page 1 of 1
         </div>
       </div>
-      {dummyData.map((section, idx) => (
-        <div key={section.section} style={{ marginBottom: 10 }}>
-          <div style={{ background: "#5ba4b6", color: "#fff", padding: "4px 8px", fontWeight: "bold", borderTop: idx === 0 ? "1px solid #bbb" : "none", borderBottom: "1px solid #bbb" }}>
-            {section.section}
-          </div>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-            <thead>
-              <tr style={{ background: "#eaf3f7" }}>
-                <th style={{ border: "1px solid #bbb", padding: "2px 6px" }}>E-Code</th>
-                <th style={{ border: "1px solid #bbb", padding: "2px 6px" }}>Name</th>
-                <th style={{ border: "1px solid #bbb", padding: "2px 6px" }}>Designation</th>
-                <th style={{ border: "1px solid #bbb", padding: "2px 6px" }}>Time IN</th>
-                <th style={{ border: "1px solid #bbb", padding: "2px 6px" }}>Time OUT</th>
-                <th style={{ border: "1px solid #bbb", padding: "2px 6px" }}>Late Time</th>
-                <th style={{ border: "1px solid #bbb", padding: "2px 6px" }}>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {section.rows.map((row, i) => (
-                <tr key={row.ECode} style={{ background: i % 2 === 0 ? "#fff" : "#f7fafd" }}>
-                  <td style={{ border: "1px solid #bbb", padding: "2px 6px" }}>{row.ECode}</td>
-                  <td style={{ border: "1px solid #bbb", padding: "2px 6px" }}>{row.Name}</td>
-                  <td style={{ border: "1px solid #bbb", padding: "2px 6px" }}>{row.Designation}</td>
-                  <td style={{ border: "1px solid #bbb", padding: "2px 6px" }}>{row.TimeIN}</td>
-                  <td style={{ border: "1px solid #bbb", padding: "2px 6px" }}>{row.TimeOUT}</td>
-                  <td style={{ border: "1px solid #bbb", padding: "2px 6px" }}>{row.Late}</td>
-                  <td style={{ border: "1px solid #bbb", padding: "2px 6px" }}>{row.Remarks}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ))}
-      <div style={{ textAlign: "right", fontSize: 12, marginTop: 16 }}>
-        Page 1 of 1
+      <div style={{ textAlign: "right", marginTop: 16 }}>
+        <button onClick={handlePrintPDF} style={{ padding: "8px 20px", background: "#5ba4b6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
+          Print to PDF
+        </button>
       </div>
     </div>
   );
