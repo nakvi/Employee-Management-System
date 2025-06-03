@@ -116,6 +116,29 @@ const EmployeeList = () => {
       setFilteredData(filtered);
     }
   }, [searchText, employee]); // 🔁 FIXED dependency
+
+function buildEmployeeFilterString(values) {
+  let filters = [];
+
+  if (values.EmpID && values.EmpID !== "-1") filters.push(`E."EmpID" = ${values.EmpID}`);
+  if (values.ETypeID && values.ETypeID !== "-1") filters.push(`E."ETypeID" = ${values.ETypeID}`);
+  if (values.FName) filters.push(`E."FName" ILIKE '%' || '${values.FName}' || '%'`);
+  if (values.DeptID && values.DeptID !== "-1") filters.push(`E."DeptID" = ${values.DeptID}`);
+  if (values.DesgID && values.DesgID !== "-1") filters.push(`E."DesgID" = ${values.DesgID}`);
+  if (values.HODID && values.HODID !== "-1") filters.push(`E."HODID" = ${values.HODID}`);
+  if (values.NIC) filters.push(`E."NIC" ILIKE '%' || '${values.NIC}' || '%'`);
+  if (values.LocationID && values.LocationID !== "-1") filters.push(`E."LocationID" = ${values.LocationID}`);
+  if (values.ShiftID && values.ShiftID !== "-1") filters.push(`E."ShiftID" = ${values.ShiftID}`);
+  if (values.GradeID && values.GradeID !== "-1") filters.push(`E."GradeID" = ${values.GradeID}`);
+  if (values.leftStatusId && values.leftStatusId !== "-1") filters.push(`E."LeftStatus" = ${values.leftStatusId}`);
+  if (values.BloodGroup) filters.push(`E."Bloodgroup" ILIKE '%' || '${values.BloodGroup}' || '%'`);
+  if (values.SalaryFrom && values.SalaryTo) filters.push(`(E.basicsalary >= ${values.SalaryFrom} AND E.basicsalary <= ${values.SalaryTo})`);
+  if (values.JoinDateFrom && values.JoinDateTo) filters.push(`(E.doj >= '${values.JoinDateFrom}' AND E.doj <= '${values.JoinDateTo}')`);
+  if (values.ResignDateFrom && values.ResignDateTo) filters.push(`(E.dol >= '${values.ResignDateFrom}' AND E.dol <= '${values.ResignDateTo}')`);
+
+  return filters.join(" AND ");
+}
+
   // Edit Click
   const handleEditClick = (row) => {
     navigate("/employee", { state: { employee: row, filterValues: formik.values } });
@@ -123,66 +146,103 @@ const EmployeeList = () => {
     // window.open(`/employee?EmpID=${row.EmpID}`, '_blank', 'noopener,noreferrer');
 
   };
+const handleFilterSubmit = async (values) => {
+  const apiUrl = `${config.api.API_URL}employeeSearch/?`;
+  let params = {};
 
-  const handleFilterSubmit = async (values) => {
-    // let apiUrl = "http://192.168.18.65:8001/ems/employeeSearch/?";
-    const apiUrl = `${config.api.API_URL}employeeSearch/?`;
-    let params = {};
+  if (values.SearchFilter && values.SearchFilter.trim() !== "") {
+    params.string = values.SearchFilter.trim();
+    params.cWhere = "";
+  } else {
+    params.string = "";
+    params.cWhere = buildEmployeeFilterString(values);
+  }
 
-    if (values.SearchFilter && values.SearchFilter.trim() !== "") {
-      // Only use string param, ignore others
-      params.string = values.SearchFilter.trim();
-    } else {
-      // Use all other filters
-      params = {
-        string: "",
-        etypeID: values.ETypeID || 0,
-        ename: values.EmpID || 0,
-        fname: values.FName || "",
-        deptID: values.DeptID || 0,
-        desgID: values.DesgID || 0,
-        hodID: values.HODID || 0,
-        nic: values.NIC || "",
-        locationID: values.LocationID || 0,
-        shiftID: values.ShiftID || 0,
-        regionID: values.ReligionID || 0,
-        gradeID: values.GradeID || 0,
-        leftStatus: values.leftStatusId || "",
-        bloodGroup: values.BloodGroup || "",
-        salaryFrom: values.SalaryFrom || 0,
-        salaryTo: values.SalaryTo || 0,
-        joinDateFrom: values.JoinDateFrom || "1900-01-01",
-        joinDateTo: values.JoinDateTo || "1900-01-01",
-        resignDateFrom: values.ResignDateFrom || "1900-01-01",
-        resignDateTo: values.ResignDateTo || "1900-01-01",
-      };
-    }
-    // Build query string
-    const queryString = Object.entries(params)
-      .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
-      .join("&");
+  // if (values.DeptID && values.DeptID !== "-1") {
+  //   params.deptids = values.DeptID;
+  // }
 
-    const fullUrl = apiUrl + queryString;
-    console.log("API URL:", fullUrl);
+  // Build query string (do NOT encode cWhere)
+  const queryString = Object.entries(params)
+    .map(([key, val]) =>
+      key === "cWhere"
+        ? `${key}=${val}` // Don't encode cWhere
+        : `${encodeURIComponent(key)}=${encodeURIComponent(val)}`
+    )
+    .join("&");
 
-    // Fetch data
-     try {
-      const response = await fetch(fullUrl);
-      const data = await response.json();
-      setFilteredData(Array.isArray(data) ? data : []);
-      setShowPreview(true); // Show preview after filtering
-    } catch (err) {
-      console.error("Error fetching employee data:", err);
-      setShowPreview(false);
-    }
-    // try {
-    //   const response = await fetch(fullUrl);
-    //   const data = await response.json();
-    //   setFilteredData(Array.isArray(data) ? data : []);
-    // } catch (err) {
-    //   console.error("Error fetching employee data:", err);
-    // }
-  };
+  const fullUrl = apiUrl + queryString;
+  console.log("API URL:", fullUrl);
+
+  try {
+    const response = await fetch(fullUrl);
+    const data = await response.json();
+    setFilteredData(Array.isArray(data) ? data : []);
+    setShowPreview(true);
+  } catch (err) {
+    console.error("Error fetching employee data:", err);
+    setShowPreview(false);
+  }
+};
+  // const handleFilterSubmit = async (values) => {
+  //   // let apiUrl = "http://192.168.18.65:8001/ems/employeeSearch/?";
+  //   const apiUrl = `${config.api.API_URL}employeeSearch/?`;
+  //   let params = {};
+
+  //   if (values.SearchFilter && values.SearchFilter.trim() !== "") {
+  //     // Only use string param, ignore others
+  //     params.string = values.SearchFilter.trim();
+  //   } else {
+  //     // Use all other filters
+  //     params = {
+  //       string: "",
+  //       etypeID: values.ETypeID || 0,
+  //       ename: values.EmpID || 0,
+  //       fname: values.FName || "",
+  //       deptID: values.DeptID || 0,
+  //       desgID: values.DesgID || 0,
+  //       hodID: values.HODID || 0,
+  //       nic: values.NIC || "",
+  //       locationID: values.LocationID || 0,
+  //       shiftID: values.ShiftID || 0,
+  //       regionID: values.ReligionID || 0,
+  //       gradeID: values.GradeID || 0,
+  //       leftStatus: values.leftStatusId || "",
+  //       bloodGroup: values.BloodGroup || "",
+  //       salaryFrom: values.SalaryFrom || 0,
+  //       salaryTo: values.SalaryTo || 0,
+  //       joinDateFrom: values.JoinDateFrom || "1900-01-01",
+  //       joinDateTo: values.JoinDateTo || "1900-01-01",
+  //       resignDateFrom: values.ResignDateFrom || "1900-01-01",
+  //       resignDateTo: values.ResignDateTo || "1900-01-01",
+  //     };
+  //   }
+  //   // Build query string
+  //   const queryString = Object.entries(params)
+  //     .map(([key, val]) => `${encodeURIComponent(key)}=${encodeURIComponent(val)}`)
+  //     .join("&");
+
+  //   const fullUrl = apiUrl + queryString;
+  //   console.log("API URL:", fullUrl);
+
+  //   // Fetch data
+  //    try {
+  //     const response = await fetch(fullUrl);
+  //     const data = await response.json();
+  //     setFilteredData(Array.isArray(data) ? data : []);
+  //     setShowPreview(true); // Show preview after filtering
+  //   } catch (err) {
+  //     console.error("Error fetching employee data:", err);
+  //     setShowPreview(false);
+  //   }
+  //   // try {
+  //   //   const response = await fetch(fullUrl);
+  //   //   const data = await response.json();
+  //   //   setFilteredData(Array.isArray(data) ? data : []);
+  //   // } catch (err) {
+  //   //   console.error("Error fetching employee data:", err);
+  //   // }
+  // };
   // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
