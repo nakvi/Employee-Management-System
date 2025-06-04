@@ -10,13 +10,14 @@ import {
   Label,
   Form,
   CardHeader,
+  UncontrolledTooltip,
 } from "reactstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
 import { getLocation } from "../../../slices/setup/location/thunk";
-import { getAttendanceEmployee, saveAttendanceEmployee, resetAttendanceEmployeeData } from "../../../slices/Attendance/AttendanceEmployee/thunk";
+import { getAttendanceEmployee, saveAttendanceEmployee, resetAttendanceEmployeeData, removeExtraAttendance } from "../../../slices/Attendance/AttendanceEmployee/thunk";
 import { toast } from "react-toastify";
 
 const AttendanceEmployee = () => {
@@ -36,6 +37,10 @@ const AttendanceEmployee = () => {
   // Validation errors state
   const [validationErrors, setValidationErrors] = useState({
     etypeid: "",
+    deptids: "",
+    employeeidlist: "",
+    datefrom: "",
+    dateto: "",
   });
 
   // State to manage table data with editable fields and checkbox status
@@ -69,6 +74,12 @@ const AttendanceEmployee = () => {
     );
   }, [attendanceEmployeeData]);
 
+  // Debug formData changes
+  useEffect(() => {
+    console.log("formData updated:", formData);
+    console.log("isRemoveButtonEnabled:", formData.deptids && formData.employeeidlist && formData.datefrom && formData.dateto);
+  }, [formData]);
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -76,8 +87,8 @@ const AttendanceEmployee = () => {
     setValidationErrors((prev) => ({ ...prev, [name]: "" }));
   };
 
-  // Validate form
-  const validateForm = () => {
+  // Validate form for Fetch
+  const validateFetchForm = () => {
     let isValid = true;
     const errors = { etypeid: "" };
 
@@ -90,10 +101,42 @@ const AttendanceEmployee = () => {
     return isValid;
   };
 
+  // Validate form for Remove Extra Attendance
+  const validateRemoveForm = () => {
+    let isValid = true;
+    const errors = {
+      deptids: "",
+      employeeidlist: "",
+      datefrom: "",
+      dateto: "",
+    };
+
+    if (!formData.deptids) {
+      errors.deptids = "Department is required";
+      isValid = false;
+    }
+    if (!formData.employeeidlist) {
+      errors.employeeidlist = "Employee is required";
+      isValid = false;
+    }
+    if (!formData.datefrom) {
+      errors.datefrom = "Date From is required";
+      isValid = false;
+    }
+    if (!formData.dateto) {
+      errors.dateto = "Date To is required";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
   // Handle Fetch button click
   const handleFetch = () => {
-    if (!validateForm()) {
+    if (!validateFetchForm()) {
       console.log("Validation failed:", validationErrors);
+      toast.error("Please select an E-Type to fetch attendance data.");
       return;
     }
 
@@ -143,7 +186,7 @@ const AttendanceEmployee = () => {
       datefrom: new Date().toISOString().split("T")[0],
       dateto: new Date().toISOString().split("T")[0],
     });
-    setValidationErrors({ etypeid: "" });
+    setValidationErrors({ etypeid: "", deptids: "", employeeidlist: "", datefrom: "", dateto: "" });
     dispatch(resetAttendanceEmployeeData());
     setTableData([]);
     console.log("Form data after reset:", formData);
@@ -151,7 +194,6 @@ const AttendanceEmployee = () => {
 
   // Handle Save button click
   const handleSave = () => {
-    // Check for changes by comparing tableData with attendanceEmployeeData
     const changedRows = tableData.filter((row, index) => {
       const originalRow = attendanceEmployeeData[index];
       return (
@@ -169,7 +211,6 @@ const AttendanceEmployee = () => {
       return;
     }
 
-    // Loop through changed rows and dispatch POST request for each
     changedRows.forEach((row) => {
       const payload = {
         empid: Number(row.empid) || 1,
@@ -187,6 +228,25 @@ const AttendanceEmployee = () => {
       };
       dispatch(saveAttendanceEmployee(payload));
     });
+  };
+
+  // Handle Remove Extra Attendance button click
+  const handleRemoveExtraAttendance = () => {
+    if (!validateRemoveForm()) {
+      console.log("Validation failed for Remove Extra Attendance:", validationErrors);
+      toast.error("Please fill in all required fields: Department, Employee, Date From, and Date To.");
+      return;
+    }
+
+    const payload = {
+      deptID: formData.deptids,
+      empID: formData.employeeidlist,
+      dateFrom: formData.datefrom,
+      dateTo: formData.dateto,
+    };
+
+    console.log("Dispatching removeExtraAttendance with payload:", payload);
+    dispatch(removeExtraAttendance(payload));
   };
 
   // Handle form submission to prevent default behavior
@@ -215,13 +275,28 @@ const AttendanceEmployee = () => {
     );
   };
 
+  // Check if Remove Extra Attendance button should be enabled
+  const isRemoveButtonEnabled = formData.deptids && formData.employeeidlist && formData.datefrom && formData.dateto;
+
+  // Generate tooltip message for disabled button
+  const getTooltipMessage = () => {
+    const missingFields = [];
+    if (!formData.deptids) missingFields.push("Department");
+    if (!formData.employeeidlist) missingFields.push("Employee");
+    if (!formData.datefrom) missingFields.push("Date From");
+    if (!formData.dateto) missingFields.push("Date To");
+    return missingFields.length > 0
+      ? `Please select: ${missingFields.join(", ")}`
+      : "Remove extra attendance records";
+  };
+
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
           {error && <p className="text-danger">{error}</p>}
-          {saveLoading && <p>Saving changes...</p>}
+          {saveLoading && <p>Processing...</p>}
           {saveError && <p className="text-danger">{saveError}</p>}
           <Row>
             <Col lg={12}>
@@ -260,10 +335,15 @@ const AttendanceEmployee = () => {
                         type="button"
                         color="danger"
                         className="add-btn me-1 py-1"
-                        disabled
+                        id="remove-extra-attendance-btn"
+                        onClick={handleRemoveExtraAttendance}
+                        
                       >
                         <i className="align-bottom me-1"></i>Remove Extra Attendance
                       </Button>
+                      <UncontrolledTooltip placement="top" target="remove-extra-attendance-btn">
+                        {getTooltipMessage()}
+                      </UncontrolledTooltip>
                     </div>
                   </CardHeader>
                   <CardBody className="card-body">
@@ -300,7 +380,7 @@ const AttendanceEmployee = () => {
                               Department
                             </Label>
                             <select
-                              className="form-select form-select-sm"
+                              className={`form-select form-select-sm ${validationErrors.deptids ? "is-invalid" : ""}`}
                               name="deptids"
                               id="deptids"
                               value={formData.deptids}
@@ -313,6 +393,9 @@ const AttendanceEmployee = () => {
                                 </option>
                               ))}
                             </select>
+                            {validationErrors.deptids && (
+                              <div className="invalid-feedback">{validationErrors.deptids}</div>
+                            )}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -346,7 +429,7 @@ const AttendanceEmployee = () => {
                               Employee
                             </Label>
                             <select
-                              className="form-select form-select-sm"
+                              className={`form-select form-select-sm ${validationErrors.employeeidlist ? "is-invalid" : ""}`}
                               name="employeeidlist"
                               id="employeeidlist"
                               value={formData.employeeidlist}
@@ -359,6 +442,9 @@ const AttendanceEmployee = () => {
                                 </option>
                               ))}
                             </select>
+                            {validationErrors.employeeidlist && (
+                              <div className="invalid-feedback">{validationErrors.employeeidlist}</div>
+                            )}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -368,12 +454,15 @@ const AttendanceEmployee = () => {
                             </Label>
                             <Input
                               type="date"
-                              className="form-control-sm"
+                              className={`form-control-sm ${validationErrors.datefrom ? "is-invalid" : ""}`}
                               id="datefrom"
                               name="datefrom"
                               value={formData.datefrom}
                               onChange={handleInputChange}
                             />
+                            {validationErrors.datefrom && (
+                              <div className="invalid-feedback">{validationErrors.datefrom}</div>
+                            )}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -383,12 +472,15 @@ const AttendanceEmployee = () => {
                             </Label>
                             <Input
                               type="date"
-                              className="form-control-sm"
+                              className={`form-control-sm ${validationErrors.dateto ? "is-invalid" : ""}`}
                               id="dateto"
                               name="dateto"
                               value={formData.dateto}
                               onChange={handleInputChange}
                             />
+                            {validationErrors.dateto && (
+                              <div className="invalid-feedback">{validationErrors.dateto}</div>
+                            )}
                           </div>
                         </Col>
                       </Row>

@@ -4,8 +4,8 @@ import "react-toastify/dist/ReactToastify.css";
 import config from "../../../config";
 import { resetAttendanceEmployeeData } from "./reducer";
 
-// const API_ENDPOINT = "https://192.168.18.65:8001/ems/attSingle";
 const API_ENDPOINT = `${config.api.API_URL}attSingle/`;
+const REMOVE_EXTRA_ATTENDANCE_API = "https://192.168.18.65:8001/ems/removeExtraAttendanceAPI/";
 
 // Helper function to format timestamps to HH:mm
 const formatTime = (timestamp) => {
@@ -210,6 +210,52 @@ export const saveAttendanceEmployee = createAsyncThunk(
     } catch (error) {
       console.error(`Save API Error for empid ${record.empid}:`, error);
       toast.error(`Failed to save attendance data for empid ${record.empid}: ${error.message}`);
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+export const removeExtraAttendance = createAsyncThunk(
+  "attendanceEmployee/removeExtraAttendance",
+  async (params, { rejectWithValue }) => {
+    try {
+      const queryParams = new URLSearchParams({
+        deptID: params.deptID || "",
+        empID: params.empID || "",
+        dateFrom: params.dateFrom || "",
+        dateTo: params.dateTo || "",
+      }).toString();
+
+      console.log("Removing extra attendance with URL:", `${REMOVE_EXTRA_ATTENDANCE_API}?${queryParams}`);
+      const response = await fetch(`${REMOVE_EXTRA_ATTENDANCE_API}?${queryParams}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("HTTP Error:", response.status, errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Remove Extra Attendance API Response:", JSON.stringify(data, null, 2));
+
+      if (data.status === "200" || (Array.isArray(data) && data.length > 0 && data[0]?.Status === "200")) {
+        toast.success("Extra attendance removed successfully!");
+        return data;
+      } else {
+        const errorMessage = data.message || data.Message || `Unexpected response: ${JSON.stringify(data)}`;
+        console.warn("Unexpected response:", data);
+        toast.error(errorMessage);
+        return rejectWithValue(errorMessage);
+      }
+    } catch (error) {
+      console.error("Remove Extra Attendance API Error:", error);
+      toast.error(`Failed to remove extra attendance: ${error.message}`);
       return rejectWithValue(error.message);
     }
   }

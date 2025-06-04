@@ -35,13 +35,21 @@ const Leaves = () => {
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
   const { employee = {} } = useSelector((state) => state.Employee || {});
   useEffect(() => {
-      dispatch(getDepartment());
-      dispatch(getEmployeeType());
-      dispatch(getEmployee());
-    }, [dispatch]);
+    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
+  }, [dispatch]);
 
   return (
     <React.Fragment>
+      {/* Inline CSS */}
+      <style>
+        {`
+          .table-sm > :not(caption) > * > * {
+            padding: 0px;
+          }
+        `}
+      </style>
       <div className="page-content">
         <Container fluid>
           {/* {loading && <p>Loading...</p>}
@@ -52,13 +60,13 @@ const Leaves = () => {
                 <Form>
                   <PreviewCardHeader
                     title="Leave"
-                    // onCancel={formik.resetForm}
+                  // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row>
                         {/* First Grid */}
-                        <Col lg={9}>
+                        <Col lg={12}>
                           <Row className="gy-4">
                             <Col xxl={2} md={3}>
                               <div className="mb-3">
@@ -84,7 +92,7 @@ const Leaves = () => {
                                 </select>
                               </div>
                             </Col>
-                            <Col xxl={2} md={5}>
+                            <Col xxl={2} md={3}>
                               <div className="mb-3">
                                 <Label
                                   htmlFor="departmentGroupInput"
@@ -106,7 +114,7 @@ const Leaves = () => {
                                 </select>
                               </div>
                             </Col>
-                            <Col xxl={2} md={4}>
+                            <Col xxl={2} md={3}>
                               <div className="mb-3">
                                 <Label
                                   htmlFor="departmentGroupInput"
@@ -125,7 +133,7 @@ const Leaves = () => {
                                 </select>
                               </div>
                             </Col>
-                            <Col xxl={2} md={4}>
+                            <Col xxl={2} md={3}>
                               <div>
                                 <Label htmlFor="VName" className="form-label">
                                   Leave No
@@ -138,7 +146,7 @@ const Leaves = () => {
                                 />
                               </div>
                             </Col>
-                            <Col xxl={2} md={4}>
+                            <Col xxl={2} md={3}>
                               <div>
                                 <Label
                                   htmlFor="DateFrom"
@@ -155,7 +163,7 @@ const Leaves = () => {
                                 />
                               </div>
                             </Col>
-                            <Col xxl={2} md={4}>
+                            <Col xxl={2} md={3}>
                               <div>
                                 <Label
                                   htmlFor="DateFrom"
@@ -172,7 +180,7 @@ const Leaves = () => {
                                 />
                               </div>
                             </Col>
-                         
+
                             <Col xxl={2} md={6}>
                               <div>
                                 <Label htmlFor="VName" className="form-label">
@@ -188,178 +196,14 @@ const Leaves = () => {
                             </Col>
                           </Row>
                         </Col>
-                        {/* Second Grid */}
-                        <Col lg={3}>
-                          <table className="table-sm bg-light  mt-2">
-                            <thead className="table-light ">
-                              <tr>
-                                <th>M-L</th>
-                                <th>Limit</th>
-                                <th>Avail</th>
-                                <th>Balance</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td> Casual</td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                              </tr>
-                              <tr>
-                                <td> Sick</td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                              </tr>
-                              <tr>
-                                <td> Annual</td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                              </tr>
-                              <tr>
-                                <td> CPL</td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                              </tr>
-                              <tr>
-                                <td> Special</td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                                <td>
-                                  <Input
-                                    type="text"
-                                    className="form-control-sm"
-                                    id="VName"
-                                    readOnly
-                                  />
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  2025/06/01:AL
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  2025/06/01:AL
-                                </td>
-                              </tr>
-                              <tr>
-                                <td>
-                                  2025/06/01:HL
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </Col>
+
                       </Row>
                     </div>
                   </CardBody>
                 </Form>
               </Card>
             </Col>
-            <Col lg={12}>
+            <Col lg={9}>
               <Card>
                 <CardBody>
                   <div className="Location-table" id="customerList">
@@ -452,6 +296,171 @@ const Leaves = () => {
                   </div>
                 </CardBody>
               </Card>
+            </Col>
+            {/* Second Grid */}
+            <Col lg={3}>
+              <table className="table-sm bg-light  mt-2">
+                <thead className="table-light ">
+                  <tr>
+                    <th>M-L</th>
+                    <th>Limit</th>
+                    <th>Avail</th>
+                    <th>Balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td> Casual</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> Sick</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> Annual</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> CPL</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> Special</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      2025/06/01:AL
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      2025/06/01:AL
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      2025/06/01:HL
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </Col>
           </Row>
         </Container>
