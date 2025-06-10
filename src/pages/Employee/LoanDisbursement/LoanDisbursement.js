@@ -434,7 +434,7 @@ const LoanDisbursement = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={4}>Special
+                        <Col xxl={2} md={4}>
                           <div className="mb-3">
                             <Label htmlFor="EmpID" className="form-label">
                               Employee
@@ -446,6 +446,7 @@ const LoanDisbursement = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee

@@ -10,6 +10,7 @@ import {
   Label,
   Form,
 } from "reactstrap";
+import { Link } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { format } from "date-fns";
@@ -26,17 +27,14 @@ import {
   submitLeave,
   updateLeave,
 } from "../../../slices/Attendance/leave/thunk";
-import config from "../../../config";
 
 const Leaves = () => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [leaveBalances, setLeaveBalances] = useState([]);
 
-  // Redux to get data from state
+  // redux to get data from state
   const { loading, error, leaves } = useSelector((state) => state.Leave);
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
@@ -54,10 +52,7 @@ const Leaves = () => {
     dispatch(getLeave());
   }, [dispatch]);
 
-<<<<<<< HEAD
-document.title = "Leave | EMS";
-=======
-  // Formik setup
+  // form
   const formik = useFormik({
     initialValues: {
       EmpID: "",
@@ -88,22 +83,23 @@ document.title = "Leave | EMS";
       try {
         if (editingGroup) {
           await dispatch(
-            updateLeave({ ...values, VID: editingGroup.VID })
-          ).unwrap();
-          setAttendanceRecords([]);
-          setLeaveBalances([]);
+            updateLeave({...values,VID: editingGroup.VID,})).unwrap();
         } else {
           await dispatch(submitLeave(values)).unwrap();
         }
+
+        // Only runs if the above dispatch is successful
         formik.resetForm();
       } catch (error) {
+        // Error already handled by toast in the thunk
         console.error("Submission failed:", error);
       }
     },
   });
 
-  // Handle edit click and fetch attendance records and leave balances
-  const handleEditClick = async (group) => {
+  // Handle edit click
+  const handleEditClick = (group) => {
+    // Find the employee record to get the ETypeID
     const selectedEmployee = employee.find(
       (emp) => String(emp.EmpID) === String(group.EmpID)
     );
@@ -123,103 +119,25 @@ document.title = "Leave | EMS";
       CompanyID: 3001,
       Tranzdatetime: "2025-04-24T10:19:32.099586Z",
     });
-
-    // Fetch attendance records
-    try {
-      const response = await fetch(
-        `${config.api.API_URL}employeeLast10AttRecord/?empID=${group.EmpID}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const result = await response.json();
-      if (result.status === "0" && result.data) {
-        setAttendanceRecords(result.data);
-      } else {
-        console.error("Failed to fetch attendance records:", result.message);
-        setAttendanceRecords([]);
-      }
-    } catch (error) {
-      console.error("Error fetching attendance records:", error);
-      setAttendanceRecords([]);
-    }
-
-    // Get current year and date for API query
-    const currentYear = new Date().getFullYear();
-    const dateFrom = `${currentYear}-01-01`;
-    const dateTo = `${currentYear}-12-31`;
-    const vDate = format(new Date(), "yyyy-MM-dd");
-
-    // Fetch leave balance
-    try {
-      const response = await fetch(
-        `${config.api.API_URL}employeeLeaveBalance?Orgini=LTT&cWhere&DateFrom=${dateFrom}&DateTo=${dateTo}&VDate=${vDate}&IsAu=0&EmpID=${group.EmpID}&IsExport=0&cWhereLimit`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      const result = await response.json();
-      setLeaveBalances(result);
-      console.log(result);
-    } catch (error) {
-      console.error("Error fetching leave balances:", error);
-      setLeaveBalances([]);
-    }
   };
-
   // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
   };
-
   const handleDeleteConfirm = () => {
     if (deleteId) {
       dispatch(deleteLeave(deleteId));
-      setAttendanceRecords([]);
-      setLeaveBalances([]);
     }
     setDeleteModal(false);
   };
-
   const formatDate = (dateString) => {
     return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
   };
-
-  // Handle cancel action
-  const handleCancel = () => {
-    formik.resetForm();
-    setEditingGroup(null);
-    setAttendanceRecords([]);
-    setLeaveBalances([]);
-  };
-
-  // Map leave types to API response
-  // const leaveTypes = [
-  //   { name: "Casual", data: leaveBalances.find((item) => item.VName === "Casual") || {} },
-  //   { name: "Sick", data: leaveBalances.find((item) => item.VName === "Sick") || {} },
-  //   { name: "Annual", data: leaveBalances.find((item) => item.VName === "Annual") || {} },
-  //   { name: "CPL", data: leaveBalances.find((item) => item.VName === "CPL") || {} },
-  //   { name: "Special", data: leaveBalances.find((item) => item.VName === "Special") || {} },
-  // ];
-  // Map leave types to the API response
-  const leaveTypes = [
-    { name: "Casual", data: leaveBalances[0] },
-    { name: "Sick", data: leaveBalances[1] },
-    { name: "Annual", data: leaveBalances[2] },
-    { name: "CPL", data: leaveBalances[3] },
-    { name: "Special", data: leaveBalances[4] || {} }, // Handle case where Special might not exist
-  ];
   document.title = "Leave | EMS";
->>>>>>> e6bd49e06ea08f933bd3f841cb81088f7c2ef8ff
   return (
     <React.Fragment>
+      {/* Inline CSS */}
       <style>
         {`
           .table-sm > :not(caption) > * > * {
@@ -235,10 +153,14 @@ document.title = "Leave | EMS";
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader title="Leave" onCancel={handleCancel} />
+                  <PreviewCardHeader
+                    title="Leave"
+                    onCancel={formik.resetForm}
+                  />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row>
+                        {/* First Grid */}
                         <Col lg={12}>
                           <Row className="gy-4">
                             <Col xxl={2} md={3}>
@@ -315,7 +237,7 @@ document.title = "Leave | EMS";
                                   Leave Type
                                 </Label>
                                 <select
-                                  className="form-select form-select-sm"
+                                  className="form-select  form-select-sm"
                                   name="LeaveTypeID"
                                   id="LeaveTypeID"
                                   value={formik.values.LeaveTypeID}
@@ -444,6 +366,7 @@ document.title = "Leave | EMS";
                         </div>
                       </Col>
                     </Row>
+
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
@@ -455,7 +378,7 @@ document.title = "Leave | EMS";
                             <th>Leave Type</th>
                             <th>Date From</th>
                             <th>Date To</th>
-                            <th>Leave No</th>
+                            <th>Laeve No</th>
                             <th>Remarks</th>
                             <th>Action</th>
                           </tr>
@@ -477,11 +400,11 @@ document.title = "Leave | EMS";
                                 </td>
                                 <td>{formatDate(group.DateFrom)}</td>
                                 <td>{formatDate(group.DateTo)}</td>
-                                <td>{group.VNo}</td>
+                                <td>{group.VName}</td>
                                 <td>{group.VName}</td>
                                 <td>
                                   <div className="d-flex gap-2">
-                                    <div className="edit">
+                                    <div className="edit ">
                                       <Button
                                         className="btn btn-soft-info"
                                         onClick={() => handleEditClick(group)}
@@ -517,9 +440,10 @@ document.title = "Leave | EMS";
                 </CardBody>
               </Card>
             </Col>
+            {/* Second Grid */}
             <Col lg={3}>
-              <table className="table-sm bg-light mt-2">
-                <thead className="table-light">
+              <table className="table-sm bg-light  mt-2">
+                <thead className="table-light ">
                   <tr>
                     <th>M-L</th>
                     <th>Limit</th>
@@ -528,58 +452,150 @@ document.title = "Leave | EMS";
                   </tr>
                 </thead>
                 <tbody>
-                  {leaveTypes.map((type) => (
-                    <tr key={type.name}>
-                      <td>{type.name}</td>
-                      <td>
-                        <Input
-                          type="text"
-                          className="form-control-sm"
-                          id={`limit-${type.name}`}
-                          value={type.data?.Limit || ""}
-                          readOnly
-                          style={{ width: "50px" }}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          type="text"
-                          className="form-control-sm"
-                          id={`avail-${type.name}`}
-                          value={type.data?.Avail || ""}
-                          readOnly
-                          style={{ width: "50px" }}
-                        />
-                      </td>
-                      <td>
-                        <Input
-                          type="text"
-                          className="form-control-sm"
-                          id={`balance-${type.name}`}
-                          value={type.data?.Balance || ""}
-                          readOnly
-                          style={{ width: "50px" }}
-                        />
-                      </td>
-                    </tr>
-                  ))}
-                  {attendanceRecords.length > 0 ? (
-                    attendanceRecords.map((record) => (
-                      <tr key={record.VID}>
-                        <td>
-                          {formatDate(record.VDate)}: {record.VName}
-                        </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td>No records found.</td>
-                    </tr>
-                  )}
+                  <tr>
+                    <td> Casual</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> Sick</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> Annual</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> CPL</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td> Special</td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <Input
+                        type="text"
+                        className="form-control-sm"
+                        id="VName"
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>2025/06/01:AL</td>
+                  </tr>
+                  <tr>
+                    <td>2025/06/01:AL</td>
+                  </tr>
+                  <tr>
+                    <td>2025/06/01:HL</td>
+                  </tr>
                 </tbody>
               </table>
             </Col>
