@@ -5,7 +5,7 @@ import config from "../../../config";
 import { resetAttendanceEmployeeData } from "./reducer";
 
 const API_ENDPOINT = `${config.api.API_URL}attSingle/`;
-const REMOVE_EXTRA_ATTENDANCE_API = "https://192.168.18.65:8001/ems/removeExtraAttendanceAPI/";
+const REMOVE_EXTRA_ATTENDANCE_API = `${config.api.API_URL}removeExtraAttendance/`;
 
 // Helper function to format timestamps to HH:mm
 const formatTime = (timestamp) => {

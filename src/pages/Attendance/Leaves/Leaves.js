@@ -43,11 +43,8 @@ const Leaves = () => {
     dispatch(getEmployeeType());
     dispatch(getEmployee());
   }, [dispatch]);
-<<<<<<< HEAD
 
-=======
 document.title = "Leave | EMS";
->>>>>>> 1dba2901241a6b11cf2cc0fe041d39ba22707c1b
   return (
     <React.Fragment>
       {/* Inline CSS */}

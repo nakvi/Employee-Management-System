@@ -116,13 +116,15 @@ export * from "./administration/secUserRole/thunk";
 // Attendance
 export * from "./Attendance/AttendanceEntry/thunk";
 export * from "./Attendance/AttendanceChange/thunk";
-<<<<<<< HEAD
 export * from "./Attendance/AttendanceEmployee/thunk";
-=======
 export * from "./Attendance/leaveType/thunk";
 export * from "./Attendance/leave/thunk";
 export * from "./Attendance/specialLeaveEntry/thunk";
 export * from "./Attendance/leaveEntryDepartment/thunk";
 export * from "./Attendance/lateComingExemptAttendance/thunk";
-
->>>>>>> 1dba2901241a6b11cf2cc0fe041d39ba22707c1b
+// OTDaily
+export * from "./Attendance/OTDaily/thunk";
+// OTMonthly
+export * from "./Attendance/OTMonthly/thunk";
+// Roaster
+export * from "./Attendance/Roaster/thunk";
