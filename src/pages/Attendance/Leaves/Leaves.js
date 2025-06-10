@@ -54,9 +54,7 @@ const Leaves = () => {
     dispatch(getLeave());
   }, [dispatch]);
 
-<<<<<<< HEAD
 document.title = "Leave | EMS";
-=======
   // Formik setup
   const formik = useFormik({
     initialValues: {
@@ -217,7 +215,6 @@ document.title = "Leave | EMS";
     { name: "Special", data: leaveBalances[4] || {} }, // Handle case where Special might not exist
   ];
   document.title = "Leave | EMS";
->>>>>>> e6bd49e06ea08f933bd3f841cb81088f7c2ef8ff
   return (
     <React.Fragment>
       <style>
