@@ -30,6 +30,8 @@ const SalaryAllowanceDeduction = () => {
   const [editingGroup, setEditingGroup] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  const [tableAllowanceDetails, setTableAllowanceDetails] = useState([]);
+
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     setSelectedDate(today);
@@ -60,6 +62,10 @@ const SalaryAllowanceDeduction = () => {
     dispatch(getSalaryAllowanceDeduction());
     dispatch(getAllowanceDeductionGroup());
   }, [dispatch]);
+
+  useEffect(() => {
+    setTableAllowanceDetails(allowanceDeductionDetails);
+  }, [salaryAllowanceDeduction]);
 
   // Formik setup
   const formik = useFormik({
@@ -97,27 +103,31 @@ const SalaryAllowanceDeduction = () => {
       ChequeDate: Yup.date().required("Cheque Date is required"),
       IsActive: Yup.boolean(),
     }),
-     onSubmit: (values) => {
-         // Add your form submission logic here
-         const transformedValues = {
-           ...values,
-           IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
-         };
-         if (editingGroup) {
-           dispatch(
-             updateSalaryAllowanceDeduction({ ...transformedValues, VID: editingGroup.VID })
-           );
-           setEditingGroup(null); // Reset after submission
-         } else {
-           dispatch(submitSalaryAllowanceDeduction(transformedValues));
-         }
-         formik.resetForm();
-       },
-    });
+    onSubmit: (values, { resetForm }) => {
+      const transformedValues = {
+        ...values,
+        IsActive: values.IsActive ? 1 : 0,
+      };
+      if (editingGroup) {
+        dispatch(
+          updateSalaryAllowanceDeduction({ ...transformedValues, VID: editingGroup.VID })
+        ).then(() => {
+          dispatch(getSalaryAllowanceDeduction());
+          setEditingGroup(null);
+          resetForm();
+        });
+      } else {
+        dispatch(submitSalaryAllowanceDeduction(transformedValues)).then(() => {
+          dispatch(getSalaryAllowanceDeduction());
+          resetForm();
+        });
+      }
+    },
+  });
 
   // Fetch allowanceDeductionDetails when GroupID changes
   useEffect(() => {
-    if (formik.values.VType && formik.values.GroupID) {
+    if (formik.values.VType && formik.values.GroupID && !editingGroup) {
       dispatch(
         getAllowanceDeductionDetails({
           VType: formik.values.VType,
@@ -126,40 +136,54 @@ const SalaryAllowanceDeduction = () => {
       );
       formik.setFieldValue("AllowDedID", "");
     }
-  }, [formik.values.VType, formik.values.GroupID, dispatch]);
+  }, [formik.values.VType, formik.values.GroupID, dispatch, editingGroup]);
 
-     const formatDate = (dateString) => {
-         return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
-       };
-        const formatDateForInput = (dateString) => {
-      return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
-    };
-    // function
-const fetchTypeAndEffectDetails = async (allowDedID) => {
-  try {
-    const response = await fetch(`${config.api.API_URL}getTypeByAllowDedId/?allowDedID=${allowDedID}`);
-    const data = await response.json();
-    if (data && data.length > 0) {
-      return {
-        VType: data[0].VType, // Changed from data[0].VType to data[0].type
-        GroupID: data[0].EffectID.toString()
-      };
+  const formatDate = (dateString) => {
+    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+  };
+
+  const formatDateForInput = (dateString) => {
+    return dateString ? dateString.split("T")[0] : "";
+  };
+
+  const fetchTypeAndEffectDetails = async (allowDedID) => {
+    try {
+      const response = await fetch(
+        `${config.api.API_URL}getTypeByAllowDedId/?allowDedID=${allowDedID}`
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        return {
+          VType: data[0].VType,
+          GroupID: data[0].EffectID.toString(),
+        };
+      }
+      return { VType: "", GroupID: "" };
+    } catch (error) {
+      console.error("Error fetching type and effect details:", error);
+      return { VType: "", GroupID: "" };
     }
-    return { VType: '', GroupID: '' };
-  } catch (error) {
-    console.error("Error fetching type and effect details:", error);
-    return { VType: '', GroupID: '' };
-  }
-};
-// Handle edit button click
-  const handleEditClick = async (group) => {
-       // Find the employee record to get the ETypeID
-  const selectedEmployee = employee.find(
-    (emp) => String(emp.EmpID) === String(group.EmpID)
-  );
-    const { VType, GroupID } =await  fetchTypeAndEffectDetails(group.AllowDedID);
+  };
 
-  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+  // Handle edit button click
+  const handleEditClick = async (group) => {
+    const selectedEmployee = employee.find(
+      (emp) => String(emp.EmpID) === String(group.EmpID)
+    );
+    const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+    const { VType, GroupID } = await fetchTypeAndEffectDetails(group.AllowDedID);
+
+    // Fetch allowanceDeductionDetails for the selected VType and GroupID
+    if (VType && GroupID) {
+      await dispatch(
+        getAllowanceDeductionDetails({
+          VType,
+          GroupID,
+        })
+      );
+    }
+
+    // Set form values after fetching details
     setEditingGroup(group);
     formik.setValues({
       VName: group.VName || "",
@@ -167,30 +191,34 @@ const fetchTypeAndEffectDetails = async (allowDedID) => {
       EmpID: group.EmpID || "",
       ETypeID: employeeTypeId,
       VType: VType || group.VType || "",
-     GroupID: GroupID || group.GroupID || "",
-      // GroupID: group.GroupID || "",
+      GroupID: GroupID || group.GroupID || "",
       AllowDedID: group.AllowDedID || "",
       Amount: group.Amount || 0,
       AccountID: group.AccountID || "",
       ChequeNo: group.ChequeNo || "",
-      ChequeDate:formatDateForInput(group.ChequeDate),
+      ChequeDate: formatDateForInput(group.ChequeDate),
       IsActive: group.IsActive === 1,
       UID: group.UID || 501,
       CompanyID: group.CompanyID || "1001",
       Tranzdatetime: group.Tranzdatetime || new Date().toISOString(),
     });
-     };
-     // Delete Data
-     const handleDeleteClick = (id) => {
-       setDeleteId(id);
-       setDeleteModal(true);
-     };
-     const handleDeleteConfirm = () => {
-       if (deleteId) {
-         dispatch(deleteSalaryAllowanceDeduction(deleteId));
-       }
-       setDeleteModal(false);
-     };
+  };
+
+  // Delete Data
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      dispatch(deleteSalaryAllowanceDeduction(deleteId)).then(() => {
+        dispatch(getSalaryAllowanceDeduction());
+      });
+    }
+    setDeleteModal(false);
+  };
+
   document.title = "Salary Allowance Deduction | EMS";
 
   return (
@@ -202,13 +230,13 @@ const fetchTypeAndEffectDetails = async (allowDedID) => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader title="Salary Allowance Deduction" 
+                  <PreviewCardHeader
+                    title="Salary Allowance Deduction"
                     onCancel={() => {
                       formik.resetForm();
-                     
                     }}
-                     isEditMode={!!editingGroup}
-                     />
+                    isEditMode={!!editingGroup}
+                  />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -496,7 +524,7 @@ const fetchTypeAndEffectDetails = async (allowDedID) => {
                             <th>Employee</th>
                             <th>Details</th>
                             <th>Amount</th>
-                            <th>Date </th>
+                            <th>Date</th>
                             <th>Bank</th>
                             <th>Cheque No</th>
                             <th>Cheque Date</th>
@@ -508,35 +536,39 @@ const fetchTypeAndEffectDetails = async (allowDedID) => {
                             salaryAllowanceDeduction.map((group) => (
                               <tr key={group.VID}>
                                 <td>
-                                  {employee.find((emp) => String(emp.EmpID) === String(group.EmpID))?.EName|| "N/A"}
+                                  {employee.find(
+                                    (emp) => String(emp.EmpID) === String(group.EmpID)
+                                  )?.EName || "N/A"}
                                 </td>
-                               
                                 <td>
-                                  {allowanceDeductionDetails.find(
+                                  {tableAllowanceDetails.find(
                                     (item) => item.VID === group.AllowDedID
                                   )?.VName || "N/A"}
                                 </td>
                                 <td>{group.Amount || "N/A"}</td>
-                                 <td>{formatDate(group.VDate)}</td>
+                                <td>{formatDate(group.VDate)}</td>
                                 <td>
                                   {salaryBank.find(
                                     (bank) => bank.VID === group.AccountID
                                   )?.VName || "N/A"}
                                 </td>
                                 <td>{group.ChequeNo || "N/A"}</td>
-                                 <td>{formatDate(group.ChequeDate)}</td>
+                                <td>{formatDate(group.ChequeDate)}</td>
                                 <td>
                                   <div className="d-flex gap-2">
                                     <div className="edit">
-                                      <Button className="btn btn-soft-info"
-                                      onClick={() => handleEditClick(group)}>
+                                      <Button
+                                        className="btn btn-soft-info"
+                                        onClick={() => handleEditClick(group)}
+                                      >
                                         <i className="bx bx-edit"></i>
                                       </Button>
                                     </div>
                                     <div className="delete">
-                                      <Button className="btn btn-soft-danger"onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }>
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() => handleDeleteClick(group.VID)}
+                                      >
                                         <i className="ri-delete-bin-2-line"></i>
                                       </Button>
                                     </div>
@@ -546,7 +578,7 @@ const fetchTypeAndEffectDetails = async (allowDedID) => {
                             ))
                           ) : (
                             <tr>
-                              <td colSpan="11" className="text-center">
+                              <td colSpan="8" className="text-center">
                                 No Salary Allowance Deduction found.
                               </td>
                             </tr>
@@ -561,11 +593,11 @@ const fetchTypeAndEffectDetails = async (allowDedID) => {
           </Row>
         </Container>
       </div>
-       <DeleteModal
-              show={deleteModal}
-              onCloseClick={() => setDeleteModal(!deleteModal)}
-              onDeleteClick={handleDeleteConfirm}
-            />
+      <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(false)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };

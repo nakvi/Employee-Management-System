@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { format } from "date-fns";
+import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { FiRefreshCw } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,8 +29,11 @@ import {
 } from "../../../slices/employee/gratuity/thunk";
 const Gratuity = () => {
   const dispatch = useDispatch();
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteId, setDeleteId] = useState(null);
+  const [editingGroup, setEditingGroup] = useState(null);
+  // redux
   const { gratuity, loading, error } = useSelector((state) => state.Gratuity);
-
   const { employeeType } = useSelector((state) => state.EmployeeType);
   const { employee = {} } = useSelector((state) => state.Employee || {});
   const { salaryBank } = useSelector((state) => state.SalaryBank);
@@ -44,76 +48,144 @@ const Gratuity = () => {
   // Formik setup
   const formik = useFormik({
     initialValues: {
-      VName: "",
+      EmpID: "",
+      ETypeID: "",
       VDate: "",
       DemandTill: "",
       PaidTill: "",
       PaidOld: "",
-      EmpID: "",
-      ETypeID: "",
       DueAmount: "",
       PaidAmount: "",
-      NewAmount: "",
-      GYearsEffected: "",
-      GYears: "",
-      GMonths: "",
-      isApproved: 1,
-      isPosted: 1,
-      PostedDate: "1900-01-01",
-      PostedBy: 1,
       CompanyBankID: "",
       ChequeNo: "",
       ChequeDate: "",
-      FinancialYearID: 2025,
-      isCancel: 0,
+      VName: "",
+      NewAmount: "5000",
       UID: 10,
       CompanyID: "1001",
       Tranzdatetime: new Date().toISOString(),
     },
     validationSchema: Yup.object({
-      ETypeID: Yup.number()
-        .min(1, "Employee Type is required")
-        .required("Required"),
-      EmpID: Yup.string().required("Employee is required"),
-      VName: Yup.string().required("Name is required"),
-      VDate: Yup.date().required("Date is required"),
-      DemandTill: Yup.date().required("Demand Till is required"),
-      PaidTill: Yup.date().required("Paid Till is required"),
-      PaidOld: Yup.date().required("Previous Date is required"),
-      DueAmount: Yup.number().required("Due Amount is required"),
-      PaidAmount: Yup.number().required("Paid Amount is required"),
-      NewAmount: Yup.number().required("New Amount is required"),
-      CompanyBankID: Yup.number()
-        .min(1, "Bank is required")
-        .required("Required"),
-      ChequeNo: Yup.string().required("Cheque No is required"),
-      ChequeDate: Yup.date().required("Cheque Date is required"),
-      isApproved: Yup.number().oneOf([0, 1], "Invalid approval status"),
-      isPosted: Yup.number().oneOf([0, 1], "Invalid posted status"),
-      isCancel: Yup.number().oneOf([0, 1], "Invalid cancel status"),
+      // ETypeID: Yup.number()
+      //   .min(1, "Employee Type is required")
+      //   .required("Required"),
+      // EmpID: Yup.string().required("Employee is required"),
+      // VName: Yup.string().required("Remarks is required"),
+      // VDate: Yup.date().required("Date is required"),
+      // DemandTill: Yup.date().required("Demand Till is required"),
+      // PaidTill: Yup.date().required("Paid Till is required"),
+      // PaidOld: Yup.date().required("Previous Date is required"),
+      // DueAmount: Yup.number().required("Due Amount is required"),
+      // PaidAmount: Yup.number().required("Paid Amount is required"),
+      // NewAmount: Yup.number().required("New Amount is required"),
+      // CompanyBankID: Yup.number()
+      //   .min(1, "Bank is required")
+      //   .required("Required"),
+      // ChequeNo: Yup.string().required("Cheque No is required"),
+      // ChequeDate: Yup.date().required("Cheque Date is required"),
+      // isApproved: Yup.number().oneOf([0, 1], "Invalid approval status"),
+      // isPosted: Yup.number().oneOf([0, 1], "Invalid posted status"),
+      // isCancel: Yup.number().oneOf([0, 1], "Invalid cancel status"),
     }),
-    onSubmit: (values) => {
-      // Add your form submission logic here
+    // onSubmit: (values) => {
+    //   // Add your form submission logic here
+    //   const transformedValues = {
+    //     ...values,
+    //     IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+    //   };
+    //   try {
+    //   if (editingGroup) {
+    //     dispatch(updateGratuity({ ...transformedValues, VID: editingGroup.VID }));
+    //     setEditingGroup(null); // Reset after submission
+    //   } else {
+    //     dispatch(submitGratuity(transformedValues));
+    //   }
+    //   formik.resetForm();
+    //    } catch (error) {
+    //     // Error already handled by toast, so do nothing here or log if needed
+    //     console.error("Submission failed:", error);
+    //   }
+    // },
+    onSubmit: async (values) => {
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+        IsActive: values.IsActive ? 1 : 0,
       };
-      if (editingGroup) {
-        dispatch(update({ ...transformedValues, VID: editingGroup.VID }));
-        setEditingGroup(null); // Reset after submission
-      } else {
-        dispatch(submitSalaryAllowanceDeduction(transformedValues));
+
+      try {
+        let result;
+        if (editingGroup) {
+          result = await dispatch(
+            updateGratuity({ ...transformedValues, VID: editingGroup.VID })
+          );
+          setEditingGroup(null);
+        } else {
+          result = await dispatch(submitGratuity(transformedValues));
+        }
+
+        // Check if the asyncThunk was fulfilled
+        if (
+          submitGratuity.fulfilled.match(result) ||
+          updateGratuity.fulfilled.match(result)
+        ) {
+          formik.resetForm();
+        }
+      } catch (error) {
+        console.error("Submission failed:", error);
+        // Errors already shown via toast, nothing else needed
       }
-      formik.resetForm();
     },
   });
+  // Handle edit click
+  const handleEditClick = (group) => {
+    // Find the employee record to get the ETypeID
+    const selectedEmployee = employee.find(
+      (emp) => String(emp.EmpID) === String(group.EmpID)
+    );
+    const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+
+    setEditingGroup(group);
+    formik.setValues({
+      VID: group.VID,
+      EmpID: group.EmpID,
+      ETypeID: employeeTypeId,
+      VDate: group.VDate.split("T")[0],
+      DemandTill: group.DemandTill.split("T")[0],
+      PaidTill: group.PaidTill.split("T")[0],
+      PaidOld: group.PaidOld.split("T")[0],
+      DueAmount: group.DueAmount,
+      PaidAmount: group.PaidAmount,
+      CompanyBankID: group.CompanyBankID,
+      ChequeNo: group.ChequeNo,
+      ChequeDate: group.ChequeDate.split("T")[0],
+      VName: group.VName,
+      NewAmount: "5000",
+      UID: 202,
+      CompanyID: 3001,
+      Tranzdatetime: "2025-04-24T10:19:32.099586Z",
+    });
+  };
+  const formatDate = (dateString) => {
+    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+  };
+  // Delete Data
+  const handleDeleteClick = (id) => {
+    setDeleteId(id);
+    setDeleteModal(true);
+  };
+  const handleDeleteConfirm = () => {
+    if (deleteId) {
+      dispatch(deleteGratuity(deleteId));
+    }
+    setDeleteModal(false);
+  };
   document.title = "Gratuity | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
@@ -164,6 +236,7 @@ const Gratuity = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee
@@ -282,9 +355,7 @@ const Gratuity = () => {
                               id="DueAmount"
                               name="DueAmount"
                               placeholder="Due Amount"
-                              value={formik.values.DueAmount}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              {...formik.getFieldProps("DueAmount")}
                             />
                             {formik.touched.DueAmount &&
                             formik.errors.DueAmount ? (
@@ -296,15 +367,22 @@ const Gratuity = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="PaidAmount" className="form-label">
                               Amount
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               className="form-control-sm"
-                              id="VName"
+                              id="PaidAmount"
                               placeholder="Amount"
+                              {...formik.getFieldProps("PaidAmount")}
                             />
+                            {formik.touched.PaidAmount &&
+                            formik.errors.PaidAmount ? (
+                              <div className="text-danger">
+                                {formik.errors.PaidAmount}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={4}>
@@ -349,9 +427,7 @@ const Gratuity = () => {
                               id="ChequeNo"
                               name="ChequeNo"
                               placeholder="Cheque No"
-                              value={formik.values.ChequeNo}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              {...formik.getFieldProps("ChequeNo")}
                             />
                             {formik.touched.ChequeNo &&
                             formik.errors.ChequeNo ? (
@@ -371,9 +447,7 @@ const Gratuity = () => {
                               className="form-control-sm"
                               id="ChequeDate"
                               name="ChequeDate"
-                              value={formik.values.ChequeDate}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              {...formik.getFieldProps("ChequeDate")}
                             />
                             {formik.touched.ChequeDate &&
                             formik.errors.ChequeDate ? (
@@ -463,7 +537,7 @@ const Gratuity = () => {
                             <th>Demand Date </th>
                             <th>Demand Till</th>
                             <th>Paid Till</th>
-                            <th> Previous</th>
+                            <th>Previous</th>
                             <th>Due Amount</th>
                             <th>Amount</th>
                             <th>Bank</th>
@@ -473,32 +547,59 @@ const Gratuity = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          <tr>
-                            <td>001:Sir Amir:Hr</td>
-                            <td>02/02/2025</td>
-                            <td>Habib</td>
-                            <td>84843</td>
-                            <td>02/03/2025</td>
-                            <td>2000</td>
-                            <td>Loan</td>
-                            <td>200</td>
-                            <td>16</td>
-                            <td>205555550</td>
-                            <td>
-                              <div className="d-flex gap-2">
-                                <div className="edit ">
-                                  <Button className="btn btn-soft-info">
-                                    <i className="bx bx-edit"></i>
-                                  </Button>
-                                </div>
-                                <div className="delete">
-                                  <Button className="btn btn-soft-danger">
-                                    <i className="ri-delete-bin-2-line"></i>
-                                  </Button>
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
+                          {gratuity?.length > 0 ? (
+                            gratuity.map((group) => (
+                              <tr key={group.VID}>
+                                <td>
+                                  {employee.find(
+                                    (emp) =>
+                                      String(emp.EmpID) === String(group.EmpID)
+                                  )?.EName || "N/A"}
+                                </td>
+                                <td>{formatDate(group.VDate)}</td>
+                                <td>{formatDate(group.DemandTill)}</td>
+                                <td>{formatDate(group.PaidTill)}</td>
+                                <td>{formatDate(group.PaidOld)}</td>
+                                <td>{group.DueAmount}</td>
+                                <td>{group.PaidAmount}</td>
+                                <td>
+                                  {salaryBank.find(
+                                    (bank) => bank.VID === group.CompanyBankID
+                                  )?.VName || "N/A"}
+                                </td>
+                                <td>{group.ChequeNo}</td>
+                                <td>205555550</td>
+                                <td>
+                                  <div className="d-flex gap-2">
+                                    <div className="edit ">
+                                      <Button
+                                        className="btn btn-soft-info"
+                                        onClick={() => handleEditClick(group)}
+                                      >
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                    </div>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="11" className="text-center">
+                                No Gratuity found.
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                       <div className="noresult" style={{ display: "none" }}>
@@ -539,6 +640,11 @@ const Gratuity = () => {
           </Row>
         </Container>
       </div>
+      <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };

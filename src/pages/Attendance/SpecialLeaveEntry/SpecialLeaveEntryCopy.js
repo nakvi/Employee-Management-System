@@ -17,61 +17,65 @@ import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useDispatch, useSelector } from "react-redux";
-import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
 import { getLeaveType } from "../../../slices/Attendance/leaveType/thunk";
 import {
-  deleteLeaveEntryDepartment,
-  getLeaveEntryDepartment,
-  submitLeaveEntryDepartment,
-  updateLeaveEntryDepartment,
-} from "../../../slices/Attendance/leaveEntryDepartment/thunk";
-const LeaveEntryDepartment = () => {
+  deleteSpecialLeaveEntry,
+  getSpecialLeaveEntry,
+  submitSpecialLeaveEntry,
+  updateSpecialLeaveEntry,
+} from "../../../slices/Attendance/specialLeaveEntry/thunk";
+import { deleteLeave } from "../../../slices/Attendance/leave/thunk";
+
+const SpecialLeaveEntry = () => {
   const dispatch = useDispatch();
-  const [editingGroup, setEditingGroup] = useState(null);
-  const [deleteModal, setDeleteModal] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
   // redux to get data from state
-  const { loading, error, leaveEntryDepartment } = useSelector(
-    (state) => state.LeaveEntryDepartment
+  const { loading, error, specialLeaveEntry } = useSelector(
+    (state) => state.SpecialLeaveEntry
   );
-  const { department = {} } = useSelector((state) => state.Department || {});
-  const departmentList = department.data || [];
+  const { employeeType = [] } = useSelector(
+    (state) => state.EmployeeType || {}
+  );
+  const { employee = {} } = useSelector((state) => state.Employee || {});
   const { leaveType } = useSelector((state) => state.LeaveType);
 
   useEffect(() => {
-    dispatch(getDepartment());
+    dispatch(getEmployeeType());
+    dispatch(getEmployee());
     dispatch(getLeaveType());
-    dispatch(getLeaveEntryDepartment());
+    dispatch(getSpecialLeaveEntry());
   }, [dispatch]);
+
   // form
   const formik = useFormik({
     initialValues: {
       VName: "",
       VDate: "",
-      DeptID:"",
+      EmpID: "",
+      ETypeID: "",
+      VNo: "",
       LeaveTypeID: 0,
       UID: 501,
       CompanyID: "1001",
     },
     validationSchema: Yup.object({
-      DeptID: Yup.number()
-        .min(1, "Department Type is required")
+      ETypeID: Yup.number()
+        .min(1, "Employee Type is required")
         .required("Required"),
       VName: Yup.string().required("Remarks is required"),
+      VNo: Yup.string().required("Application is required"),
       LeaveTypeID: Yup.number()
         .min(1, "Leave Type is required")
         .required("Required"),
+      EmpID: Yup.string().required("Employee is required"),
       VDate: Yup.date().required("Date is required"),
     }),
     onSubmit: async (values) => {
       try {
-        if (editingGroup) {
-          dispatch(
-            updateLeaveEntryDepartment({ ...values, VID: editingGroup.VID })
-          );
-        } else {
-          dispatch(submitLeaveEntryDepartment(values)).then(() => {});
-        }
+        const result = await dispatch(submitSpecialLeaveEntry(values)).unwrap();
         // If successful
         formik.resetForm();
       } catch (error) {
@@ -80,22 +84,21 @@ const LeaveEntryDepartment = () => {
       }
     },
   });
-
-  // Delete Data
-  const handleDeleteClick = (id) => {
-    setDeleteId(id);
-    setDeleteModal(true);
-  };
-  const handleDeleteConfirm = () => {
-    if (deleteId) {
-      dispatch(deleteLeaveEntryDepartment(deleteId));
-    }
-    setDeleteModal(false);
-  };
+    // Delete Data
+    const handleDeleteClick = (id) => {
+      setDeleteId(id);
+      setDeleteModal(true);
+    };
+    const handleDeleteConfirm = () => {
+      if (deleteId) {
+        dispatch(deleteLeave(deleteId))
+      }
+      setDeleteModal(false);
+    };
   const formatDate = (dateString) => {
     return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
   };
-  document.title = "Leave Entry Department | EMS";
+  document.title = "Special Leave Entry | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -107,7 +110,7 @@ const LeaveEntryDepartment = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title="Leave Entry Department"
+                    title="Special Leave Entry"
                     onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
@@ -115,27 +118,82 @@ const LeaveEntryDepartment = () => {
                       <Row className="gy-4">
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label htmlFor="DeptID" className="form-label">
-                              Department
+                            <Label htmlFor="ETypeID" className="form-label">
+                              E-Type
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="DeptID"
-                              id="DeptID"
-                              value={formik.values.DeptID}
+                              className="form-select form-select-sm"
+                              name="ETypeID"
+                              id="ETypeID"
+                              value={formik.values.ETypeID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
-                              {departmentList.map((item) => (
+                              <option value="">---Select---</option>
+                              {employeeType.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
-                            {formik.touched.DeptID && formik.errors.DeptID ? (
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
                               <div className="text-danger">
-                                {formik.errors.DeptID}
+                                {formik.errors.ETypeID}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={4}>
+                          <div className="mb-3">
+                            <Label htmlFor="EmpID" className="form-label">
+                              Employee
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              name="EmpID"
+                              id="EmpID"
+                              value={formik.values.EmpID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
+                            >
+                              <option value="">---Select---</option>
+                              {employee
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
+                                .map((item) => (
+                                  <option key={item.EmpID} value={item.EmpID}>
+                                    {item.EName}
+                                  </option>
+                                ))}
+                            </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="VNo" className="form-label">
+                              Application No
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="VNo"
+                              name="VNo"
+                              placeholder="Application No"
+                              {...formik.getFieldProps("VNo")}
+                            />
+                            {formik.touched.VNo && formik.errors.VNo ? (
+                              <div className="text-danger">
+                                {formik.errors.VNo}
                               </div>
                             ) : null}
                           </div>
@@ -239,7 +297,8 @@ const LeaveEntryDepartment = () => {
                       >
                         <thead className="table-light">
                           <tr>
-                            <th>Department</th>
+                            <th>Employee</th>
+                            <th>Application No</th>
                             <th>Date</th>
                             <th>Leave Type</th>
                             <th>Remarks</th>
@@ -247,14 +306,16 @@ const LeaveEntryDepartment = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          {leaveEntryDepartment?.length > 0 ? (
-                            leaveEntryDepartment.map((group) => (
+                          {specialLeaveEntry?.length > 0 ? (
+                            specialLeaveEntry.map((group) => (
                               <tr key={group.VID}>
                                 <td>
-                                  {departmentList.find(
-                                    (row) => row.VID === group.DeptID
-                                  )?.VName || "N/A"}
+                                  {employee.find(
+                                    (emp) =>
+                                      String(emp.EmpID) === String(group.EmpID)
+                                  )?.EName || "N/A"}
                                 </td>
+                                <td>{group.VNo}</td>
                                 <td>{formatDate(group.VDate)}</td>
                                 <td>
                                   {leaveType.find(
@@ -265,12 +326,7 @@ const LeaveEntryDepartment = () => {
                                 <td>
                                   <div className="d-flex gap-2">
                                     <div className="delete">
-                                      <Button
-                                        className="btn btn-soft-danger"
-                                        onClick={() =>
-                                          handleDeleteClick(group.VID)
-                                        }
-                                      >
+                                      <Button className="btn btn-soft-danger" onClick={() => handleDeleteClick(group.VID)}>
                                         <i className="ri-delete-bin-2-line"></i>
                                       </Button>
                                     </div>
@@ -281,7 +337,7 @@ const LeaveEntryDepartment = () => {
                           ) : (
                             <tr>
                               <td colSpan="11" className="text-center">
-                                No leave Entry Department found.
+                                No Special Leave Entry found.
                               </td>
                             </tr>
                           )}
@@ -325,13 +381,13 @@ const LeaveEntryDepartment = () => {
           </Row>
         </Container>
       </div>
-      <DeleteModal
-        show={deleteModal}
-        onCloseClick={() => setDeleteModal(!deleteModal)}
-        onDeleteClick={handleDeleteConfirm}
-      />
+       <DeleteModal
+              show={deleteModal}
+              onCloseClick={() => setDeleteModal(!deleteModal)}
+              onDeleteClick={handleDeleteConfirm}
+            />
     </React.Fragment>
   );
 };
 
-export default LeaveEntryDepartment;
+export default SpecialLeaveEntry;
