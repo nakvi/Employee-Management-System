@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, Col, DropdownItem, DropdownMenu, DropdownToggle, UncontrolledDropdown } from 'reactstrap';
 import { SalesForecastCharts } from './DashboardCrmCharts';
 import { useSelector, useDispatch } from "react-redux";
-import { getSalesChartsData } from '../../slices/thunks';
+// import { getSalesChartsData } from '../../slices/thunks';
 import { createSelector } from 'reselect';
 
 const SalesForecast = () => {
@@ -26,11 +26,11 @@ const SalesForecast = () => {
     const [seletedMonth, setSeletedMonth] = useState("Nov 2021");
     const onChangeChartPeriod = pType => {
         setSeletedMonth(pType);
-        dispatch(getSalesChartsData(pType));
+        // dispatch(getSalesChartsData(pType));
     };
 
     useEffect(() => {
-        dispatch(getSalesChartsData("nov"));
+        // dispatch(getSalesChartsData("nov"));
     }, [dispatch]);
 
     return (
