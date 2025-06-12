@@ -82,6 +82,7 @@ const Leaves = () => {
     }
   }, [leaves, employee, leaveType, searchText]);
 
+document.title = "Leave | EMS";
   // Formik setup
   const formik = useFormik({
     initialValues: {
