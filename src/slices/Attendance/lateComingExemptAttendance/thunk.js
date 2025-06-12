@@ -4,7 +4,7 @@ import "react-toastify/dist/ReactToastify.css";
 import config from "../../../config"; // ✅ correct
 
 // Define the API endpoint
-const API_ENDPOINT = `${config.api.API_URL}attLeaveSpecial/`;
+const API_ENDPOINT = `${config.api.API_URL}attExemptLate/`;
 
 // Create the async thunk
 export const getLateComingExemptAttendance = createAsyncThunk(

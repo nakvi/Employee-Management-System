@@ -4,7 +4,7 @@ import Widget from "./Widgets";
 import BestSellingProducts from "./BestSellingProducts";
 import RecentActivity from "./RecentActivity";
 import RecentOrders from "./RecentOrders";
-import Revenue from "./Revenue";
+// import Revenue from "./Revenue";
 import SalesByLocations from "./SalesByLocations";
 import Section from "./Section";
 import StoreVisits from "./StoreVisits";
@@ -22,7 +22,7 @@ const DashboardEcommerce = () => {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* <Row>
+          {<Row>
             <Col>
               <div className="h-100">
                 <Section rightClickBtn={toggleRightColumn} />
@@ -31,7 +31,7 @@ const DashboardEcommerce = () => {
                 </Row>
                 <Row>
                   <Col xl={8}>
-                    <Revenue />
+                    {/* <Revenue /> */}
                   </Col>
                   <SalesByLocations />
                 </Row>
@@ -46,7 +46,7 @@ const DashboardEcommerce = () => {
               </div>
             </Col>
             <RecentActivity rightColumn={rightColumn} hideRightColumn={toggleRightColumn} />
-          </Row> */}
+          </Row> }
         </Container>
       </div>
     </React.Fragment>
