@@ -350,7 +350,7 @@ const Advance = () => {
     });
   };
 
-  document.title = "Advance| EMS";
+  document.title = "Advance | EMS";
   return (
     <React.Fragment>
       <div className="page-content">

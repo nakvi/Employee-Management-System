@@ -151,18 +151,5 @@ export const getCurrentYearSessionData = () => api.get(url.GET_CURRENTYEARSESSIO
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 //API Key
 export const getAPIKey = () => api.get(url.GET_API_KEY);
