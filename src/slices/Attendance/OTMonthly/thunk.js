@@ -19,6 +19,7 @@ const encodeQueryParam = (key, value) => {
 export const getOTMonthly = createAsyncThunk(
   "otMonthly/getOTMonthly",
   async (filters, { rejectWithValue }) => {
+    console.log("Fetching O/T Monthly with filters:", filters);
     try {
       // Calculate DateFrom and DateTo from month (YYYY-MM)
       let dateFrom = "2025-01-01";
