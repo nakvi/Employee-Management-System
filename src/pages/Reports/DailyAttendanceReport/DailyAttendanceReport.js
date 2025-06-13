@@ -12,6 +12,11 @@ import {
   CardHeader,
 } from "reactstrap";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
+import ReportsPreview from "../../../Components/pdfsPreviews/reports"; 
+import UnpostedPreview from "../../../Components/pdfsPreviews/UnpostedPreview";
+import PostedPreview from "../../../Components/pdfsPreviews/PostedPreview";
+import LatecomerPreview from "../../../Components/pdfsPreviews/LatecomerPreview";
+import AbsenteesPreview from "../../../Components/pdfsPreviews/AbsenteesPreview";
 import RenderTable from "./RenderTable";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
@@ -19,138 +24,31 @@ import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
 import { getDesignation } from "../../../slices/setup/designation/thunk";
 import { getLocation } from "../../../slices/setup/location/thunk";
+import config from "../../../config"; 
+import { useFormik } from "formik";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
-
+console.log(jsPDF);
+console.log(jsPDF.prototype);
+console.log(jsPDF.prototype.autoTable);
 const DailyAttendanceReport = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [showTable, setShowTable] = useState(false);
-  const [selectedOption, setSelectedOption] = useState("Unposted");
-  const [reportType, setReportType] = useState(""); // Stores the selected report type for fetching
-  const [filters, setFilters] = useState({});
   const [showFilters, setShowFilters] = useState(false);
   const [queryString, setQueryString] = useState("");
+  const [filters, setFilters] = useState({});
 
-  // Handle option change
-  const handleOptionChange = (e) => {
-    setSelectedOption(e.target.value);
-    // setShowTable(false); // Reset the table when option changes
-  };
-  const generateQueryString = (filters) => {
-    let query = "cWhere = Where UserID = 1 AND LoginCompanyID = 1 AND LoginLocationID = 1 ";
-    if (filters.EType && Number(filters.EType) > 0) {
-      query += ` AND EType = '${filters.EType ? filters.EType : 0}'`;
-    }
-    if (filters.EmployeeID && Number(filters.EmployeeID) > 0) {
-      query += ` AND EmployeeID = '${filters.EmployeeID ? filters.EmployeeID : 0
-        }'`;
-    }
-    if (filters.HODID && Number(filters.HODID) > 0) {
-      query += ` AND HODID = '${filters.HODID ? filters.HODID : 0}'`;
-    }
-    if (filters.LocationID && Number(filters.LocationID) > 0) {
-      query += ` AND LocationID = '${filters.LocationID ? filters.LocationID : 0
-        }'`;
-    }
-    if (filters.DeptID && Number(filters.DeptID) > 0) {
-      query += ` AND DepartmentID = '${filters.DeptID ? filters.DeptID : 0}'`;
-    }
-    if (filters.DesgID && Number(filters.DesgID) > 0) {
-      query += ` AND DesignationID = '${filters.DesgID ? filters.DesgID : 0}'`;
-    }
-    query += ` AND AttendanceDate = '${filters.Date}'`;
-
-    // Handle OverTime explicitly as true or false
-    if (filters.WithOverTime && filters.WithOverTime === true) {
-      query += ` AND OverTime = 1`;
-    } else if (filters.WithOverTime && filters.WithOverTime === false) {
-      query += ` AND OverTime = 0`;
-    }
-
-    if (filters.IsManager && filters.IsManager === true) {
-      query += ` AND IsManager = 1`;
-    } else if (filters.IsManager && filters.IsManager === false) {
-      query += ` AND IsManager = 0`;
-    }
-
-    if (filters.ShiftEmployee && filters.ShiftEmployee === true) {
-      query += ` AND IsShiftEmployee = 1`;
-    } else if (filters.ShiftEmployee && filters.ShiftEmployee === false) {
-      query += ` AND IsShiftEmployee = 0`;
-    }
-    // query += ` AND VType = '${filters.VType}'`;
-    return query;
-  };
-
-  const handleFetch = () => {
-    const selectedFilters = {
-      UserID: 1,
-      LoginComapnyID: 1,
-      LoginLocationID: 1,
-      EType: Number(document.getElementById("EType").value) > 0 ? document.getElementById("EType").value : null,
-      EmployeeID: Number(document.getElementById("EmployeeID").value) > 0 ? document.getElementById("EmployeeID").value : null,
-      HODID: Number(document.getElementById("HODID").value) > 0 ? document.getElementById("HODID").value : null,
-      LocationID: Number(document.getElementById("LocationID").value) > 0 ? document.getElementById("LocationID").value : null,
-      DeptID: Number(document.getElementById("DeptID").value) > 0 ? document.getElementById("DeptID").value : null,
-      DesgID: Number(document.getElementById("DesgID").value) > 0 ? document.getElementById("DesgID").value : null,
-      Date: document.getElementById("date").value,
-      ReportHeading: document.getElementById("VName").value,
-      WithOverTime: document.getElementById("WithOverTime").checked,
-      IsManager: document.getElementById("IsManager").checked,
-      ShiftEmployee: document.getElementById("ShiftEmployee").checked,
-      VType: document.querySelector('input[name="VType"]:checked')?.value || null, // Get selected radio button value
-    };
-
-    // const selectedFilters = {
-    //   UserID :1,
-    //   LoginComapnyID: 1,
-    //   LoginLocationID: 1,
-
-    //   EType: document.getElementById("EType").value,
-    //   EmployeeID: document.getElementById("EmployeeID").value,
-    //   HODID: document.getElementById("HODID").value,
-    //   LocationID: document.getElementById("LocationID").value,
-    //   DeptID: document.getElementById("DeptID").value,
-    //   DesgID: document.getElementById("DesgID").value,
-    //   Date: document.getElementById("date").value,
-    //   ReportHeading: document.getElementById("VName").value,
-    //   WithOverTime: document.getElementById("WithOverTime").checked,
-    //   IsManager: document.getElementById("IsManager").checked,
-    //   ShiftEmployee: document.getElementById("ShiftEmployee").checked,
-    //   // ReportType: selectedOption,
-    //   VType: selectedOption,
-    // };
-
-    setFilters(selectedFilters);
-    setShowFilters(true);
-    const query = generateQueryString(selectedFilters);
-    setQueryString(query);
-  };
-  const handleGeneratePDF = () => {
-    console.log("Generating PDF...");
-  };
-
-  const handleCancel = () => {
-    console.log("Cancelling...");
-    setShowTable(false);
-  };
-  // Today Date
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    setSelectedDate(today);
-  }, []);
-  const getMinDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
-  };
-  document.title = "Daily Attendance Report | EMS";
+  // Redux
   const dispatch = useDispatch();
   const { location = [] } = useSelector((state) => state.Location || {});
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
   const { designation = [] } = useSelector((state) => state.Designation || {});
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
-
   const { employee = [] } = useSelector((state) => state.Employee || {});
+  const [tableData, setTableData] = useState([]);
 
   useEffect(() => {
     dispatch(getDepartment());
@@ -158,22 +56,191 @@ const DailyAttendanceReport = () => {
     dispatch(getEmployee());
     dispatch(getDesignation());
     dispatch(getLocation());
+    const today = new Date().toISOString().split("T")[0];
+    setSelectedDate(today);
   }, [dispatch]);
+
+  const getMinDate = () => {
+    const today = new Date();
+    return today.toISOString().split("T")[0];
+  };
+
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      EType: "-1",
+      EmployeeID: "-1",
+      HODID: "-1",
+      LocationID: "-1",
+      DeptID: "-1",
+      DesgID: "-1",
+      Date: new Date().toISOString().split("T")[0],
+      ReportHeading: "",
+      WithOverTime: false,
+      IsManager: false,
+      ShiftEmployee: false,
+      VType: "Unposted",
+    },
+    onSubmit: (values) => {
+      const selectedFilters = {
+        UserID: 1,
+        LoginComapnyID: 1,
+        LoginLocationID: 1,
+        ...values,
+      };
+      setFilters(selectedFilters);
+      setShowFilters(true);
+      setShowTable(true);
+      const query = generateQueryString(selectedFilters);
+      setQueryString(query);
+      // Call the main fetch function
+      fetchAttendanceData(selectedFilters);
+    },
+  });
+
+  const generateQueryString = (filters) => {
+    // EmployeeIDList: sab emp related fields (date ko chor ke)
+    let empListArr = [];
+    // if (filters.UserID) empListArr.push(`UserID = ${filters.UserID}`);
+    // if (filters.LoginComapnyID) empListArr.push(`LoginCompanyID = ${filters.LoginComapnyID}`);
+    // if (filters.LoginLocationID) empListArr.push(`LoginLocationID = ${filters.LoginLocationID}`);
+    // if (filters.EType && Number(filters.EType) > 0) empListArr.push(`EType = '${filters.EType}'`);
+    // if (filters.EmployeeID && Number(filters.EmployeeID) > 0) empListArr.push(`EmployeeID = '${filters.EmployeeID}'`);
+    // if (filters.HODID && Number(filters.HODID) > 0) empListArr.push(`HODID = '${filters.HODID}'`);
+    // if (filters.LocationID && Number(filters.LocationID) > 0) empListArr.push(`LocationID = '${filters.LocationID}'`);
+    // if (filters.DeptID && Number(filters.DeptID) > 0) empListArr.push(`DepartmentID = '${filters.DeptID}'`);
+    // if (filters.DesgID && Number(filters.DesgID) > 0) empListArr.push(`DesignationID = '${filters.DesgID}'`);
+    // EmployeeIDList ban gaya
+    let employeeIDList = empListArr.join(" AND ");
+
+    // cWhere: date aur baqi non-emp filters
+    let cWhereArr = [];
+    // if (filters.Date) cWhereArr.push(`AttendanceDate = '${filters.Date}'`);
+    // cWhereArr.push(`OverTime = ${filters.WithOverTime ? 1 : 0}`);
+    // cWhereArr.push(`IsManager = ${filters.IsManager ? 1 : 0}`);
+    // cWhereArr.push(`IsShiftEmployee = ${filters.ShiftEmployee ? 1 : 0}`);
+    let cWhere = cWhereArr.join(" AND ");
+
+    // Final string
+    return `EmployeeIDList = ${employeeIDList}\ncWhere = ${cWhere}`;
+  };
+
+  const fetchAttendanceData = async (filters) => {
+    const query = generateQueryString(filters);
+    const [empListLine, cWhereLine] = query.split('\n');
+    const employeeIDList = empListLine.replace('EmployeeIDList = ', '');
+    const cWhere = cWhereLine.replace('cWhere = ', '');
+
+    // Build params in the exact order and with empty values if needed
+    const params = [
+      `Orgini=LTT`,
+      `CompanyID=${filters.LoginComapnyID || 1}`,
+      `LocationID=${filters.LoginLocationID || 1}`,
+      // `VDate=${filters.Date || "2025-06-02"}`,
+      `VDate="2025-06-02"`, 
+      // `VDate="2025-05-22"`,
+      `EmployeeIDList=${employeeIDList}`,
+      `cWhere=${cWhere}`,
+      `IsAu=0`,
+      `IsExport=0`,
+      `UID=${filters.UserID || 0}`,
+    ].join("&");
+
+    let apiUrl = "";
+    switch (filters.VType) {
+      case "Unposted":
+        apiUrl = `${config.api.API_URL}rptAttDailyUnposted?${params}`;
+        break;
+      case "Posted":
+        apiUrl = `${config.api.API_URL}rptAttDailyPosted?${params}`;
+        break;
+      case "Latecomer":
+        apiUrl = `${config.api.API_URL}rptAttDailyLate?${params}`;
+        break;
+      case "Absentees":
+        apiUrl = `${config.api.API_URL}rptAttDailyAB?${params}`;
+        break;
+      default:
+        setTableData([]);
+        return;
+    }
+
+    try {
+      const response = await fetch(apiUrl);
+      console.log("API Response:", response);
+      const data = await response.json();
+      console.log("API data:", data);
+
+      setTableData(data);
+    } catch (error) {
+      setTableData([]);
+      console.error("API Error:", error);
+    }
+  };
+function groupByDepartment(data) {
+  const grouped = {};
+  data.forEach(row => {
+    const section = row.Department || "Other";
+    if (!grouped[section]) grouped[section] = [];
+    grouped[section].push(row); // Ab row ko as-is push karo
+  });
+  return Object.entries(grouped).map(([section, rows]) => ({ section, rows }));
+}
+  // Generate query string (same as your code)
+  // const generateQueryString = (filters) => {
+  //   let query = "cWhere = Where UserID = 1 AND LoginCompanyID = 1 AND LoginLocationID = 1 ";
+  //   if (filters.EType && Number(filters.EType) > 0) {
+  //     query += ` AND EType = '${filters.EType}'`;
+  //   }
+  //   if (filters.EmployeeID && Number(filters.EmployeeID) > 0) {
+  //     query += ` AND EmployeeID = '${filters.EmployeeID}'`;
+  //   }
+  //   if (filters.HODID && Number(filters.HODID) > 0) {
+  //     query += ` AND HODID = '${filters.HODID}'`;
+  //   }
+  //   if (filters.LocationID && Number(filters.LocationID) > 0) {
+  //     query += ` AND LocationID = '${filters.LocationID}'`;
+  //   }
+  //   if (filters.DeptID && Number(filters.DeptID) > 0) {
+  //     query += ` AND DepartmentID = '${filters.DeptID}'`;
+  //   }
+  //   if (filters.DesgID && Number(filters.DesgID) > 0) {
+  //     query += ` AND DesignationID = '${filters.DesgID}'`;
+  //   }
+  //   query += ` AND AttendanceDate = '${filters.Date}'`;
+  //   if (filters.WithOverTime) query += ` AND OverTime = 1`;
+  //   else query += ` AND OverTime = 0`;
+  //   if (filters.IsManager) query += ` AND IsManager = 1`;
+  //   else query += ` AND IsManager = 0`;
+  //   if (filters.ShiftEmployee) query += ` AND IsShiftEmployee = 1`;
+  //   else query += ` AND IsShiftEmployee = 0`;
+  //   return query;
+  // };
+
+
+  // Cancel button handler
+  const handleCancel = () => {
+    formik.resetForm();
+    setShowFilters(false);
+    setShowTable(false);
+    setQueryString("");
+    setFilters({});
+  };
+
+  document.title = "Daily Attendance Report | EMS";
 
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
+                <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeaderReport
                     title="Daily Attendance Report"
-                    onFetch={handleFetch}
-                    onGeneratePDF={handleGeneratePDF}
+                    onFetch={formik.handleSubmit}
+                    onGeneratePDF={() => { }}
                     onCancel={handleCancel}
                   />
                   <CardBody className="card-body">
@@ -181,16 +248,13 @@ const DailyAttendanceReport = () => {
                       <Row className="gy-4">
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              E-Type
-                            </Label>
+                            <Label className="form-label">E-Type</Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="EType"
                               id="EType"
+                              value={formik.values.EType}
+                              onChange={formik.handleChange}
                             >
                               <option value="-1">---Select--- </option>
                               {employeeType.map((item) => (
@@ -203,16 +267,13 @@ const DailyAttendanceReport = () => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              Employee
-                            </Label>
+                            <Label className="form-label">Employee</Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="EmployeeID"
                               id="EmployeeID"
+                              value={formik.values.EmployeeID}
+                              onChange={formik.handleChange}
                             >
                               <option value="-1">---Select--- </option>
                               {employee.map((item) => (
@@ -223,19 +284,15 @@ const DailyAttendanceReport = () => {
                             </select>
                           </div>
                         </Col>
-
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              HOD
-                            </Label>
+                            <Label className="form-label">HOD</Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="HODID"
                               id="HODID"
+                              value={formik.values.HODID}
+                              onChange={formik.handleChange}
                             >
                               <option value="-1">---Select--- </option>
                               <option value="1">IT</option>
@@ -245,16 +302,13 @@ const DailyAttendanceReport = () => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              Location
-                            </Label>
+                            <Label className="form-label">Location</Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="LocationID"
                               id="LocationID"
+                              value={formik.values.LocationID}
+                              onChange={formik.handleChange}
                             >
                               <option value="-1">---Select--- </option>
                               {location.map((item) => (
@@ -267,16 +321,13 @@ const DailyAttendanceReport = () => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              Department
-                            </Label>
+                            <Label className="form-label">Department</Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="DeptID"
                               id="DeptID"
+                              value={formik.values.DeptID}
+                              onChange={formik.handleChange}
                             >
                               <option value="-1">---Select--- </option>
                               {departmentList.map((item) => (
@@ -287,19 +338,15 @@ const DailyAttendanceReport = () => {
                             </select>
                           </div>
                         </Col>
-
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              Designation
-                            </Label>
+                            <Label className="form-label">Designation</Label>
                             <select
-                              className="form-select  form-select-sm"
+                              className="form-select form-select-sm"
                               name="DesgID"
                               id="DesgID"
+                              value={formik.values.DesgID}
+                              onChange={formik.handleChange}
                             >
                               <option value="-1">---Select--- </option>
                               {designation.map((item) => (
@@ -312,36 +359,35 @@ const DailyAttendanceReport = () => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="date" className="form-label">
                               Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
                               id="date"
-                              min={getMinDate()} // Prevent past dates
-                              value={selectedDate}
+                              name="Date"
+                              min={getMinDate()}
+                              value={formik.values.Date}
+                              onChange={formik.handleChange}
                             />
                           </div>
                         </Col>
                         <Col xxl={4} md={9}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              Report Heading
-                            </Label>
+                            <Label className="form-label">Report Heading</Label>
                             <Input
                               type="text"
                               className="form-control-sm"
                               id="VName"
+                              name="ReportHeading"
                               placeholder="Report Heading"
+                              value={formik.values.ReportHeading}
+                              onChange={formik.handleChange}
                             />
                           </div>
                         </Col>
                       </Row>
-
                       {/* checkbox grid */}
                       <Row style={{ border: "1px dotted lightgray" }}>
                         <Col xxl={2} md={2}>
@@ -350,11 +396,11 @@ const DailyAttendanceReport = () => {
                               className="form-check-input"
                               type="checkbox"
                               id="WithOverTime"
+                              name="WithOverTime"
+                              checked={formik.values.WithOverTime}
+                              onChange={formik.handleChange}
                             />
-                            <Label
-                              className="form-check-label"
-                              for="WithOverTime"
-                            >
+                            <Label className="form-check-label" htmlFor="WithOverTime">
                               WithOverTime
                             </Label>
                           </div>
@@ -365,8 +411,11 @@ const DailyAttendanceReport = () => {
                               className="form-check-input"
                               type="checkbox"
                               id="IsManager"
+                              name="IsManager"
+                              checked={formik.values.IsManager}
+                              onChange={formik.handleChange}
                             />
-                            <Label className="form-check-label" for="IsManager">
+                            <Label className="form-check-label" htmlFor="IsManager">
                               IsManager
                             </Label>
                           </div>
@@ -377,209 +426,47 @@ const DailyAttendanceReport = () => {
                               className="form-check-input"
                               type="checkbox"
                               id="ShiftEmployee"
+                              name="ShiftEmployee"
+                              checked={formik.values.ShiftEmployee}
+                              onChange={formik.handleChange}
                             />
-                            <Label
-                              className="form-check-label"
-                              for="ShiftEmployee"
-                            >
+                            <Label className="form-check-label" htmlFor="ShiftEmployee">
                               ShiftEmployee
                             </Label>
                           </div>
                         </Col>
                       </Row>
-                      {/* Optional grid */}
+                      {/* radio grid */}
                       <Row>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="Unposted"
-                              name="VType"
-                              value="Unposted"
-                              checked={selectedOption === "Unposted"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="Unposted"
-                            >
-                              Unposted Attendance
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="Posted"
-                              name="VType"
-                              value="Posted"
-                              checked={selectedOption === "Posted"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="Posted"
-                            >
-                              Posted Attendance
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={3}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="UnpostedSummary"
-                              name="VType"
-                              value="UnpostedSummary"
-                              checked={selectedOption === "UnpostedSummary"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="Unposted"
-                            >
-                              Latecomers
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={3}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="PostedSummary"
-                              name="VType"
-                              value="PostedSummary"
-                              checked={selectedOption === "PostedSummary"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="PostedSummary"
-                            >
-                              Absentees
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="Latecomer"
-                              name="VType"
-                              value="Latecomer"
-                              checked={selectedOption === "Latecomer"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="Latecomer"
-                            >
-                              Pending For Out
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="ManualOverTime"
-                              name="VType"
-                              value="ManualOverTime"
-                              checked={selectedOption === "ManualOverTime"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="ManualOverTime"
-                            >
-                              OT List
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="OverTime"
-                              name="VType"
-                              value="OverTime"
-                              checked={selectedOption === "OverTime"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="OverTime"
-                            >
-                              OT Sheet
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={3}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="OverTimeList"
-                              name="VType"
-                              value="OverTimeList"
-                              checked={selectedOption === "OverTimeList"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="OverTimeList"
-                            >
-                              Summary-1
-                            </Label>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={3}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="OverTimeSheet"
-                              name="VType"
-                              value="OverTimeSheet"
-                              checked={selectedOption === "OverTimeSheet"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="OverTimeSheet"
-                            >
-                              Summary-2
-                            </Label>
-                          </div>
-                        </Col>
-
-                        <Col xxl={2} md={2}>
-                          <div className="form-check mt-3" dir="ltr">
-                            <Input
-                              type="radio"
-                              className="form-check-input"
-                              id="ExportLog"
-                              name="VType"
-                              value="ExportLog"
-                              checked={selectedOption === "ExportLog"}
-                              onChange={handleOptionChange}
-                            />
-                            <Label
-                              className="form-check-label"
-                              htmlFor="ExportLog"
-                            >
-                              Log File
-                            </Label>
-                          </div>
-                        </Col>
+                        {[
+                          { id: "Unposted", label: "Unposted Attendance" },
+                          { id: "Posted", label: "Posted Attendance" },
+                          { id: "Latecomer", label: "Latecomers" },
+                          { id: "Absentees", label: "Absentees" },
+                          { id: "PendingForOut", label: "Pending For Out" },
+                          { id: "ManualOverTime", label: "OT List" },
+                          { id: "OverTime", label: "OT Sheet" },
+                          { id: "OverTimeList", label: "Summary-1" },
+                          { id: "OverTimeSheet", label: "Summary-2" },
+                          { id: "ExportLog", label: "Log File" },
+                        ].map((option) => (
+                          <Col xxl={2} md={2} key={option.id}>
+                            <div className="form-check mt-3" dir="ltr">
+                              <Input
+                                type="radio"
+                                className="form-check-input"
+                                id={option.id}
+                                name="VType"
+                                value={option.id}
+                                checked={formik.values.VType === option.id}
+                                onChange={formik.handleChange}
+                              />
+                              <Label className="form-check-label" htmlFor={option.id}>
+                                {option.label}
+                              </Label>
+                            </div>
+                          </Col>
+                        ))}
                       </Row>
                     </div>
                   </CardBody>
@@ -588,42 +475,42 @@ const DailyAttendanceReport = () => {
             </Col>
             {showFilters && (
               <Col lg={12}>
-                <Card className="mt-3">
+                {showTable && (
+                <>
+                  {filters.VType === "Unposted" && <UnpostedPreview groupedData={groupByDepartment(tableData)} />}
+                  {filters.VType === "Posted" && <PostedPreview groupedData={groupByDepartment(tableData)} />}
+                  {filters.VType === "Latecomer" && <LatecomerPreview groupedData={groupByDepartment(tableData)} />}
+                  {filters.VType === "Absentees" && <AbsenteesPreview groupedData={groupByDepartment(tableData)} />}
+                </>
+              )}
+                {/* <Card className="mt-3">
                   <CardBody>
                     <h5>Selected Filters:</h5>
                     <p>
-                      <strong>UserID:</strong> {filters.UserID || " "} <br />
-                      <strong>LoginComapnyID:</strong> {filters.LoginComapnyID || " "} <br />
-                      <strong>LoginLocationID:</strong> {filters.LoginLocationID || " "} <br />
+                      <strong>UserID:</strong> 1 <br />
+                      <strong>LoginComapnyID:</strong> 1 <br />
+                      <strong>LoginLocationID:</strong> 1 <br />
                       <strong>E-Type:</strong> {filters.EType || " "} <br />
-                      <strong>Employee:</strong> {filters.EmployeeID || " "}{" "}
-                      <br />
+                      <strong>Employee:</strong> {filters.EmployeeID || " "} <br />
                       <strong>HOD:</strong> {filters.HODID || " "} <br />
-                      <strong>Location:</strong> {filters.LocationID || " "}{" "}
-                      <br />
-                      <strong>Department:</strong> {filters.DeptID || " "}{" "}
-                      <br />
-                      <strong>Designation:</strong> {filters.DesgID || " "}{" "}
-                      <br />
+                      <strong>Location:</strong> {filters.LocationID || " "} <br />
+                      <strong>Department:</strong> {filters.DeptID || " "} <br />
+                      <strong>Designation:</strong> {filters.DesgID || " "} <br />
                       <strong>Date:</strong> {filters.Date} <br />
-                      <strong>Report Heading:</strong>{" "}
-                      {filters.ReportHeading || " "} <br />
-                      <strong>With OverTime:</strong>{" "}
-                      {filters.WithOverTime ? "1" : "0"} <br />
-                      <strong>Is Manager:</strong>{" "}
-                      {filters.IsManager ? "1" : "0"} <br />
-                      <strong>Shift Employee:</strong>{" "}
-                      {filters.ShiftEmployee ? "1" : "0"} <br />
+                      <strong>Report Heading:</strong> {filters.ReportHeading || " "} <br />
+                      <strong>With OverTime:</strong> {filters.WithOverTime ? "1" : "0"} <br />
+                      <strong>Is Manager:</strong> {filters.IsManager ? "1" : "0"} <br />
+                      <strong>Shift Employee:</strong> {filters.ShiftEmployee ? "1" : "0"} <br />
                       <strong>Report Type:</strong> {filters.VType}
                     </p>
                     <h5>Generated Query:</h5>
                     <pre>{queryString}</pre>
                   </CardBody>
-                </Card>
+                </Card> */}
               </Col>
             )}
-            {/* Conditionally render the table */}
-            {/* {showTable && <RenderTable selectedOption={reportType} />} */}
+            {/* {showTable && <RenderTable selectedOption={filters.VType} />} */}
+           
           </Row>
         </Container>
       </div>

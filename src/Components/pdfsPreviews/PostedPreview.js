@@ -53,7 +53,7 @@ const dummyData = [
   },
 ];
 
-const ReportsPreview = ({ groupedData }) => {
+const PostedPreview = ({ groupedData }) => {
   const reportRef = useRef();
   // Find first non-empty section
   const firstSection = groupedData.find(sec => sec.rows && sec.rows.length > 0);
@@ -77,22 +77,40 @@ const ReportsPreview = ({ groupedData }) => {
     pdf.save("LateComerReport.pdf");
   };
 
- return (
-    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-      <div ref={reportRef} style={{ fontFamily: "Arial, sans-serif", fontSize: 13, background: "#fff", border: "1px solid #bbb", padding: 24 }}>
-        {/* ...header... */}
-        {groupedData.map((section, idx) => {
-        // Dynamic columns from first row of this section
+return (
+  <div style={{ margin: "0 auto", overflow: "auto" }}>
+    <div
+      ref={reportRef}
+      style={{
+        fontFamily: "Arial, sans-serif",
+        fontSize: 13,
+        background: "#fff",
+        border: "1px solid #bbb",
+        padding: 24,
+        minWidth: 900,
+      }}
+    >
+      {/* ...header... */}
+      {groupedData.map((section, idx) => {
         const columns = section.rows.length > 0 ? Object.keys(section.rows[0]) : [];
         return (
           <div key={section.section} style={{ marginBottom: 10 }}>
-            <div style={{ background: "#5ba4b6", color: "#fff", padding: "4px 8px", fontWeight: "bold", borderTop: idx === 0 ? "1px solid #bbb" : "none", borderBottom: "1px solid #bbb" }}>
+            <div
+              style={{
+                background: "#5ba4b6",
+                color: "#fff",
+                padding: "4px 8px",
+                fontWeight: "bold",
+                borderTop: idx === 0 ? "1px solid #bbb" : "none",
+                borderBottom: "1px solid #bbb",
+              }}
+            >
               {section.section}
             </div>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+            <table style={{ width: "auto", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ background: "#eaf3f7" }}>
-                  {columns.map(col => (
+                  {columns.map((col) => (
                     <th key={col} style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>
                       {col}
                     </th>
@@ -102,7 +120,7 @@ const ReportsPreview = ({ groupedData }) => {
               <tbody>
                 {section.rows.map((row, i) => (
                   <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#f7fafd" }}>
-                    {columns.map(col => (
+                    {columns.map((col) => (
                       <td key={col} style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>
                         {row[col]}
                       </td>
@@ -114,44 +132,11 @@ const ReportsPreview = ({ groupedData }) => {
           </div>
         );
       })}
-        {/* {groupedData.map((section, idx) => (
-          <div key={section.section} style={{ marginBottom: 10 }}>
-            <div style={{ background: "#5ba4b6", color: "#fff", padding: "4px 8px", fontWeight: "bold", borderTop: idx === 0 ? "1px solid #bbb" : "none", borderBottom: "1px solid #bbb" }}>
-              {section.section}
-            </div>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead>
-                <tr style={{ background: "#eaf3f7" }}>
-                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>E-Code</th>
-                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>Name</th>
-                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>Designation</th>
-                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>Time IN</th>
-                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>Time OUT</th>
-                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>Late Time</th>
-                  <th style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {section.rows.map((row, i) => (
-                  <tr key={row.ECode + i} style={{ background: i % 2 === 0 ? "#fff" : "#f7fafd" }}>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.ECode}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Name}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Designation}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.TimeIN}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.TimeOUT}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Late}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Remarks}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ))} */}
-        {/* ...footer... */}
-      </div>
-      {/* ...print button... */}
+      {/* ...footer... */}
     </div>
-  );
+    {/* ...print button... */}
+  </div>
+);
 };
 
-export default ReportsPreview;
+export default PostedPreview;

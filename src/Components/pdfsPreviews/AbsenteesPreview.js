@@ -53,7 +53,7 @@ const dummyData = [
   },
 ];
 
-const ReportsPreview = ({ groupedData }) => {
+const AbsenteesPreview = ({ groupedData }) => {
   const reportRef = useRef();
   // Find first non-empty section
   const firstSection = groupedData.find(sec => sec.rows && sec.rows.length > 0);
@@ -154,4 +154,4 @@ const ReportsPreview = ({ groupedData }) => {
   );
 };
 
-export default ReportsPreview;
+export default AbsenteesPreview;

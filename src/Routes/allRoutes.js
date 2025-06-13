@@ -69,10 +69,18 @@ import EmployeeProfile from "../pages/Employee/Employee/EmployeeProfile";
 import SalaryAllowanceDeduction from "../pages/Employee/SalaryAllowanceDeduction/SalaryAllowanceDeduction";
 import Invoice from "../Components/pdfsPreviews/invoice";
 import ReportsPreview from "../Components/pdfsPreviews/reports";
+import UnpostedPreview from "../Components/pdfsPreviews/UnpostedPreview";
+import PostedPreview from "../Components/pdfsPreviews/PostedPreview";
+import LatecomerPreview from "../Components/pdfsPreviews/LatecomerPreview";
+import AbsenteesPreview from "../Components/pdfsPreviews/AbsenteesPreview";
 
 const authProtectedRoutes = [
   // my routes setup
   { path: "/report-preview", component: <ReportsPreview /> },
+  { path: "/unposted-preview", component: <UnpostedPreview /> },
+  { path: "/posted-preview", component: <PostedPreview /> },
+  { path: "/latecomer-preview", component: <LatecomerPreview /> },
+  { path: "/absentees-preview", component: <AbsenteesPreview /> },
   { path: "/invoice-preview", component: <Invoice /> },
   { path: "/company", component: <Company /> },
   { path: "/location", component: <Location /> },

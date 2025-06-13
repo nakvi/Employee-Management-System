@@ -161,26 +161,27 @@ const EmployeeList = () => {
   // Update filteredData and columns after API call
   const handleFilterSubmit = async (values) => {
 
-      // Convert SalaryFrom and SalaryTo to numbers if they exist
-  const filterValues = {
-    ...values,
-    SalaryFrom: values.SalaryFrom ? parseInt(values.SalaryFrom, 10) : "",
-    SalaryTo: values.SalaryTo ? parseInt(values.SalaryTo, 10) : "",
-  };
-  
+    // Convert SalaryFrom and SalaryTo to numbers if they exist
+    const filterValues = {
+      ...values,
+      SalaryFrom: values.SalaryFrom ? parseInt(values.SalaryFrom, 10) : "",
+      SalaryTo: values.SalaryTo ? parseInt(values.SalaryTo, 10) : "",
+    };
+
     const apiUrl = `${config.api.API_URL}employeeReport?`;
     let filterString = buildEmployeeFilterString(filterValues);
+    // console.log("ReportType sent:", filterValues.ReportType);
     let cWhere = filterString ? `WHERE ${filterString}` : "";
     const params = {
       Orgini: "LTT",
       cWhere: cWhere,
-      VDate: "2025-06-05",
+      VDate: "2020-06-05",
       IsAu: 0,
       EmpID: 9,
       IsExport: 0,
       Compcode: 0,
       UID: 1,
-      ReportType: "EmpList"
+      ReportType: filterValues.ReportType || "EmpList", // Default to EmpList if not provided
     };
     const queryString = Object.entries(params)
       .map(([key, val]) =>
@@ -201,9 +202,10 @@ const EmployeeList = () => {
       if (Array.isArray(data) && data.length > 0) {
         const firstRow = data[0];
         const cols = Object.keys(firstRow).map(key => ({
-          name: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()), // Format: EmpCode -> Emp Code
+          name: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()),
           selector: row => row[key],
           sortable: true,
+          wrap: true,
         }));
         setDynamicColumns(cols);
       } else {
@@ -231,25 +233,26 @@ const EmployeeList = () => {
     table: {
       style: {
         border: "1px solid #dee2e6",
+        tableLayout: "auto",
       },
     },
     headRow: {
       style: {
         backgroundColor: "#f8f9fa",
         borderBottom: "1px solid #dee2e6",
-        fontWeight: "600",
+        fontWeight: "500",
       },
     },
     rows: {
       style: {
-        minHeight: "48px",
+        minHeight: "45px",
         borderBottom: "1px solid #dee2e6",
       },
     },
     cells: {
       style: {
-        paddingLeft: "16px",
-        paddingRight: "16px",
+        paddingLeft: "12px",
+        paddingRight: "12px",
         borderRight: "1px solid #dee2e6",
       },
     },
@@ -279,7 +282,7 @@ const EmployeeList = () => {
       ResignEmployeeCheck: false,
       ResignDateFrom: '',
       ResignDateTo: '',
-      ReportType: 'VIN',
+      ReportType: 'EmpList',
       leftStatusId: ''
     },
 
@@ -1244,13 +1247,29 @@ const EmployeeList = () => {
                                 <Input
                                   type="radio"
                                   className="form-check-input"
-                                  id="DepStrength"
+                                  id="EmpOnDate"
                                   name="ReportType"
-                                  value="DepStrength"
-                                  checked={formik.values.ReportType === "DepStrength"}
+                                  value="EmpOnDate"
+                                  checked={formik.values.ReportType === "EmpOnDate"}
                                   onChange={formik.handleChange}
                                 />
-                                <Label className="form-check-label" htmlFor="DepStrength">
+                                <Label className="form-check-label" htmlFor="EmpOnDate">
+                                  Employee On Date
+                                </Label>
+                              </div>
+                            </Col>
+                            <Col xxl={2} md={3}>
+                              <div className="form-check mt-3" dir="ltr">
+                                <Input
+                                  type="radio"
+                                  className="form-check-input"
+                                  id="EmpStrength"
+                                  name="ReportType"
+                                  value="EmpStrength"
+                                  checked={formik.values.ReportType === "EmpStrength"}
+                                  onChange={formik.handleChange}
+                                />
+                                <Label className="form-check-label" htmlFor="EmpStrength">
                                   Department Strength
                                 </Label>
                               </div>
@@ -1260,14 +1279,14 @@ const EmployeeList = () => {
                                 <Input
                                   type="radio"
                                   className="form-check-input"
-                                  id="EmpOnDate"
+                                  id="EmpStrengthOnDate"
                                   name="ReportType"
-                                  value="EmpOnDate"
-                                  checked={formik.values.ReportType === "EmpOnDate"}
+                                  value="EmpStrengthOnDate"
+                                  checked={formik.values.ReportType === "EmpStrengthOnDate"}
                                   onChange={formik.handleChange}
                                 />
-                                <Label className="form-check-label" htmlFor="EmpOnDate">
-                                  Employee On Date
+                                <Label className="form-check-label" htmlFor="EmpStrengthOnDate">
+                                  Strength On Date
                                 </Label>
                               </div>
                             </Col>
@@ -1336,18 +1355,108 @@ const EmployeeList = () => {
             <Col xxl={12} md={12}>
               <Card className="shadow-sm">
                 <CardBody>
-                  {dynamicColumns.length > 0 ? (
-                    <DataTable
-                      columns={dynamicColumns}
-                      data={filteredData}
-                      pagination
-                      highlightOnHover
-                      striped
-                    />
+                  {showPreview ? (
+                    formik.values.ReportType === "EmpCard" && filteredData.length > 0 ? (
+                      <Row>
+                        {filteredData.map(emp => (
+                          <Col key={emp.EmpID} xs={12} sm={6} md={4} lg={3} className="mb-4">
+                            <Card className="text-center h-100" style={{ borderRadius: "15px", boxShadow: "0 2px 8px #40518982" }}>
+                              <div style={{ marginTop: "16px" }}>
+                                {console.log('1', emp)}
+                                <img
+                                  src={emp.ImageUrl || avatar1}
+                                  alt={emp.EName}
+                                  style={{
+                                    width: "70px",
+                                    height: "70px",
+                                    borderRadius: "50%",
+                                    objectFit: "cover",
+                                    border: "4px solid gold"
+                                  }}
+                                />
+                                {emp.IsActive === true || emp.IsActive === 1 ? (
+                                  <span
+                                    style={{
+                                      display: "inline-block",
+                                      width: "14px",
+                                      height: "14px",
+                                      background: "green",
+                                      borderRadius: "50%",
+                                      border: "2px solid #fff",
+                                      position: "relative",
+                                      left: "-18px",
+                                      top: "-18px"
+                                    }}
+                                  ></span>
+                                ) : (
+                                  <span
+                                    style={{
+                                      display: "inline-block",
+                                      width: "14px",
+                                      height: "14px",
+                                      background: "#ff3d3d",
+                                      borderRadius: "50%",
+                                      border: "2px solid #fff",
+                                      position: "relative",
+                                      left: "-18px",
+                                      top: "-18px"
+                                    }}
+                                  ></span>
+                                )}
+
+                              </div>
+                              <CardBody>
+                                <h5>
+                                  {emp.EName}{" "}
+                                  {emp.IsActive === true || emp.IsActive === 1 ? (
+                                    <span style={{ color: "green" }}>Online</span>
+                                  ) : (
+                                    <span style={{ color: "red" }}>Offline</span>
+                                  )}
+                                </h5>
+                                <div style={{ fontSize: "14px", color: "#555" }}>
+                                  <div>
+                                    <i className="mdi mdi-office-building"></i> {emp.Department || ""}
+                                  </div>
+                                  <div>
+                                    <i className="mdi mdi-account-tie"></i> {emp.Designation || ""}
+                                  </div>
+                                  <div>
+                                    <i className="mdi mdi-email"></i> {emp.Email}
+                                  </div>
+                                  <div>
+                                    <i className="mdi mdi-domain"></i> {emp.CompanyName}
+                                  </div>
+                                </div>
+                                <Button color="primary" className="mt-2" style={{ width: "100%" }}>
+                                  View Profile
+                                </Button>
+                              </CardBody>
+                            </Card>
+                          </Col>
+                        ))}
+                      </Row>
+                    ) : (
+                      dynamicColumns.length > 0 ? (
+                        <DataTable
+                          title="Employee Report"
+                          columns={dynamicColumns}
+                          data={filteredData}
+                          pagination
+                          paginationPerPage={100}
+                          paginationRowsPerPageOptions={[100, 200, 500]}
+                          highlightOnHover
+                          responsive
+                          customStyles={customStyles}
+                        />
+                      ) : (
+                        <div style={{ padding: "2rem", textAlign: "center", color: "#aaa" }}>
+                          No data to display.
+                        </div>
+                      )
+                    )
                   ) : (
-                    <div style={{ padding: "2rem", textAlign: "center", color: "#aaa" }}>
-                      No data to display.
-                    </div>
+                    null
                   )}
                 </CardBody>
               </Card>

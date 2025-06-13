@@ -53,12 +53,9 @@ const dummyData = [
   },
 ];
 
-const ReportsPreview = ({ groupedData }) => {
+const ReportsPreview = () => {
   const reportRef = useRef();
-  // Find first non-empty section
-  const firstSection = groupedData.find(sec => sec.rows && sec.rows.length > 0);
-  // Columns ko first row ki keys se generate karein
-  const columns = firstSection ? Object.keys(firstSection.rows[0]) : [];
+
   const handlePrintPDF = async () => {
     const input = reportRef.current;
     const canvas = await html2canvas(input, { scale: 2 });
@@ -77,44 +74,22 @@ const ReportsPreview = ({ groupedData }) => {
     pdf.save("LateComerReport.pdf");
   };
 
- return (
-    <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+  return (
+    <div style={{ maxWidth: 900, margin: "0 auto" }}>
       <div ref={reportRef} style={{ fontFamily: "Arial, sans-serif", fontSize: 13, background: "#fff", border: "1px solid #bbb", padding: 24 }}>
-        {/* ...header... */}
-        {groupedData.map((section, idx) => {
-        // Dynamic columns from first row of this section
-        const columns = section.rows.length > 0 ? Object.keys(section.rows[0]) : [];
-        return (
-          <div key={section.section} style={{ marginBottom: 10 }}>
-            <div style={{ background: "#5ba4b6", color: "#fff", padding: "4px 8px", fontWeight: "bold", borderTop: idx === 0 ? "1px solid #bbb" : "none", borderBottom: "1px solid #bbb" }}>
-              {section.section}
-            </div>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-              <thead>
-                <tr style={{ background: "#eaf3f7" }}>
-                  {columns.map(col => (
-                    <th key={col} style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>
-                      {col}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {section.rows.map((row, i) => (
-                  <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#f7fafd" }}>
-                    {columns.map(col => (
-                      <td key={col} style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>
-                        {row[col]}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* ...existing report content... */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+          <div>
+            <b>LECOMPANY NAME</b>
+            <br />
+            Late Commer for the date 30/05/2025
           </div>
-        );
-      })}
-        {/* {groupedData.map((section, idx) => (
+          <div style={{ textAlign: "right", fontSize: 12 }}>
+            Print Date : 02-Jun-2025<br />
+            Print Time : 19:05:53
+          </div>
+        </div>
+        {dummyData.map((section, idx) => (
           <div key={section.section} style={{ marginBottom: 10 }}>
             <div style={{ background: "#5ba4b6", color: "#fff", padding: "4px 8px", fontWeight: "bold", borderTop: idx === 0 ? "1px solid #bbb" : "none", borderBottom: "1px solid #bbb" }}>
               {section.section}
@@ -133,23 +108,29 @@ const ReportsPreview = ({ groupedData }) => {
               </thead>
               <tbody>
                 {section.rows.map((row, i) => (
-                  <tr key={row.ECode + i} style={{ background: i % 2 === 0 ? "#fff" : "#f7fafd" }}>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.ECode}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Name}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Designation}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.TimeIN}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.TimeOUT}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Late}</td>
-                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px" }}>{row.Remarks}</td>
+                  <tr key={row.ECode} style={{ background: i % 2 === 0 ? "#fff" : "#f7fafd" }}>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.ECode}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>{row.Name}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>{row.Designation}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.TimeIN}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.TimeOUT}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "10%" }}>{row.Late}</td>
+                    <td style={{ border: "1px solid #e0e0e082", padding: "2px 6px", width: "20%" }}>{row.Remarks}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        ))} */}
-        {/* ...footer... */}
+        ))}
+        <div style={{ textAlign: "right", fontSize: 12, marginTop: 16 }}>
+          Page 1 of 1
+        </div>
       </div>
-      {/* ...print button... */}
+      <div style={{ textAlign: "right", marginTop: 16 }}>
+        <button onClick={handlePrintPDF} style={{ padding: "8px 20px", background: "#5ba4b6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
+          Print to PDF
+        </button>
+      </div>
     </div>
   );
 };
