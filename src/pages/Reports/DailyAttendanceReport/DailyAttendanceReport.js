@@ -26,13 +26,7 @@ import { getDesignation } from "../../../slices/setup/designation/thunk";
 import { getLocation } from "../../../slices/setup/location/thunk";
 import config from "../../../config"; 
 import { useFormik } from "formik";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
-import autoTable from "jspdf-autotable";
 
-console.log(jsPDF);
-console.log(jsPDF.prototype);
-console.log(jsPDF.prototype.autoTable);
 const DailyAttendanceReport = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [showTable, setShowTable] = useState(false);
@@ -98,85 +92,83 @@ const DailyAttendanceReport = () => {
     },
   });
 
-  const generateQueryString = (filters) => {
-    // EmployeeIDList: sab emp related fields (date ko chor ke)
-    let empListArr = [];
-    // if (filters.UserID) empListArr.push(`UserID = ${filters.UserID}`);
-    // if (filters.LoginComapnyID) empListArr.push(`LoginCompanyID = ${filters.LoginComapnyID}`);
-    // if (filters.LoginLocationID) empListArr.push(`LoginLocationID = ${filters.LoginLocationID}`);
-    // if (filters.EType && Number(filters.EType) > 0) empListArr.push(`EType = '${filters.EType}'`);
-    // if (filters.EmployeeID && Number(filters.EmployeeID) > 0) empListArr.push(`EmployeeID = '${filters.EmployeeID}'`);
-    // if (filters.HODID && Number(filters.HODID) > 0) empListArr.push(`HODID = '${filters.HODID}'`);
-    // if (filters.LocationID && Number(filters.LocationID) > 0) empListArr.push(`LocationID = '${filters.LocationID}'`);
-    // if (filters.DeptID && Number(filters.DeptID) > 0) empListArr.push(`DepartmentID = '${filters.DeptID}'`);
-    // if (filters.DesgID && Number(filters.DesgID) > 0) empListArr.push(`DesignationID = '${filters.DesgID}'`);
-    // EmployeeIDList ban gaya
-    let employeeIDList = empListArr.join(" AND ");
+const generateQueryString = (filters) => {
+  // EmployeeIDList
+  let empListArr = [];
+  if (filters.EType && Number(filters.EType) > 0) empListArr.push(`AND E."ETypeID" = ${filters.EType}`);
+  if (filters.EmployeeID && Number(filters.EmployeeID) > 0) empListArr.push(`AND E."EmpID" = ${filters.EmployeeID}`);
+  if (filters.HODID && Number(filters.HODID) > 0) empListArr.push(`AND E."HODID" = ${filters.HODID}`);
+  if (filters.LocationID && Number(filters.LocationID) > 0) empListArr.push(`AND E."LocationID" = ${filters.LocationID}`);
+  if (filters.DeptID && Number(filters.DeptID) > 0) empListArr.push(`AND E."DeptID" = ${filters.DeptID}`);
+  if (filters.DesgID && Number(filters.DesgID) > 0) empListArr.push(`AND E."DesgID" = ${filters.DesgID}`);
+  let employeeIDList = empListArr.join(" ");
 
-    // cWhere: date aur baqi non-emp filters
-    let cWhereArr = [];
-    // if (filters.Date) cWhereArr.push(`AttendanceDate = '${filters.Date}'`);
-    // cWhereArr.push(`OverTime = ${filters.WithOverTime ? 1 : 0}`);
-    // cWhereArr.push(`IsManager = ${filters.IsManager ? 1 : 0}`);
-    // cWhereArr.push(`IsShiftEmployee = ${filters.ShiftEmployee ? 1 : 0}`);
-    let cWhere = cWhereArr.join(" AND ");
+  // cWhere
+  let cWhere = "";
+  if (filters.Date) cWhere = `AND A."DateIn" = '${filters.Date}'`;
 
-    // Final string
-    return `EmployeeIDList = ${employeeIDList}\ncWhere = ${cWhere}`;
-  };
+  // Final string
+  return `EmployeeIDList = ${employeeIDList}\ncWhere = ${cWhere}`;
+};
 
-  const fetchAttendanceData = async (filters) => {
-    const query = generateQueryString(filters);
-    const [empListLine, cWhereLine] = query.split('\n');
-    const employeeIDList = empListLine.replace('EmployeeIDList = ', '');
-    const cWhere = cWhereLine.replace('cWhere = ', '');
+const fetchAttendanceData = async (filters) => {
+  // Build EmployeeIDList
+  let empListArr = [];
+  if (filters.EType && Number(filters.EType) > 0) empListArr.push(`AND E."ETypeID" = ${filters.EType}`);
+  if (filters.EmployeeID && Number(filters.EmployeeID) > 0) empListArr.push(`AND E."EmpID" = ${filters.EmployeeID}`);
+  if (filters.HODID && Number(filters.HODID) > 0) empListArr.push(`AND E."HODID" = ${filters.HODID}`);
+  if (filters.LocationID && Number(filters.LocationID) > 0) empListArr.push(`AND E."LocationID" = ${filters.LocationID}`);
+  if (filters.DeptID && Number(filters.DeptID) > 0) empListArr.push(`AND E."DeptID" = ${filters.DeptID}`);
+  if (filters.DesgID && Number(filters.DesgID) > 0) empListArr.push(`AND E."DesgID" = ${filters.DesgID}`);
+  let employeeIDList = empListArr.join(" ");
 
-    // Build params in the exact order and with empty values if needed
-    const params = [
-      `Orgini=LTT`,
-      `CompanyID=${filters.LoginComapnyID || 1}`,
-      `LocationID=${filters.LoginLocationID || 1}`,
-      // `VDate=${filters.Date || "2025-06-02"}`,
-      `VDate="2025-06-02"`, 
-      // `VDate="2025-05-22"`,
-      `EmployeeIDList=${employeeIDList}`,
-      `cWhere=${cWhere}`,
-      `IsAu=0`,
-      `IsExport=0`,
-      `UID=${filters.UserID || 0}`,
-    ].join("&");
+  // cWhere
+  let cWhere = "";
+  if (filters.Date) cWhere = `AND A."DateIn" = ${filters.Date}`;
 
-    let apiUrl = "";
-    switch (filters.VType) {
-      case "Unposted":
-        apiUrl = `${config.api.API_URL}rptAttDailyUnposted?${params}`;
-        break;
-      case "Posted":
-        apiUrl = `${config.api.API_URL}rptAttDailyPosted?${params}`;
-        break;
-      case "Latecomer":
-        apiUrl = `${config.api.API_URL}rptAttDailyLate?${params}`;
-        break;
-      case "Absentees":
-        apiUrl = `${config.api.API_URL}rptAttDailyAB?${params}`;
-        break;
-      default:
-        setTableData([]);
-        return;
-    }
+  // Build params (NO encodeURIComponent)
+  const params = [
+    `Orgini=LTT`,
+    `CompanyID=${filters.LoginComapnyID || 1}`,
+    `LocationID=${filters.LoginLocationID || 1}`,
+    `VDate=${filters.Date || "2025-06-02"}`,
+    `EmployeeIDList=${employeeIDList}`,
+    `cWhere=${cWhere}`,
+    `IsAu=0`,
+    `IsExport=0`,
+    `UID=${filters.UserID || 1}`,
+  ].join("&");
 
-    try {
-      const response = await fetch(apiUrl);
-      console.log("API Response:", response);
-      const data = await response.json();
-      console.log("API data:", data);
-
-      setTableData(data);
-    } catch (error) {
+  let apiUrl = "";
+  switch (filters.VType) {
+    case "Unposted":
+      apiUrl = `${config.api.API_URL}rptAttDailyUnposted?${params}`;
+      break;
+    case "Posted":
+      apiUrl = `${config.api.API_URL}rptAttDailyPosted?${params}`;
+      break;
+    case "Latecomer":
+      apiUrl = `${config.api.API_URL}rptAttDailyLate?${params}`;
+      break;
+    case "Absentees":
+      apiUrl = `${config.api.API_URL}rptAttDailyAB?${params}`;
+      break;
+    default:
       setTableData([]);
-      console.error("API Error:", error);
-    }
-  };
+      return;
+  }
+  // Fetch data from the API
+  console.log("API URL:", apiUrl); // Debugging line
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    console.log("API Response:", data); // Debugging line
+    setTableData(data);
+  } catch (error) {
+    setTableData([]);
+    console.error("API Error:", error);
+  }
+};
 function groupByDepartment(data) {
   const grouped = {};
   data.forEach(row => {
@@ -367,7 +359,7 @@ function groupByDepartment(data) {
                               className="form-control-sm"
                               id="date"
                               name="Date"
-                              min={getMinDate()}
+                              // min={getMinDate()}
                               value={formik.values.Date}
                               onChange={formik.handleChange}
                             />

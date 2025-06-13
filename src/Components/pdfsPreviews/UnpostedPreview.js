@@ -1,8 +1,10 @@
 import React, { useRef } from "react";
 import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
-import autoTable from "jspdf-autotable";
+import { jsPDF } from 'jspdf';
+import { autoTable } from 'jspdf-autotable';
+
+
+
 const UnpostedPreview = ({ groupedData }) => {
   const reportRef = useRef();
   // Table columns fixed order
@@ -16,88 +18,121 @@ const UnpostedPreview = ({ groupedData }) => {
     { key: "Remarks", label: "Remarks" },
   ];
 
+  function getCurrentDate() {
+  const d = new Date();
+  return d.toLocaleDateString('en-GB').replace(/\//g, '-');
+}
+function getCurrentTime() {
+  const d = new Date();
+  return d.toLocaleTimeString('en-GB', { hour12: false });
+}
   // Print date/time
   const now = new Date();
   const printDate = now.toLocaleDateString();
   const printTime = now.toLocaleTimeString();
 
-  const handlePrintPDF = () => {
-  const doc = new jsPDF({
-    orientation: "landscape",
-    unit: "pt",
-    format: "a4",
-  });
+const handlePrintPDF = () => {
+  const doc = new jsPDF('p', 'pt', 'a4');
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  // Convert groupedData to sections for PDF
+  const sections = groupedData.map(sec => ({
+    title: sec.section,
+    head: ['#', ...columns.map(col => col.label)],
+    rows: sec.rows.map((row, idx) => [
+      (idx + 1).toString(),
+      ...columns.map(col => row[col.key] || "")
+    ])
+  }));
 
   // Header
-  doc.setFontSize(16);
-  doc.text("LECOMPANY NAME", doc.internal.pageSize.getWidth() / 2, 30, { align: "center" });
-  doc.setFontSize(12);
-  doc.text(`Unposted Attendance for the date ${printDate}`, doc.internal.pageSize.getWidth() / 2, 50, { align: "center" });
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text('LECOMPANY NAME', 40, 40);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  doc.text('Unposted Attendance for the date 02/06/2025', 40, 60);
 
-  let startY = 70;
+  doc.setFontSize(10);
+  doc.text(`Print Date: ${getCurrentDate()}`, pageWidth - 180, 40);
+  doc.text(`Print Time: ${getCurrentTime()}`, pageWidth - 180, 60);
 
-  groupedData.forEach((section, idx) => {
-    // Section Title
-    doc.setFontSize(13);
-    doc.setTextColor("#a13b00");
-    doc.text(section.section, 40, startY);
-    doc.setTextColor(0, 0, 0);
+  let startY = 80;
 
-    // Table Data
-    const tableBody = section.rows.map((row, i) => [
-      i + 1,
-      row.EmpCode || "",
-      row.EName || "",
-      row.Designation || "",
-      row.StartTime || "",
-      row.DateIn || "",
-      row.LateTime || "",
-      row.Remarks || "",
-    ]);
-
-    doc.autoTable({
-      head: [[
-        "#", "E-Code", "Name", "Designation", "Time IN", "Time OUT", "Late Time", "Remarks"
-      ]],
-      body: tableBody,
-      startY: startY + 10,
-      theme: "grid",
-      headStyles: { fillColor: [91, 164, 182] },
-      styles: { fontSize: 10, cellPadding: 3 },
+  sections.forEach((section) => {
+    // Section Title Row
+    autoTable(doc, {
+      startY,
+      head: [[section.title]],
+      theme: 'plain',
+      headStyles: {
+        fillColor: [230, 185, 122], // Section color (match your HTML)
+        textColor: [161, 59, 0],    // Section text color
+        fontStyle: 'bold',
+        fontSize: 11,
+        halign: 'left',
+        cellPadding: { left: 4, right: 0, top: 2, bottom: 2 },
+      },
+      styles: { cellWidth: 'wrap' },
+      columnStyles: { 0: { cellWidth: pageWidth - 80 } },
       margin: { left: 40, right: 40 },
-      didDrawPage: (data) => {
-        // For multipage, reset startY
-        startY = data.cursor.y + 20;
-      }
+      didDrawPage: function (data) {
+        // Page number in footer
+        const pageCount = doc.internal.getNumberOfPages();
+        doc.setFontSize(9);
+        doc.text(
+          `Page ${doc.internal.getCurrentPageInfo().pageNumber} of ${pageCount}`,
+          pageWidth - 80,
+          doc.internal.pageSize.getHeight() - 20,
+          { align: 'right' }
+        );
+      },
     });
 
-    startY = doc.lastAutoTable.finalY + 30;
-  });
+    startY = doc.lastAutoTable.finalY;
 
-  // Footer (optional)
-  doc.setFontSize(10);
-  doc.text(`Print Date: ${printDate}    Print Time: ${printTime}`, doc.internal.pageSize.getWidth() - 200, doc.internal.pageSize.getHeight() - 20);
+    // Table Header and Data
+    autoTable(doc, {
+      startY,
+      head: [section.head],
+      body: section.rows,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [91, 164, 182], // Table header color (match your HTML)
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 10,
+        halign: 'center',
+      },
+      bodyStyles: {
+        fontSize: 9,
+        halign: 'center',
+        font: 'helvetica',
+      },
+      alternateRowStyles: {
+        fillColor: [247, 250, 253], // Table alternate row color (match your HTML)
+      },
+      
+      margin: { left: 40, right: 40 },
+      didDrawPage: function (data) {
+        // Page number in footer
+        const pageCount = doc.internal.getNumberOfPages();
+        doc.setFontSize(9);
+        doc.text(
+          `Page ${doc.internal.getCurrentPageInfo().pageNumber} of ${pageCount}`,
+          pageWidth - 80,
+          doc.internal.pageSize.getHeight() - 20,
+          { align: 'right' }
+        );
+      },
+    });
+
+    startY = doc.lastAutoTable.finalY + 10;
+  });
 
   // Preview in new tab
   window.open(doc.output("bloburl"), "_blank");
 };
-  // const handlePrintPDF = async () => {
-  //   const input = reportRef.current;
-  //   const canvas = await html2canvas(input, { scale: 2 });
-  //   const imgData = canvas.toDataURL("image/png");
-  //   const pdf = new jsPDF({
-  //     orientation: "landscape",
-  //     unit: "pt",
-  //     format: "a4", // Use standard A4 size
-  //   });
-  //   const pageWidth = pdf.internal.pageSize.getWidth();
-  //   const pageHeight = pdf.internal.pageSize.getHeight();
-  //   pdf.addImage(imgData, "PNG", 0, 0, pageWidth, pageHeight);
-  //   // pdf.save("D-01-Unposted.pdf");
-  //   const pdfBlob = pdf.output("blob");
-  //   const pdfUrl = URL.createObjectURL(pdfBlob);
-  //   window.open(pdfUrl, "_blank");
-  // };
 
   // Data check
   if (!groupedData || groupedData.length === 0) {
