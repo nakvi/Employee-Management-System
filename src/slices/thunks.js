@@ -57,7 +57,7 @@ export * from "./employee/advance/thunk";
 export * from "./employee/localSales/thunk";
 export * from "./employee/employeeTrial/thunk";
 export * from "./employee/gratuity/thunk";
-
+export * from "./employee/paymentPlan/thunk";
 // Administration
 export * from "./administration/roles/thunk";
 export * from "./administration/rolesRight/thunk";
