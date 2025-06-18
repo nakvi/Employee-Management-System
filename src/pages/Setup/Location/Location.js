@@ -193,7 +193,7 @@ const Location = () => {
       // Add title
       doc.setFont("helvetica", "bold");
       doc.setFontSize(16);
-      doc.text("Locations Report", 105, 15, { align: "center" });
+      doc.text("Locations Report", doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
 
       // Add date
       doc.setFont("helvetica", "normal");
@@ -201,6 +201,15 @@ const Location = () => {
       doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, {
         align: "center",
       });
+    // Add date
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(
+      `Generated on: ${new Date().toLocaleDateString()}`,
+      doc.internal.pageSize.getWidth() / 2,
+      28,
+      { align: "center" }
+    );
 
       // Prepare data for the table
       const headers = [
@@ -225,46 +234,53 @@ const Location = () => {
         loc.IsActive === 1 || loc.IsActive === true ? "Active" : "Inactive",
       ]);
 
-      // Add table
-      autoTable(doc, {
-        head: headers,
-        body: data,
-        startY: 30,
-        margin: { top: 30 },
-        styles: {
-          cellPadding: 4,
-          fontSize: 10,
-          valign: "middle",
-          halign: "left",
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontSize: 10,
-          fontStyle: "bold",
-          halign: "center",
-        },
-        columnStyles: {
-          0: { cellWidth: 20, halign: "center" },
-          1: { cellWidth: 35 },
-          2: { cellWidth: 35 },
-          3: { cellWidth: 40 },
-          4: { cellWidth: 40 },
-          5: { cellWidth: 20, halign: "center" },
-          6: { cellWidth: 20, halign: "center" },
-        },
-        didDrawPage: (data) => {
-          // Footer
-          doc.setFontSize(10);
-          doc.setTextColor(100);
-          doc.text(
-            `Page ${data.pageCount}`,
-            doc.internal.pageSize.width / 2,
-            doc.internal.pageSize.height - 10,
-            { align: "center" }
-          );
-        },
-      });
+    // Calculate total table width
+    const colWidths = [18, 28, 28, 32, 32, 14, 18];
+    const tableWidth = colWidths.reduce((a, b) => a + b, 0);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const leftMargin = (pageWidth - tableWidth) / 2;
+
+    // Add table centered
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 38,
+      tableWidth: "auto",
+      margin: { left: leftMargin, right: leftMargin, top: 30 },
+      styles: {
+        cellPadding: 3,
+        fontSize: 10,
+        valign: "middle",
+        halign: "left",
+        overflow: 'linebreak',
+      },
+      headStyles: {
+        fillColor: [41, 128, 185],
+        textColor: 255,
+        fontSize: 10,
+        fontStyle: "bold",
+        halign: "center"
+      },
+      columnStyles: {
+        0: { cellWidth: 18, halign: "center" },   // Code
+        1: { cellWidth: 28 },                     // Title
+        2: { cellWidth: 28 },                     // Title Urdu
+        3: { cellWidth: 32 },                     // Address
+        4: { cellWidth: 32 },                     // Address Urdu
+        5: { cellWidth: 14, halign: "center" },   // Sort Order
+        6: { cellWidth: 18, halign: "center" }    // Status
+      },
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(
+          `Page ${data.pageCount}`,
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" }
+        );
+      }
+    });
 
       // Save the PDF
       doc.save(`Locations_${new Date().toISOString().slice(0, 10)}.pdf`);
