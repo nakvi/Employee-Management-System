@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
+  Button,
   Card,
   CardBody,
   Col,
@@ -8,69 +9,67 @@ import {
   Input,
   Label,
   Form,
+  CardHeader,
 } from "reactstrap";
-import Select from "react-select";
+import PreviewCardHeader4 from "../../../Components/Common/PreviewCardHeader4";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
+import { getRoster, submitRoster } from "../../../slices/Attendance/Roaster/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getShift } from "../../../slices/setup/shift/thunk";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
-import { useDispatch, useSelector } from "react-redux";
-import { getLocation } from "../../../slices/setup/location/thunk";
-import { getDepartment } from "../../../slices/setup/department/thunk";
-import { getDesignation } from "../../../slices/setup/designation/thunk";
-import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
-import { getOTMonthly, submitOTMonthly } from "../../../slices/Attendance/OTMonthly/thunk";
 
-const OTMonthly = () => {
-  document.title = "O/T Monthly | EMS";
-
+const Roster = () => {
+  document.title = "Roster | EMS";
   const dispatch = useDispatch();
 
   // State for form inputs
   const [formData, setFormData] = useState({
     eType: "",
-    location: "",
-    department: [],
-    designation: "",
+    department: "",
     month: "",
-    otOnly: false,
+    dateFrom: "",
+    dateTo: "",
     otEntries: [],
+    ShiftID: "",
+    offDay: "", // Added offDay to formData
   });
 
   // Selectors for data
-  const { location = [] } = useSelector((state) => state.Location || {});
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
-  const { designation = [] } = useSelector((state) => state.Designation || {});
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
-  const { otMonthly, loading, error } = useSelector((state) => state.OTMonthly || {});
+  const { roster, loading, error } = useSelector((state) => state.Roster || {});
+  const { employee = [] } = useSelector((state) => state.Employee || {});
+  const { shift = [] } = useSelector((state) => state.Shift || {});
+
+  // Days of the week for the offDay dropdown
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
   // Fetch data on mount
   useEffect(() => {
-    dispatch(getLocation());
     dispatch(getDepartment());
-    dispatch(getDesignation());
     dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getShift());
   }, [dispatch]);
-
-  // Log otEntries for debugging
-  useEffect(() => {
-    console.log("Current otEntries in state:", formData.otEntries);
-  }, [formData.otEntries]);
 
   // Handle input changes
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
-
-  // Handle multi-select changes for department
-  const handleMultiChange = (name, selectedOptions) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: selectedOptions ? selectedOptions.map((option) => option.value) : [],
+      [name]: value,
     }));
   };
 
@@ -90,7 +89,7 @@ const OTMonthly = () => {
     return true;
   };
 
-  // Construct EmployeeIdList string
+  // Construct employeeIdList string
   const buildEmployeeIdList = () => {
     const conditions = [];
 
@@ -98,67 +97,51 @@ const OTMonthly = () => {
       conditions.push(`E."ETypeID" = ${formData.eType}`);
     }
 
-    if (formData.location) {
-      conditions.push(`E."LocationID" = ${formData.location}`);
+    if (formData.department) {
+      conditions.push(`E."DeptID" = ${formData.department}`);
     }
 
-    if (formData.department.length > 0) {
-      if (formData.department.length === 1) {
-        conditions.push(`E."DeptID" = ${formData.department[0]}`);
-      } else {
-        conditions.push(`E."DeptID" IN (${formData.department.join(",")})`);
-      }
-    }
-
-    if (formData.designation) {
-      conditions.push(`E."DesgID" = ${formData.designation}`);
-    }
-
-    return conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    const employeeIdList = conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    console.log("Step 1 - Generated employeeIdList:", employeeIdList);
+    return employeeIdList;
   };
 
   // Handle Fetch button click
   const handleFetch = () => {
     if (!validateEType()) return;
 
+    const employeeIdList = buildEmployeeIdList();
     const filterConditions = {
       eType: formData.eType,
-      location: formData.location,
       department: formData.department,
-      designation: formData.designation,
       month: formData.month,
-      employeeIdList: buildEmployeeIdList(),
+      dateFrom: formData.dateFrom,
+      dateTo: formData.dateTo,
+      ShiftID: formData.ShiftID,
+      offDay: formData.offDay, // Added offDay to filterConditions
+      employeeIdList: employeeIdList,
     };
 
-    console.log("Fetch Payload:", JSON.stringify(filterConditions, null, 2));
+    console.log("Step 2 - Fetch Payload (filterConditions):", JSON.stringify(filterConditions, null, 2));
 
-    dispatch(getOTMonthly(filterConditions)).then((response) => {
-      console.log("Raw API Response:", response);
-      console.log("API Response Payload:", response.payload);
-
-      const dataArray = Array.isArray(response.payload) ? response.payload : [];
-
-      console.log("Data Array:", dataArray);
-
-      if (dataArray.length) {
-        const mappedEntries = dataArray.map((item) => ({
-          employee: item.EName || item.EmpCode || "N/A",
-          attCode: item.AttCode || "N/A",
-          shiftTime: item.ShiftTime || 0,
-          totalTime: item.TotalTime || 0,
-          overTime: item.OverTime !== undefined ? String(item.OverTime) : "0.0",
-          remarks: item.Remarks || "",
-          post: item.IsChanged === 1,
-        }));
-
-        console.log("Mapped OT Entries:", mappedEntries);
-
+    dispatch(getRoster(filterConditions)).then((response) => {
+      if (response.payload) {
+        const dataArray = Array.isArray(response.payload) ? response.payload : response.payload.data || [];
         setFormData((prev) => ({
           ...prev,
-          otEntries: mappedEntries,
+          otEntries: dataArray.length
+            ? dataArray.map((item) => ({
+              employee: item.employee || "N/A",
+              attCode: item.attCode || "N/A",
+              shiftTime: item.shiftTime || 0,
+              totalTime: item.totalTime || 0,
+              overTime: item.overTime || "00.0",
+              remarks: item.remarks || "",
+              post: item.post || false,
+            }))
+            : [],
         }));
       } else {
-        console.log("No data to map, setting otEntries to empty array");
         setFormData((prev) => ({
           ...prev,
           otEntries: [],
@@ -173,63 +156,29 @@ const OTMonthly = () => {
     e.preventDefault();
     if (!validateEType()) return;
 
-    // Filter entries where post is true
-    const selectedEntries = formData.otEntries.filter((entry) => entry.post);
-
-    if (selectedEntries.length === 0) {
-      toast.error("No entries selected for submission!");
-      return;
-    }
-
-    // Construct payload for each selected entry
-    const otEntriesPayload = selectedEntries.map((entry, index) => ({
-      VID: 1, // Temporary unique ID for each entry
-      VName: "Monthly Overtime",
-      VNo: `OT-2025-${String(index + 1).padStart(3, "0")}`, // e.g., OT-2025-001
-      VDate: "2025-06-10T08:00:00Z", // Hardcoded as per requirement
-      // EmpID: entry.employee, // Assuming employee field contains EmpID or EmpCode
-      EmpID: "entry.employee", // Assuming employee field contains EmpID or EmpCode
-      OverTime: parseFloat(entry.overTime) || 0.0, // Convert to number
-      LeaveTypeID: 2, // Hardcoded
-      IsPosted: 0, // Hardcoded
-      PostedDate: "1900-01-01", // Hardcoded
-      PostedBy: 1, // Hardcoded
-      IsCanceled: 0, // Hardcoded
-      CanceledDate: "1900-01-01", // Hardcoded
-      CanceledBy: 1, // Hardcoded
-      UID: 1002, // Hardcoded
-      CompanyID: 5, // Hardcoded
-      Tranzdatetime: "2025-06-10T09:30:00Z", // Hardcoded
-    }));
-
     const payload = {
-      employeeIdList: buildEmployeeIdList(),
-      otEntries: otEntriesPayload,
+      eType: formData.eType,
+      department: formData.department,
+      month: formData.month,
+      dateFrom: formData.dateFrom,
+      dateTo: formData.dateTo,
+      otEntries: formData.otEntries,
+      ShiftID: formData.ShiftID,
+      offDay: formData.offDay, // Added offDay to payload
     };
-
-    console.log("Submit Payload:", JSON.stringify(payload, null, 2));
-
-    dispatch(submitOTMonthly(payload)).then((response) => {
-      if (response.meta.requestStatus === "fulfilled") {
-        toast.success("O/T Monthly submitted successfully!");
-        // Optionally clear or refresh the form
-        setFormData((prev) => ({
-          ...prev,
-          otEntries: [],
-        }));
-      }
-    });
+    dispatch(submitRoster(payload));
   };
 
   // Handle Cancel button click
   const handleCancel = () => {
     setFormData({
       eType: "",
-      location: "",
-      department: [],
-      designation: "",
+      department: "",
       month: "",
-      otOnly: false,
+      dateFrom: "",
+      dateTo: "",
+      ShiftID: "",
+      offDay: "", // Added offDay to reset
       otEntries: [],
     });
   };
@@ -243,9 +192,9 @@ const OTMonthly = () => {
           <Row>
             <Col lg={12}>
               <Card>
-                <Form onSubmit={(e) => e.preventDefault()}>
-                  <PreviewCardHeader2
-                    title="O/T Monthly"
+                <Form onSubmit={handleSave}>
+                  <PreviewCardHeader4
+                    title="Roster"
                     onFetch={handleFetch}
                     onSave={handleSave}
                     onCancel={handleCancel}
@@ -254,85 +203,20 @@ const OTMonthly = () => {
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={2}>
-                          <div className="mb-3">
-                            <Label htmlFor="eType" className="form-label">
-                              E-Type
-                            </Label>
-                            <select
-                              className="form-select form-select-sm"
-                              name="eType"
-                              id="eType"
-                              value={formData.eType}
-                              onChange={handleInputChange}
-                            >
-                              <option value="">---Select---</option>
-                              {employeeType.map((item) => (
-                                <option key={item.VID} value={item.VID}>
-                                  {item.VName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="mb-3">
-                            <Label htmlFor="location" className="form-label">
-                              Location
-                            </Label>
-                            <select
-                              className="form-select form-select-sm"
-                              name="location"
-                              id="location"
-                              value={formData.location}
-                              onChange={handleInputChange}
-                            >
-                              <option value="">---Select---</option>
-                              {location.map((item) => (
-                                <option key={item.VID} value={item.VID}>
-                                  {item.VName}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label htmlFor="department" className="form-label">
                               Department
                             </Label>
-                            <Select
-                              isMulti
-                              name="department"
-                              id="department"
-                              value={departmentList
-                                .filter((dept) => formData.department.includes(dept.VID))
-                                .map((dept) => ({
-                                  value: dept.VID,
-                                  label: dept.VName,
-                                }))}
-                              onChange={(selected) => handleMultiChange("department", selected)}
-                              options={departmentList.map((dept) => ({
-                                value: dept.VID,
-                                label: dept.VName,
-                              }))}
-                            />
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="mb-3">
-                            <Label htmlFor="designation" className="form-label">
-                              Designation
-                            </Label>
                             <select
                               className="form-select form-select-sm"
-                              name="designation"
-                              id="designation"
-                              value={formData.designation}
+                              name="department"
+                              id="department"
+                              value={formData.department}
                               onChange={handleInputChange}
                             >
                               <option value="">---Select---</option>
-                              {designation.map((item) => (
+                              {departmentList.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
@@ -355,19 +239,106 @@ const OTMonthly = () => {
                             />
                           </div>
                         </Col>
-                        <Col xxl={2} md={2} className="mt-3">
-                          <div className="form-check mt-4">
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="employeeidlist" className="form-label">
+                              Employee
+                            </Label>
+                            <select
+                              className={`form-select form-select-sm ${formData.employeeidlist ? "is-invalid" : ""}`}
+                              name="employeeidlist"
+                              id="employeeidlist"
+                              value={formData.employeeidlist}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">---Select---</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
+                            </select>
+                            {formData.employeeidlist && (
+                              <div className="invalid-feedback">{formData.employeeidlist}</div>
+                            )}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="ShiftID" className="form-label">
+                              Shift
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="ShiftID"
+                              name="ShiftID"
+                              value={formData.ShiftID}
+                              onChange={handleInputChange} // Fixed to use handleInputChange
+                            >
+                              <option value="">---Select---</option>
+                              {shift?.length > 0 ? (
+                                shift.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No Shift available
+                                </option>
+                              )}
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="offDay" className="form-label">
+                              Off Days
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="offDay"
+                              name="offDay"
+                              value={formData.offDay}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">---Select---</option>
+                              {daysOfWeek.map((day) => (
+                                <option key={day} value={day}>
+                                  {day}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="dateFrom" className="form-label">
+                              Date From
+                            </Label>
                             <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="otOnly"
-                              name="otOnly"
-                              checked={formData.otOnly}
+                              type="date"
+                              className="form-control-sm"
+                              id="dateFrom"
+                              name="dateFrom"
+                              value={formData.dateFrom}
                               onChange={handleInputChange}
                             />
-                            <Label className="form-check-label" htmlFor="otOnly">
-                              O/T Only
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="dateTo" className="form-label">
+                              Date To
                             </Label>
+                            <Input
+                              type="date"
+                              className="form-control-sm"
+                              id="dateTo"
+                              name="dateTo"
+                              value={formData.dateTo}
+                              onChange={handleInputChange}
+                            />
                           </div>
                         </Col>
                       </Row>
@@ -389,9 +360,9 @@ const OTMonthly = () => {
                           <tr>
                             <th>Sr #</th>
                             <th>Employee</th>
-                            {/* <th>Attendance Code</th>
+                            <th>Attendance Code</th>
                             <th>Shift Time</th>
-                            <th>Total Time</th> */}
+                            <th>Total Time</th>
                             <th>Over Time</th>
                             <th>Remarks</th>
                             <th>
@@ -416,9 +387,9 @@ const OTMonthly = () => {
                             <tr key={index}>
                               <td>{index + 1}</td>
                               <td>{entry.employee}</td>
-                              {/* <td>{entry.attCode}</td>
+                              <td>{entry.attCode}</td>
                               <td>{entry.shiftTime}</td>
-                              <td>{entry.totalTime}</td> */}
+                              <td>{entry.totalTime}</td>
                               <td>
                                 <Input
                                   type="number"
@@ -479,4 +450,4 @@ const OTMonthly = () => {
   );
 };
 
-export default OTMonthly;
+export default Roster;

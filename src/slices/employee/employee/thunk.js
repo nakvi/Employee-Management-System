@@ -18,7 +18,7 @@ export const getEmployee = createAsyncThunk(
 
       if (data.status === "0") {
         // Success: Return the data
-        console.log("test", data.data);
+        // console.log("test", data.data);
 
         return data.data;
       } else if (data.status === "1") {

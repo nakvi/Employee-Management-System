@@ -124,7 +124,7 @@ import OTDailyReducer from "./Attendance/OTDaily/reducer"; // Assuming OTDaily i
 // OTMonthly
 import OTMonthlyReducer from "./Attendance/OTMonthly/reducer"; // Assuming OTMonthly is a slice, adjust as necessary
 // Roaster
-import RoasterReducer from "./Attendance/Roaster/reducer"; // Assuming Roaster is a slice, adjust as necessary
+import RosterReducer from "./Attendance/Roster/reducer"; // Assuming Roaster is a slice, adjust as necessary
 
 
 
@@ -209,7 +209,7 @@ const rootReducer = combineReducers({
     LateComingExemptAttendance:LateComingExemptAttendanceReducer,
     OTDaily: OTDailyReducer, // Assuming OTDaily is a component or slice, adjust as necessary
     OTMonthly: OTMonthlyReducer, // Assuming OTMonthly is a component or slice, adjust as necessary
-    Roaster: RoasterReducer, // Assuming Roaster is a component or slice, adjust as necessary
+    Roster: RosterReducer, // Assuming Roaster is a component or slice, adjust as necessary
 });
 
 export default rootReducer;
