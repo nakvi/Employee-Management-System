@@ -124,14 +124,13 @@ const fetchAttendanceData = async (filters) => {
 
   // cWhere
   let cWhere = "";
-  if (filters.Date) cWhere = `AND A."DateIn" = ${filters.Date}`;
-
+  if (filters.Date) cWhere = `AND A."DateIn" = '${filters.Date}'`;
   // Build params (NO encodeURIComponent)
   const params = [
     `Orgini=LTT`,
     `CompanyID=${filters.LoginComapnyID || 1}`,
     `LocationID=${filters.LoginLocationID || 1}`,
-    `VDate=${filters.Date || "2025-06-02"}`,
+    `VDate=${filters.Date || "2025-05-02"}`,
     `EmployeeIDList=${employeeIDList}`,
     `cWhere=${cWhere}`,
     `IsAu=0`,
@@ -155,7 +154,7 @@ const fetchAttendanceData = async (filters) => {
       break;
     default:
       setTableData([]);
-      return;
+      return; 
   }
   // Fetch data from the API
   console.log("API URL:", apiUrl); // Debugging line
@@ -178,36 +177,7 @@ function groupByDepartment(data) {
   });
   return Object.entries(grouped).map(([section, rows]) => ({ section, rows }));
 }
-  // Generate query string (same as your code)
-  // const generateQueryString = (filters) => {
-  //   let query = "cWhere = Where UserID = 1 AND LoginCompanyID = 1 AND LoginLocationID = 1 ";
-  //   if (filters.EType && Number(filters.EType) > 0) {
-  //     query += ` AND EType = '${filters.EType}'`;
-  //   }
-  //   if (filters.EmployeeID && Number(filters.EmployeeID) > 0) {
-  //     query += ` AND EmployeeID = '${filters.EmployeeID}'`;
-  //   }
-  //   if (filters.HODID && Number(filters.HODID) > 0) {
-  //     query += ` AND HODID = '${filters.HODID}'`;
-  //   }
-  //   if (filters.LocationID && Number(filters.LocationID) > 0) {
-  //     query += ` AND LocationID = '${filters.LocationID}'`;
-  //   }
-  //   if (filters.DeptID && Number(filters.DeptID) > 0) {
-  //     query += ` AND DepartmentID = '${filters.DeptID}'`;
-  //   }
-  //   if (filters.DesgID && Number(filters.DesgID) > 0) {
-  //     query += ` AND DesignationID = '${filters.DesgID}'`;
-  //   }
-  //   query += ` AND AttendanceDate = '${filters.Date}'`;
-  //   if (filters.WithOverTime) query += ` AND OverTime = 1`;
-  //   else query += ` AND OverTime = 0`;
-  //   if (filters.IsManager) query += ` AND IsManager = 1`;
-  //   else query += ` AND IsManager = 0`;
-  //   if (filters.ShiftEmployee) query += ` AND IsShiftEmployee = 1`;
-  //   else query += ` AND IsShiftEmployee = 0`;
-  //   return query;
-  // };
+
 
 
   // Cancel button handler
@@ -469,36 +439,12 @@ function groupByDepartment(data) {
               <Col lg={12}>
                 {showTable && (
                 <>
-                  {filters.VType === "Unposted" && <UnpostedPreview groupedData={groupByDepartment(tableData)} />}
-                  {filters.VType === "Posted" && <PostedPreview groupedData={groupByDepartment(tableData)} />}
-                  {filters.VType === "Latecomer" && <LatecomerPreview groupedData={groupByDepartment(tableData)} />}
-                  {filters.VType === "Absentees" && <AbsenteesPreview groupedData={groupByDepartment(tableData)} />}
+                  {filters.VType === "Unposted" && <UnpostedPreview groupedData={groupByDepartment(tableData)} reportHeading={filters.ReportHeading}  reportDate={filters.Date} />}
+                  {filters.VType === "Posted" && <PostedPreview groupedData={groupByDepartment(tableData)} reportHeading={filters.ReportHeading}  reportDate={filters.Date} />}
+                  {filters.VType === "Latecomer" && <LatecomerPreview groupedData={groupByDepartment(tableData)} reportHeading={filters.ReportHeading}  reportDate={filters.Date} />}
+                  {filters.VType === "Absentees" && <AbsenteesPreview groupedData={groupByDepartment(tableData)} reportHeading={filters.ReportHeading}  reportDate={filters.Date} />}
                 </>
               )}
-                {/* <Card className="mt-3">
-                  <CardBody>
-                    <h5>Selected Filters:</h5>
-                    <p>
-                      <strong>UserID:</strong> 1 <br />
-                      <strong>LoginComapnyID:</strong> 1 <br />
-                      <strong>LoginLocationID:</strong> 1 <br />
-                      <strong>E-Type:</strong> {filters.EType || " "} <br />
-                      <strong>Employee:</strong> {filters.EmployeeID || " "} <br />
-                      <strong>HOD:</strong> {filters.HODID || " "} <br />
-                      <strong>Location:</strong> {filters.LocationID || " "} <br />
-                      <strong>Department:</strong> {filters.DeptID || " "} <br />
-                      <strong>Designation:</strong> {filters.DesgID || " "} <br />
-                      <strong>Date:</strong> {filters.Date} <br />
-                      <strong>Report Heading:</strong> {filters.ReportHeading || " "} <br />
-                      <strong>With OverTime:</strong> {filters.WithOverTime ? "1" : "0"} <br />
-                      <strong>Is Manager:</strong> {filters.IsManager ? "1" : "0"} <br />
-                      <strong>Shift Employee:</strong> {filters.ShiftEmployee ? "1" : "0"} <br />
-                      <strong>Report Type:</strong> {filters.VType}
-                    </p>
-                    <h5>Generated Query:</h5>
-                    <pre>{queryString}</pre>
-                  </CardBody>
-                </Card> */}
               </Col>
             )}
             {/* {showTable && <RenderTable selectedOption={filters.VType} />} */}

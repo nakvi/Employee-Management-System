@@ -5,15 +5,15 @@ import { autoTable } from 'jspdf-autotable';
 
 
 
-const UnpostedPreview = ({ groupedData }) => {
+const UnpostedPreview = ({ groupedData, reportHeading , reportDate }) => {
   const reportRef = useRef();
   // Table columns fixed order
   const columns = [
     { key: "EmpCode", label: "E-Code" },
     { key: "EName", label: "Name" },
     { key: "Designation", label: "Designation" },
-    { key: "StartTime", label: "Time IN" },
-    { key: "DateIn", label: "Time OUT" },
+    { key: "DateIn", label: "Time IN" },
+    { key: "DateOut", label: "Time OUT" },
     { key: "LateTime", label: "Late Time" },
     { key: "Remarks", label: "Remarks" },
   ];
@@ -31,108 +31,230 @@ function getCurrentTime() {
   const printDate = now.toLocaleDateString();
   const printTime = now.toLocaleTimeString();
 
-const handlePrintPDF = () => {
-  const doc = new jsPDF('p', 'pt', 'a4');
-  const pageWidth = doc.internal.pageSize.getWidth();
+  const handlePrintPDF = () => {
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
 
-  // Convert groupedData to sections for PDF
-  const sections = groupedData.map(sec => ({
+    // Convert groupedData to sections for PDF
+    const sections = groupedData.map(sec => ({
     title: sec.section,
     head: ['#', ...columns.map(col => col.label)],
     rows: sec.rows.map((row, idx) => [
       (idx + 1).toString(),
-      ...columns.map(col => row[col.key] || "")
+      ...columns.map(col => {
+        if (col.key === "DateIn" || col.key === "DateOut") {
+          // Show only time part (assume value is "YYYY-MM-DD HH:mm:ss" or similar)
+          const val = row[col.key];
+          if (!val) return "";
+          // Try to extract time part
+          const match = val.match(/\d{2}:\d{2}/);
+          return match ? match[0] : val;
+        }
+        if (col.key === "LateTime") {
+          // Show 0 if null, empty, or 0
+          return row[col.key] && row[col.key] !== "0" ? row[col.key] : "0";
+        }
+        return row[col.key] || "";
+      })
     ])
   }));
 
-  // Header
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(13);
-  doc.text('LECOMPANY NAME', 40, 40);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(11);
-  doc.text('Unposted Attendance for the date 02/06/2025', 40, 60);
 
-  doc.setFontSize(10);
-  doc.text(`Print Date: ${getCurrentDate()}`, pageWidth - 180, 40);
-  doc.text(`Print Time: ${getCurrentTime()}`, pageWidth - 180, 60);
+  // Header
+  // doc.setFont('helvetica', 'bold');
+  // doc.setFontSize(10);
+  // doc.text('LECOMPANY NAME', 40, 60);
+  // doc.setFont('helvetica', 'normal');
+  // doc.setFontSize(10);
+  // if (reportHeading && reportHeading.trim() !== "") {
+  //   doc.text(reportHeading, 40, 75);
+  // } else {
+  //   doc.text(`Unposted Attendance for the date ${reportDate}`, 40, 75);
+  // }
+
+  
+
+  // doc.setFontSize(8);
+  // doc.text(`Print Date: ${getCurrentDate()}`, pageWidth - 130, 60);
+  // doc.text(`Print Time: ${getCurrentTime()}`, pageWidth - 130, 75);
 
   let startY = 80;
-
   sections.forEach((section) => {
-    // Section Title Row
     autoTable(doc, {
       startY,
-      head: [[section.title]],
-      theme: 'plain',
-      headStyles: {
-        fillColor: [230, 185, 122], // Section color (match your HTML)
-        textColor: [161, 59, 0],    // Section text color
-        fontStyle: 'bold',
-        fontSize: 11,
-        halign: 'left',
-        cellPadding: { left: 4, right: 0, top: 2, bottom: 2 },
-      },
-      styles: { cellWidth: 'wrap' },
-      columnStyles: { 0: { cellWidth: pageWidth - 80 } },
-      margin: { left: 40, right: 40 },
-      didDrawPage: function (data) {
-        // Page number in footer
-        const pageCount = doc.internal.getNumberOfPages();
-        doc.setFontSize(9);
-        doc.text(
-          `Page ${doc.internal.getCurrentPageInfo().pageNumber} of ${pageCount}`,
-          pageWidth - 80,
-          doc.internal.pageSize.getHeight() - 20,
-          { align: 'right' }
-        );
-      },
-    });
-
-    startY = doc.lastAutoTable.finalY;
-
-    // Table Header and Data
-    autoTable(doc, {
-      startY,
-      head: [section.head],
+      head: [
+        [
+          {
+            content: section.title,
+            colSpan: 8,
+            styles: {
+              halign: 'left',
+              fillColor: '#F7EDD4',
+              textColor: '#222',
+              fontStyle: 'bold',
+              fontSize: 9,
+              cellPadding: 2,
+              font: 'helvetica'
+            }
+          }
+        ],
+        section.head
+      ],
       body: section.rows,
       theme: 'grid',
       headStyles: {
-        fillColor: [91, 164, 182], // Table header color (match your HTML)
-        textColor: [255, 255, 255],
+        fillColor: '#fff',
+        textColor: '#222',
         fontStyle: 'bold',
-        fontSize: 10,
-        halign: 'center',
+        fontSize: 7,
+        font: 'helvetica',
+        halign: 'left',
+        lineColor: [230, 230, 230],
+        lineWidth: 0.3,
       },
       bodyStyles: {
-        fontSize: 9,
-        halign: 'center',
+        fontSize: 7,
         font: 'helvetica',
+        halign: 'center',
+        lineColor: [230, 230, 230],
+        lineWidth: 0.3,
       },
       alternateRowStyles: {
-        fillColor: [247, 250, 253], // Table alternate row color (match your HTML)
+        fillColor: [247, 250, 253],
       },
-      
-      margin: { left: 40, right: 40 },
+       margin: { top: 75, left: 40, right: 40 }, // <-- Add top margin for header space
+      columnStyles: {
+        0: { halign: 'left', cellWidth: 20 },
+        1: { halign: 'left', cellWidth: 40 },
+        2: { halign: 'left', cellWidth: 110 },
+        3: { halign: 'left', cellWidth: 110 },
+        4: { halign: 'center', cellWidth: 45 },
+        5: { halign: 'center', cellWidth: 45 },
+        6: { halign: 'center', cellWidth: 45 },
+        7: { halign: 'left', cellWidth: 100 },
+      },
       didDrawPage: function (data) {
-        // Page number in footer
+        // Header on every page
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.text('LECOMPANY NAME', 40, 60);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        if (reportHeading && reportHeading.trim() !== "") {
+          doc.text(reportHeading, 40, 75);
+        } else {
+          doc.text(`Unposted Attendance for the date ${reportDate}`, 40, 75);
+        }
+        doc.setFontSize(8);
+        doc.text(`Print Date: ${getCurrentDate()}`, pageWidth - 130, 60);
+        doc.text(`Print Time: ${getCurrentTime()}`, pageWidth - 130, 75);
+
+        // Page number (optional)
         const pageCount = doc.internal.getNumberOfPages();
-        doc.setFontSize(9);
+        doc.setFontSize(7);
         doc.text(
           `Page ${doc.internal.getCurrentPageInfo().pageNumber} of ${pageCount}`,
-          pageWidth - 80,
+          pageWidth - 40,
           doc.internal.pageSize.getHeight() - 20,
           { align: 'right' }
         );
       },
+      didParseCell: function (data) {
+          // Apply alignment only to header row (excluding the section title row)
+          if (data.section === 'head' && data.row.index === 1) {
+            const colIndex = data.column.index;
+
+            // Left align for specific headers
+            if ([0, 1, 2, 3 , 7].includes(colIndex)) {
+              data.cell.styles.halign = 'left';
+            } else {
+              // Center align for others
+              data.cell.styles.halign = 'center';
+            }
+          }
+        }
     });
 
     startY = doc.lastAutoTable.finalY + 10;
   });
+  // sections.forEach((section) => {
+  //   autoTable(doc, {
+  //     startY,
+  //     head: [
+  //       [
+  //         {
+  //           content: section.title,
+  //           colSpan: 8,
+  //           styles: {
+  //             halign: 'left',
+  //             fillColor: '#F7EDD4',
+  //             // textColor: [161, 59, 0],
+  //             textColor: '#222',
+  //             // fillColor: [230, 185, 122],
+  //             // textColor: [161, 59, 0],
+  //             fontStyle: 'bold',
+  //             fontSize: 9,
+  //             cellPadding: 5,
+  //             font: 'helvetica'
+  //           }
+  //         }
+  //       ],
+  //       section.head
+  //     ],
+  //     body: section.rows,
+  //     theme: 'grid',
+  //     headStyles: {
+  //       // fillColor: [91, 164, 182],
+  //       fillColor: '#fff',
+  //       // fillColor: [64, 81, 137],
+  //       textColor: '#222',
+  //       // textColor: [255, 255, 255],
+  //       fontStyle: 'bold',
+  //       fontSize: 7,
+  //       font: 'helvetica',
+  //       halign: 'left',
+  //       lineColor: [230, 230, 230], // lighter border
+  //       lineWidth: 0.3,
+  //     },
+  //     bodyStyles: {
+  //       fontSize: 7,
+  //       font: 'helvetica',
+  //       halign: 'center',
+  //       lineColor: [230, 230, 230], // lighter border
+  //       lineWidth: 0.3,
+  //     },
+  //     alternateRowStyles: {
+  //       fillColor: [247, 250, 253],
+  //     },
+  //     margin: { left: 40, right: 40 },
+  //     columnStyles: {
+  //       0: { halign: 'left', cellWidth: 20 },    // #
+  //       1: { halign: 'left', cellWidth: 40 },    // E-Code
+  //       2: { halign: 'left', cellWidth: 110 },   // Name
+  //       3: { halign: 'left', cellWidth: 110 },   // Designation
+  //       4: { halign: 'center', cellWidth: 45 },  // Time IN
+  //       5: { halign: 'center', cellWidth: 45 },  // Time OUT
+  //       6: { halign: 'center', cellWidth: 45 },  // Late Time
+  //       7: { halign: 'left', cellWidth: 100 },   // Remarks
+  //     },
+  //     didDrawPage: function (data) {
+  //       const pageCount = doc.internal.getNumberOfPages();
+  //       doc.setFontSize(7);
+  //       doc.text(
+  //         `Page ${doc.internal.getCurrentPageInfo().pageNumber} of ${pageCount}`,
+  //         pageWidth - 40,
+  //         doc.internal.pageSize.getHeight() - 20,
+  //         { align: 'right' }
+  //       );
+  //     },
+  //   });
 
-  // Preview in new tab
-  window.open(doc.output("bloburl"), "_blank");
-};
+  //   startY = doc.lastAutoTable.finalY + 10;
+  // });
+
+    // Preview in new tab
+    window.open(doc.output("bloburl"), "_blank");
+  };
 
   // Data check
   if (!groupedData || groupedData.length === 0) {
@@ -156,8 +278,14 @@ const handlePrintPDF = () => {
       padding: 24,
       overflow: "auto"
     }}>
+        {/* Print Button */}
+      <div style={{ textAlign: "right", margin: "10px 0" }}>
+        <button onClick={handlePrintPDF} style={{ padding: "6px 18px", background: "#5ba4b6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
+          Print PDF
+        </button>
+      </div>
       <div ref={reportRef} style={{
-        fontFamily: "Arial, sans-serif",
+        fontFamily: "helvetica, sans-serif",
         fontSize: 13,
         background: "#fff",
         borderRadius: 8,
@@ -224,12 +352,7 @@ const handlePrintPDF = () => {
           {/* Page number JS PDF se add hota hai, yahan preview me nahi aayega */}
         </div>
       </div>
-      {/* Print Button */}
-      <div style={{ textAlign: "right", margin: "10px 0" }}>
-        <button onClick={handlePrintPDF} style={{ padding: "6px 18px", background: "#5ba4b6", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
-          Print PDF
-        </button>
-      </div>
+    
     </div>
   );
 };
