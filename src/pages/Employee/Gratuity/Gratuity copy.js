@@ -14,6 +14,8 @@ import { Link } from "react-router-dom";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { format } from "date-fns";
+import DeleteModal from "../../../Components/Common/DeleteModal";
+import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { FiRefreshCw } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
@@ -25,21 +27,21 @@ import {
   updateGratuity,
   deleteGratuity,
 } from "../../../slices/employee/gratuity/thunk";
-import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
-import DeleteModal from "../../../Components/Common/DeleteModal";
-
+import config from "../../../config";
+import axios from "axios"; // Import axios for API calls
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const Gratuity = () => {
-  document.title = "Gratuity | EMS";
   const dispatch = useDispatch();
-  const [editingGroup, setEditingGroup] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-
-  // Redux state
-  const { employeeType } = useSelector((state) => state.EmployeeType);
-  const { employee = [] } = useSelector((state) => state.Employee || {});
-  const { salaryBank } = useSelector((state) => state.SalaryBank);
+  const [editingGroup, setEditingGroup] = useState(null);
+  const [selectedDate, setSelectedDate] = useState("");
+  // redux
   const { gratuity, loading, error } = useSelector((state) => state.Gratuity);
+  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { salaryBank } = useSelector((state) => state.SalaryBank);
 
   useEffect(() => {
     dispatch(getSalaryBank());
@@ -51,28 +53,23 @@ const Gratuity = () => {
   // Formik setup
   const formik = useFormik({
     initialValues: {
-      VName: "",
+      EmpID: "",
+      ETypeID: "",
       VDate: "",
       DemandTill: "",
       PaidTill: "",
       PaidOld: "",
-      EmpID: "",
-      ETypeID: "",
+      PaidOn:"",
       DueAmount: "",
+      DemandDate:"",
       PaidAmount: "",
-      NewAmount: "",
-      GYearsEffected: "",
-      GYears: "",
-      GMonths: "",
-      isApproved: 1,
-      isPosted: 1,
-      PostedDate: "1900-01-01",
-      PostedBy: 1,
+      BasicSalary:"",
+      NewAmount: "5000",
       CompanyBankID: "",
       ChequeNo: "",
       ChequeDate: "",
-      FinancialYearID: 2025,
-      isCancel: 0,
+      VName: "",
+      SalaryYear: "",
       UID: 10,
       CompanyID: "1001",
       Tranzdatetime: new Date().toISOString(),
@@ -82,99 +79,133 @@ const Gratuity = () => {
         .min(1, "Employee Type is required")
         .required("Required"),
       EmpID: Yup.string().required("Employee is required"),
-      VName: Yup.string().required("Name is required"),
+      VName: Yup.string().required("Remarks is required"),
       VDate: Yup.date().required("Date is required"),
       DemandTill: Yup.date().required("Demand Till is required"),
       PaidTill: Yup.date().required("Paid Till is required"),
       PaidOld: Yup.date().required("Previous Date is required"),
+      PaidOn: Yup.date().required("Paid Date is required"),
+      DemandDate: Yup.date().required("Date is required"),
       DueAmount: Yup.number().required("Due Amount is required"),
+      BasicSalary: Yup.number().required("Current Salary is required"),
       PaidAmount: Yup.number().required("Paid Amount is required"),
-      NewAmount: Yup.number().required("New Amount is required"),
       CompanyBankID: Yup.number()
         .min(1, "Bank is required")
         .required("Required"),
       ChequeNo: Yup.string().required("Cheque No is required"),
       ChequeDate: Yup.date().required("Cheque Date is required"),
-      isApproved: Yup.number().oneOf([0, 1], "Invalid approval status"),
-      isPosted: Yup.number().oneOf([0, 1], "Invalid posted status"),
-      isCancel: Yup.number().oneOf([0, 1], "Invalid cancel status"),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values) => {
       const transformedValues = {
         ...values,
-        isApproved: parseInt(values.isApproved),
-        isPosted: parseInt(values.isPosted),
-        isCancel: parseInt(values.isCancel),
-        PostedBy: parseInt(values.PostedBy),
-        FinancialYearID: parseInt(values.FinancialYearID),
-        UID: parseInt(values.UID),
-        CompanyBankID: parseInt(values.CompanyBankID),
-        DueAmount: parseFloat(values.DueAmount),
-        PaidAmount: parseFloat(values.PaidAmount),
-        NewAmount: parseFloat(values.NewAmount),
+        IsActive: values.IsActive ? 1 : 0,
       };
-      if (editingGroup) {
-        dispatch(updateGratuity({ ...transformedValues, VID: editingGroup.VID }));
-        setEditingGroup(null);
-      } else {
-        dispatch(submitGratuity(transformedValues));
+
+      try {
+        let result;
+        result = await dispatch(submitGratuity(transformedValues));
+        // Check if the asyncThunk was fulfilled
+        if (
+          submitGratuity.fulfilled.match(result) ||
+          updateGratuity.fulfilled.match(result)
+        ) {
+          formik.resetForm();
+        }
+      } catch (error) {
+        console.error("Submission failed:", error);
+        // Errors already shown via toast, nothing else needed
       }
-      formik.resetForm();
     },
   });
 
-  // Handle edit button click
-  const handleEditClick = (group) => {
-    setEditingGroup(group);
-    formik.setValues({
-      VName: group.VName || "",
-      VDate: group.VDate ? group.VDate.split("T")[0] : "",
-      DemandTill: group.DemandTill ? group.DemandTill.split("T")[0] : "",
-      PaidTill: group.PaidTill ? group.PaidTill.split("T")[0] : "",
-      PaidOld: group.PaidOld ? group.PaidOld.split("T")[0] : "",
-      EmpID: group.EmpID || "",
-      ETypeID: employee.find((emp) => emp.EmpID === group.EmpID)?.ETypeID || "",
-      DueAmount: group.DueAmount || "",
-      PaidAmount: group.PaidAmount || "",
-      NewAmount: group.NewAmount || "",
-      GYearsEffected: group.GYearsEffected || "",
-      GYears: group.GYears || "",
-      GMonths: group.GMonths || "",
-      isApproved: group.isApproved || 1,
-      isPosted: group.isPosted || 1,
-      PostedDate: group.PostedDate ? group.PostedDate.split("T")[0] : "1900-01-01",
-      PostedBy: group.PostedBy || 1,
-      CompanyBankID: group.CompanyBankID || "",
-      ChequeNo: group.ChequeNo || "",
-      ChequeDate: group.ChequeDate ? group.ChequeDate.split("T")[0] : "",
-      FinancialYearID: group.FinancialYearID || 2025,
-      isCancel: group.isCancel || 0,
-      UID: group.UID || 10,
-      CompanyID: group.CompanyID || "1001",
-      Tranzdatetime: group.Tranzdatetime || new Date().toISOString(),
-    });
+  // Function to fetch gratuity details
+  const fetchGratuityDetails = async (empId, vDate) => {
+    try {
+      const response = await axios.get(
+        `${config.api.API_URL}getEmployeeGratuityDetail`,
+        {
+          params: {
+            Orgini: "LTT",
+            EmpID: empId,
+            VDate: vDate || selectedDate,
+            UID: 1,
+            IsAu: 0,
+            IgnoreOld: 0,
+            BasicSalary: 0,
+          },
+        }
+      );
+      const data = response[0];
+      if (data) {
+        formik.setFieldValue("DueAmount", data.GratuityAmount);
+        formik.setFieldValue("PaidAmount", data.GratuityAmount);
+        formik.setFieldValue("PaidOld", data.LastGDate);
+        formik.setFieldValue("SalaryYear", data.SalaryYear);
+        formik.setFieldValue("BasicSalary", data.CurrentSalary);
+        formik.setFieldValue("CompanyBankID", data.CompanyBankID);
+      }
+    } catch (error) {
+      console.error("Error fetching gratuity details:", error);
+    }
   };
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setSelectedDate(today);
+    formik.setFieldValue("DemandTill", today); // Set default DemandTill
+  }, []);
+  // Handle Employee change
+  const handleEmployeeChange = (e) => {
+    const empId = e.target.value;
+    formik.handleChange(e);
+    // Check if required fields are empty
+    if (!empId || !formik.values.DemandTill) {
+      toast.error("Please select both Employee and Demand Till date.");
+      return; // stop further execution
+    }
+    fetchGratuityDetails(empId, formik.values.DemandTill);
+  };
+  // Add this function to handle the refresh button click
+  const handleRefreshClick = () => {
+    const { EmpID, DemandTill } = formik.values;
 
-  // Handle delete button click
+    // Check if required fields are filled
+    if (!EmpID || !DemandTill) {
+      toast.error("Please select both Employee and Demand Till date.");
+      return;
+    }
+
+    // Fetch gratuity details
+    fetchGratuityDetails(EmpID, DemandTill);
+  };
+  // Handle DemandTill change
+  const handleDemandTillChange = (e) => {
+    const vDate = e.target.value;
+    formik.handleChange(e);
+    setSelectedDate(vDate);
+       // Check if required fields are filled
+    if (!formik.values.EmpID || !vDate) {
+      toast.error("Please select both Employee and Demand Till date.");
+      return;
+    }
+    // if (formik.values.EmpID && vDate) {
+      fetchGratuityDetails(formik.values.EmpID, vDate);
+    // }
+  };
+  const formatDate = (dateString) => {
+    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
+  };
+  // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
   };
-
-  // Handle delete confirmation
   const handleDeleteConfirm = () => {
     if (deleteId) {
       dispatch(deleteGratuity(deleteId));
     }
     setDeleteModal(false);
-    setDeleteId(null);
   };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
-  };
-
+  document.title = "Gratuity | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -213,11 +244,13 @@ const Gratuity = () => {
                               ))}
                             </select>
                             {formik.touched.ETypeID && formik.errors.ETypeID ? (
-                              <div className="text-danger">{formik.errors.ETypeID}</div>
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        {/* <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="EmpID" className="form-label">
                               Employee
@@ -229,10 +262,15 @@ const Gratuity = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee
-                                .filter((emp) => emp.ETypeID === parseInt(formik.values.ETypeID))
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
                                 .map((item) => (
                                   <option key={item.EmpID} value={item.EmpID}>
                                     {item.EName}
@@ -240,46 +278,86 @@ const Gratuity = () => {
                                 ))}
                             </select>
                             {formik.touched.EmpID && formik.errors.EmpID ? (
-                              <div className="text-danger">{formik.errors.EmpID}</div>
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
                             ) : null}
                           </div>
-                        </Col>
+                        </Col> */}
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label htmlFor="VName" className="form-label">
-                              Name
+                            <Label htmlFor="EmpID" className="form-label">
+                              Employee
                             </Label>
-                            <Input
-                              type="text"
-                              className="form-control-sm"
-                              id="VName"
-                              name="VName"
-                              placeholder="Name"
-                              value={formik.values.VName}
-                              onChange={formik.handleChange}
+                            <select
+                              className="form-select form-select-sm"
+                              name="EmpID"
+                              id="EmpID"
+                              value={formik.values.EmpID}
+                              onChange={handleEmployeeChange}
                               onBlur={formik.handleBlur}
-                            />
-                            {formik.touched.VName && formik.errors.VName ? (
-                              <div className="text-danger">{formik.errors.VName}</div>
+                              disabled={!formik.values.ETypeID}
+                            >
+                              <option value="">---Select---</option>
+                              {employee
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
+                                .map((item) => (
+                                  <option key={item.EmpID} value={item.EmpID}>
+                                    {item.EName}
+                                  </option>
+                                ))}
+                            </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="VDate" className="form-label">
-                              Demand Date
+                              Date
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="VDate"
+                              id=""
                               name="VDate"
                               value={formik.values.VDate}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                             />
-                            {formik.touched.VDate && formik.errors.VDate ? (
-                              <div className="text-danger">{formik.errors.VDate}</div>
+                            {formik.touched.VDate &&
+                            formik.errors.VDate ? (
+                              <div className="text-danger">
+                                {formik.errors.VDate}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="DemandDate" className="form-label">
+                              Demand Date
+                            </Label>
+                            <Input
+                              type="date"
+                              className="form-control-sm"
+                              id="DemandDate"
+                              name="DemandDate"
+                              value={formik.values.DemandDate}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            />
+                            {formik.touched.DemandDate && formik.errors.DemandDate ? (
+                              <div className="text-danger">
+                                {formik.errors.DemandDate}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -293,12 +371,18 @@ const Gratuity = () => {
                               className="form-control-sm"
                               id="DemandTill"
                               name="DemandTill"
-                              value={formik.values.DemandTill}
-                              onChange={formik.handleChange}
+                              // value={formik.values.DemandTill}
+                              // onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              value={selectedDate}
+                              onChange={handleDemandTillChange}
+                              // {...formik.getFieldProps("DemandTill")}
                             />
-                            {formik.touched.DemandTill && formik.errors.DemandTill ? (
-                              <div className="text-danger">{formik.errors.DemandTill}</div>
+                            {formik.touched.DemandTill &&
+                            formik.errors.DemandTill ? (
+                              <div className="text-danger">
+                                {formik.errors.DemandTill}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -316,8 +400,54 @@ const Gratuity = () => {
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                             />
-                            {formik.touched.PaidTill && formik.errors.PaidTill ? (
-                              <div className="text-danger">{formik.errors.PaidTill}</div>
+                            {formik.touched.PaidTill &&
+                            formik.errors.PaidTill ? (
+                              <div className="text-danger">
+                                {formik.errors.PaidTill}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="PaidOn" className="form-label">
+                              Paid On
+                            </Label>
+                            <Input
+                              type="date"
+                              className="form-control-sm"
+                              id="PaidOn"
+                              name="PaidOn"
+                              value={formik.values.PaidOn}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            />
+                            {formik.touched.PaidOn &&
+                            formik.errors.PaidOn ? (
+                              <div className="text-danger">
+                                {formik.errors.PaidOn}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="BasicSalary" className="form-label">
+                              Current Salary
+                            </Label>
+                            <Input
+                              type="number"
+                              className="form-control-sm"
+                              id="BasicSalary"
+                              name="BasicSalary"
+                              placeholder="Current Salary"
+                              {...formik.getFieldProps("BasicSalary")}
+                            />
+                            {formik.touched.BasicSalary &&
+                            formik.errors.BasicSalary ? (
+                              <div className="text-danger">
+                                {formik.errors.BasicSalary}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -336,8 +466,39 @@ const Gratuity = () => {
                               onBlur={formik.handleBlur}
                             />
                             {formik.touched.PaidOld && formik.errors.PaidOld ? (
-                              <div className="text-danger">{formik.errors.PaidOld}</div>
+                              <div className="text-danger">
+                                {formik.errors.PaidOld}
+                              </div>
                             ) : null}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={4}>
+                          <div>
+                            <Label htmlFor="SalaryYear" className="form-label">
+                              Salary / Year
+                            </Label>
+                            <Input
+                              type="text"
+                              className="form-control-sm"
+                              id="SalaryYear"
+                              name="SalaryYear"
+                              placeholder=""
+                              readOnly
+                              disabled
+                              {...formik.getFieldProps("SalaryYear")}
+                            />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Button
+                              className="btn btn-soft-success mt-4 px-4 py-1"
+                              title="Refresh"
+                              data-bs-toggle="tooltip"
+                              onClick={handleRefreshClick}
+                            >
+                              <FiRefreshCw strokeWidth={4} />
+                            </Button>
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -351,58 +512,44 @@ const Gratuity = () => {
                               id="DueAmount"
                               name="DueAmount"
                               placeholder="Due Amount"
-                              value={formik.values.DueAmount}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              readOnly
+                              disabled
+                              {...formik.getFieldProps("DueAmount")}
                             />
-                            {formik.touched.DueAmount && formik.errors.DueAmount ? (
-                              <div className="text-danger">{formik.errors.DueAmount}</div>
+                            {formik.touched.DueAmount &&
+                            formik.errors.DueAmount ? (
+                              <div className="text-danger">
+                                {formik.errors.DueAmount}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
-                          <div className="mb-3">
+                          <div>
                             <Label htmlFor="PaidAmount" className="form-label">
-                              Paid Amount
+                              Amount
                             </Label>
                             <Input
                               type="number"
                               className="form-control-sm"
                               id="PaidAmount"
-                              name="PaidAmount"
-                              placeholder="Paid Amount"
-                              value={formik.values.PaidAmount}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              placeholder="Amount"
+                              {...formik.getFieldProps("PaidAmount")}
                             />
-                            {formik.touched.PaidAmount && formik.errors.PaidAmount ? (
-                              <div className="text-danger">{formik.errors.PaidAmount}</div>
+                            {formik.touched.PaidAmount &&
+                            formik.errors.PaidAmount ? (
+                              <div className="text-danger">
+                                {formik.errors.PaidAmount}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={4}>
                           <div className="mb-3">
-                            <Label htmlFor="NewAmount" className="form-label">
-                              New Amount
-                            </Label>
-                            <Input
-                              type="number"
-                              className="form-control-sm"
-                              id="NewAmount"
-                              name="NewAmount"
-                              placeholder="New Amount"
-                              value={formik.values.NewAmount}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
-                            />
-                            {formik.touched.NewAmount && formik.errors.NewAmount ? (
-                              <div className="text-danger">{formik.errors.NewAmount}</div>
-                            ) : null}
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="mb-3">
-                            <Label htmlFor="CompanyBankID" className="form-label">
+                            <Label
+                              htmlFor="CompanyBankID"
+                              className="form-label"
+                            >
                               Bank
                             </Label>
                             <select
@@ -420,8 +567,11 @@ const Gratuity = () => {
                                 </option>
                               ))}
                             </select>
-                            {formik.touched.CompanyBankID && formik.errors.CompanyBankID ? (
-                              <div className="text-danger">{formik.errors.CompanyBankID}</div>
+                            {formik.touched.CompanyBankID &&
+                            formik.errors.CompanyBankID ? (
+                              <div className="text-danger">
+                                {formik.errors.CompanyBankID}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -436,12 +586,13 @@ const Gratuity = () => {
                               id="ChequeNo"
                               name="ChequeNo"
                               placeholder="Cheque No"
-                              value={formik.values.ChequeNo}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              {...formik.getFieldProps("ChequeNo")}
                             />
-                            {formik.touched.ChequeNo && formik.errors.ChequeNo ? (
-                              <div className="text-danger">{formik.errors.ChequeNo}</div>
+                            {formik.touched.ChequeNo &&
+                            formik.errors.ChequeNo ? (
+                              <div className="text-danger">
+                                {formik.errors.ChequeNo}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -455,41 +606,33 @@ const Gratuity = () => {
                               className="form-control-sm"
                               id="ChequeDate"
                               name="ChequeDate"
-                              value={formik.values.ChequeDate}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              {...formik.getFieldProps("ChequeDate")}
                             />
-                            {formik.touched.ChequeDate && formik.errors.ChequeDate ? (
-                              <div className="text-danger">{formik.errors.ChequeDate}</div>
+                            {formik.touched.ChequeDate &&
+                            formik.errors.ChequeDate ? (
+                              <div className="text-danger">
+                                {formik.errors.ChequeDate}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="mb-3">
-                            <Label htmlFor="GYears" className="form-label">
-                              Gratuity Years
+                        <Col xxl={2} md={4}>
+                          <div>
+                            <Label htmlFor="VName" className="form-label">
+                              Remarks
                             </Label>
                             <Input
                               type="text"
                               className="form-control-sm"
-                              id="GYears"
-                              name="GYears"
-                              placeholder="Gratuity Years"
-                              value={formik.values.GYears}
-                              onChange={formik.handleChange}
-                              onBlur={formik.handleBlur}
+                              id="VName"
+                              placeholder="Remarks"
+                              {...formik.getFieldProps("VName")}
                             />
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2}>
-                          <div className="mb-3">
-                            <Button
-                              className="btn btn-soft-success mt-4 px-4 py-1"
-                              title="Refresh"
-                              onClick={() => dispatch(getGratuity())}
-                            >
-                              <FiRefreshCw strokeWidth={4} />
-                            </Button>
+                            {formik.touched.VName && formik.errors.VName ? (
+                              <div className="text-danger">
+                                {formik.errors.VName}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                       </Row>
@@ -509,13 +652,13 @@ const Gratuity = () => {
                             <input
                               type="text"
                               className="form-control-sm search"
-                              placeholder="Search..."
                             />
                             <i className="ri-search-line search-icon"></i>
                           </div>
                         </div>
                       </Col>
                     </Row>
+
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
@@ -524,91 +667,85 @@ const Gratuity = () => {
                         <thead className="table-light">
                           <tr>
                             <th>Employee</th>
-                            <th>Demand Date</th>
+                            <th>Demand Date </th>
                             <th>Demand Till</th>
                             <th>Paid Till</th>
+                            <th>Paid On</th>
+                            <th>C Salaray</th>
                             <th>Previous</th>
                             <th>Due Amount</th>
-                            <th>Paid Amount</th>
-                            <th>New Amount</th>
+                            <th>Amount</th>
                             <th>Bank</th>
                             <th>Cheque No</th>
                             <th>Cheque Date</th>
+                            <th>Remarks</th>
                             <th>Action</th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
                           {gratuity?.length > 0 ? (
-                            gratuity.map((item) => (
-                              <tr key={item.VID}>
+                            gratuity.map((group) => (
+                              <tr key={group.VID}>
                                 <td>
-                                  {employee.find((emp) => emp.EmpID === item.EmpID)?.EName || "N/A"}
+                                  {employee.find(
+                                    (emp) =>
+                                      String(emp.EmpID) === String(group.EmpID)
+                                  )?.EName || "N/A"}
                                 </td>
-                                <td>{formatDate(item.VDate)}</td>
-                                <td>{formatDate(item.DemandTill)}</td>
-                                <td>{formatDate(item.PaidTill)}</td>
-                                <td>{formatDate(item.PaidOld)}</td>
-                                <td>{item.DueAmount}</td>
-                                <td>{item.PaidAmount}</td>
-                                <td>{item.NewAmount}</td>
+                                <td>{formatDate(group.DemandDate)}</td>
+                                <td>{formatDate(group.DemandTill)}</td>
+                                <td>{formatDate(group.PaidTill)}</td>
+                                <td>{formatDate(group.PaidOn)}</td>
+                                 <td>{group.BasicSalary}</td>
+                                <td>{formatDate(group.PaidOld)}</td>
+                                <td>{group.DueAmount}</td>
+                                <td>{group.PaidAmount}</td>
                                 <td>
-                                  {salaryBank.find((bank) => bank.VID === item.CompanyBankID)?.VName || "N/A"}
+                                  {salaryBank.find(
+                                    (bank) => bank.VID === group.CompanyBankID
+                                  )?.VName || "N/A"}
                                 </td>
-                                <td>{item.ChequeNo}</td>
-                                <td>{formatDate(item.ChequeDate)}</td>
+                                <td>{group.ChequeNo}</td>
+                                <td>{formatDate(group.ChequeDate)}</td>
+                                <td>{group.VName}</td>
                                 <td>
                                   <div className="d-flex gap-2">
-                                    <Button
-                                      className="btn btn-soft-info"
-                                      onClick={() => handleEditClick(item)}
-                                      disabled={loading}
-                                    >
-                                      <i className="bx bx-edit"></i>
-                                    </Button>
-                                    <Button
-                                      className="btn btn-soft-danger"
-                                      onClick={() => handleDeleteClick(item.VID)}
-                                      disabled={loading}
-                                    >
-                                      <i className="ri-delete-bin-2-line"></i>
-                                    </Button>
+                                    <div className="delete">
+                                      <Button
+                                        className="btn btn-soft-danger"
+                                        onClick={() =>
+                                          handleDeleteClick(group.VID)
+                                        }
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
                                   </div>
                                 </td>
                               </tr>
                             ))
                           ) : (
                             <tr>
-                              <td colSpan="12" className="text-center">
-                                No Gratuity data found.
+                              <td colSpan="20" className="text-center">
+                                No Gratuity found.
                               </td>
                             </tr>
                           )}
                         </tbody>
                       </table>
                     </div>
-                    <div className="d-flex justify-content-end">
-                      <div className="pagination-wrap hstack gap-2">
-                        <Link className="page-item pagination-prev disabled" to="#">
-                          Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
-                          Next
-                        </Link>
-                      </div>
-                    </div>
                   </div>
                 </CardBody>
               </Card>
             </Col>
           </Row>
-          <DeleteModal
-            show={deleteModal}
-            onCloseClick={() => setDeleteModal(false)}
-            onDeleteClick={handleDeleteConfirm}
-          />
         </Container>
       </div>
+      <DeleteModal
+        show={deleteModal}
+        onCloseClick={() => setDeleteModal(!deleteModal)}
+        onDeleteClick={handleDeleteConfirm}
+      />
     </React.Fragment>
   );
 };

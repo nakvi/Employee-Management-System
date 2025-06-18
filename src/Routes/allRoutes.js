@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 //Dashboard
 import DashboardCrm from "../pages/DashboardCrm";
 import DashboardEcommerce from "../pages/DashboardEcommerce";
-
+import Dashboard from "../pages/Dashboard/Index";
 //login
 import Login from "../pages/Authentication/Login";
 import ForgetPasswordPage from "../pages/Authentication/ForgetPassword";
@@ -67,8 +67,40 @@ import Configuration from "../pages/Administration/Configuration/Configuration";
 import EmployeeList from "../pages/Employee/Employee/EmployeeList";
 import EmployeeProfile from "../pages/Employee/Employee/EmployeeProfile";
 import SalaryAllowanceDeduction from "../pages/Employee/SalaryAllowanceDeduction/SalaryAllowanceDeduction";
+
+// daily att reports 
+import Invoice from "../Components/pdfsPreviews/invoice";
+import ReportsPreview from "../Components/pdfsPreviews/reports";
+import UnpostedPreview from "../Components/pdfsPreviews/UnpostedPreview";
+import PostedPreview from "../Components/pdfsPreviews/PostedPreview";
+import LatecomerPreview from "../Components/pdfsPreviews/LatecomerPreview";
+import AbsenteesPreview from "../Components/pdfsPreviews/AbsenteesPreview";
+// Monthly att reports 
+import MonthlyAttCardPreview from "../Components/pdfsPreviews/MonthlyAttCardPreview";
+import MonthlyAttSheetPreview from "../Components/pdfsPreviews/MonthlyAttSheetPreview";
+import MonthlyAttSummaryPreview from "../Components/pdfsPreviews/MonthlyAttSummaryPreview";
+import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLeaveListPreview";
+// Salary reports 
+import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
+
+
 const authProtectedRoutes = [
   // my routes setup
+  // Monthly att reports
+  { path: "/monthly-attendance-card-preview", component: <MonthlyAttCardPreview /> },
+  { path: "/monthly-attendance-sheet-preview", component: <MonthlyAttSheetPreview /> },
+  { path: "/monthly-attendance-summary-preview", component: <MonthlyAttSummaryPreview /> },
+  { path: "/monthly-attendance-leave-list-preview", component: <MonthlyAttLeaveListPreview /> },
+  // Salary reports
+  { path: "/monthly-attendance-salary-sheet-preview", component: <MonthlyAttSalarySheetPreview /> },
+
+  // daily att reports 
+  { path: "/report-preview", component: <ReportsPreview /> },
+  { path: "/unposted-preview", component: <UnpostedPreview /> },
+  { path: "/posted-preview", component: <PostedPreview /> },
+  { path: "/latecomer-preview", component: <LatecomerPreview /> },
+  { path: "/absentees-preview", component: <AbsenteesPreview /> },
+  { path: "/invoice-preview", component: <Invoice /> },
   { path: "/company", component: <Company /> },
   { path: "/location", component: <Location /> },
   { path: "/department-group", component: <DepartmentGroup /> },
@@ -142,9 +174,11 @@ const authProtectedRoutes = [
 
 
   // Attendance routes setup
+  // My Dashboard
+  { path: "/dashboard",component: <Dashboard/>},
 
   { path: "/dashboard-crm", component: <DashboardCrm /> },
-  { path: "/dashboard", component: <DashboardEcommerce /> },
+  // { path: "/dashboard", component: <DashboardEcommerce /> },
   { path: "/index", component: <DashboardEcommerce /> },
   { path: "/dashboard-blog", component: <DashboardBlog /> },
 

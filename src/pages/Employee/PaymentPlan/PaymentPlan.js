@@ -12,12 +12,14 @@ import {
   CardHeader,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getDepartment } from "../../../slices/setup/department/thunk";
+import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 
 const PaymentPlan = () => {
-  document.title = "Payment Plan | EMS";
   const dispatch = useDispatch();
 
   const { employeeType } = useSelector((state) => state.EmployeeType);
@@ -28,7 +30,47 @@ const PaymentPlan = () => {
     dispatch(getEmployeeType());
     dispatch(getDepartment());
   }, [dispatch]);
-
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      ETypeID: "",
+      DesgID: "",
+      Month: "",
+      UID: 501,
+      CompanyID: "1001",
+    },
+    validationSchema: Yup.object({
+      ETypeID: Yup.number()
+        .min(1, "Employee Type is required")
+        .required("Required"),
+      // DesgID: Yup.number()
+      //   .min(1, "Department is required")
+      //   .required("Required"),
+      // Month: Yup.month().required("Month is required"),
+    }),
+    // onSubmit: (values) => {
+    //   if (editingGroup) {
+    //     dispatch(
+    //       updateSalaryAllowanceDeduction({ ...values, VID: editingGroup.VID })
+    //     ).then(() => {
+    //       dispatch(getAdvance()); // Fetch updated data after update
+    //       setEditingGroup(null); // Reset editing state
+    //       formik.resetForm(); // Reset form
+    //     });
+    //   } else {
+    //     dispatch(submitSalaryAllowanceDeduction(values)).then(() => {
+    //       dispatch(getAdvance()); // Fetch updated data after submission
+    //       formik.resetForm(); // Reset form
+    //     });
+    //   }
+    // },
+  });
+  // fetch data 
+  const handleFetch = () =>{
+    alert("ok");
+  }
+  
+  document.title = "Payment Plan | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -39,7 +81,7 @@ const PaymentPlan = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <CardHeader className="align-items-center d-flex py-2">
+                  {/* <CardHeader className="align-items-center d-flex py-2">
                     <h4 className="card-title mb-0 flex-grow-1">
                       Payment Plan
                     </h4>
@@ -64,22 +106,29 @@ const PaymentPlan = () => {
                         <i className="align-bottom me-1"></i> Cancel
                       </Button>
                     </div>
-                  </CardHeader>
+                  </CardHeader> */}
+                  <PreviewCardHeader2
+                    title="Payment Plan"
+                    onFetch={handleFetch}
+                    // onSave={handleSave}
+                    onCancel={formik.resetForm}
+                    // disabled={false}
+                  />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="ETypeID" className="form-label">
                               E-Type
                             </Label>
                             <select
                               className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              name="ETypeID"
+                              id="ETypeID"
+                               value={formik.values.ETypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
                               <option value="">---Select--- </option>
                               {employeeType.map((item) => (
@@ -88,20 +137,25 @@ const PaymentPlan = () => {
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="DesgID" className="form-label">
                               Department
                             </Label>
                             <select
                               className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              name="DesgID"
+                              id="DesgID"
+                               value={formik.values.DesgID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
                               <option value="">---Select--- </option>
                               {departmentList.map((item) => (
@@ -115,13 +169,15 @@ const PaymentPlan = () => {
 
                         <Col xxl={2} md={3}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="month" className="form-label">
                               Month
                             </Label>
                             <Input
-                              type="date"
+                              type="month"
                               className="form-control-sm"
-                              id="VName"
+                              name="Month"
+                              id="Month"
+                               {...formik.getFieldProps("Month")}
                             />
                           </div>
                         </Col>
@@ -135,20 +191,6 @@ const PaymentPlan = () => {
               <Card>
                 <CardBody>
                   <div className="Location-table" id="customerList">
-                    <Row className="g-4 mb-3">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
@@ -194,36 +236,6 @@ const PaymentPlan = () => {
                           </tr>
                         </tbody>
                       </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-end">
-                      <div className="pagination-wrap hstack gap-2">
-                        <Link
-                          className="page-item pagination-prev disabled"
-                          to="#"
-                        >
-                          Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
-                          Next
-                        </Link>
-                      </div>
                     </div>
                   </div>
                 </CardBody>

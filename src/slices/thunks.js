@@ -11,57 +11,12 @@ export * from "./auth/profile/thunk";
 export * from "./calendar/thunk";
 //Chat
 export * from "./chat/thunk";
-//Ecommerce
-export * from "./ecommerce/thunk";
-
-//Project
-export * from "./projects/thunk";
-
-// Tasks
-export * from "./tasks/thunk";
-//Crypto
-export * from "./crypto/thunk";
-
-//TicketsList
-export * from "./tickets/thunk";
 //Crm
-export * from "./crm/thunk";
-
-//Invoice
-export * from "./invoice/thunk";
-
-//Mailbox
-export * from "./mailbox/thunk";
+// export * from "./crm/thunk";
 
 // Dashboard Analytics
 export * from "./dashboardAnalytics/thunk";
 
-// Dashboard CRM
-export * from "./dashboardCRM/thunk";
-
-// Dashboard Ecommerce
-export * from "./dashboardEcommerce/thunk";
-
-// Dashboard Cryto
-export * from "./dashboardCrypto/thunk";
-
-// Dashboard Cryto
-export * from "./dashboardProject/thunk";
-
-// Dashboard NFT
-export * from "./dashboardNFT/thunk";
-
-// Pages > Team
-export * from "./team/thunk";
-
-// File Manager
-export * from "./fileManager/thunk";
-
-// To do
-export * from "./todos/thunk";
-
-// Jobs
-export * from "./jobs/thunk";
 
 // API Key
 export * from "./apiKey/thunk";
@@ -102,7 +57,7 @@ export * from "./employee/advance/thunk";
 export * from "./employee/localSales/thunk";
 export * from "./employee/employeeTrial/thunk";
 export * from "./employee/gratuity/thunk";
-
+export * from "./employee/paymentPlan/thunk";
 // Administration
 export * from "./administration/roles/thunk";
 export * from "./administration/rolesRight/thunk";
