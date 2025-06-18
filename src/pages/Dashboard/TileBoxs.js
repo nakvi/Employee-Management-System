@@ -1,5 +1,5 @@
 import React from "react";
-import { Row, Col, Card, CardBody, Button } from "reactstrap";
+import { Row, Col, Card, CardBody } from "reactstrap";
 
 const data = [
   {
@@ -21,7 +21,6 @@ const data = [
     gp: "GBP 71,356",
     expense: "GBP 4,056",
     np: "GBP 67,300",
-    // bgColor: "bg-success",
     rightbgColor: "bg-gradient bg-success",
     leftbgColor: "bg-success",
   },
@@ -33,23 +32,22 @@ const data = [
     gp: "0",
     expense: "0",
     np: "0",
-    // bgColor: "bg-warning",
-    rightbgColor: " bg-gradient bg-warning",
+    rightbgColor: "bg-gradient bg-warning",
     leftbgColor: "bg-warning",
   },
 ];
 
 const TileBoxs = () => {
   return (
-    <Row className="border-box">
+    <Row className="border-box g-4"> 
       {data.map((item, index) => (
-        <Col xxl={2} md={2} lg={4} key={index} className="mb-3">
-          <Card >
+        <Col xxl={2} md={4} lg={4} key={index} className="mb-3">
+          <Card className="p-1"> 
             <Row>
               {/* Left Side: Title + Date */}
               <Col
                 md="4"
-                className={`p-2  ${item.leftbgColor} text-white`}
+                className={`p-2 ${item.leftbgColor} text-white`}
               >
                 <div className="h-100 d-flex flex-column justify-content-center">
                   <h5 className="mb-1 text-white">{item.title}</h5>

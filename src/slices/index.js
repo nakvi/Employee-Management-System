@@ -58,6 +58,8 @@ import AdvanceReducer from "./employee/advance/reducer"
 import LocalSaleReducer from "./employee/localSales/reducer"
 import EmployeeTrialReducer from "./employee/employeeTrial/reducer"
 import GratuityReducer from "./employee/gratuity/reducer"
+import PaymentPlanReducer from "./employee/paymentPlan/reducer"
+
 // Administration
 import RolesReducer from "./administration/roles/reducer";
 import RolesRightReducer from "./administration/rolesRight/reducer";
@@ -130,6 +132,7 @@ const rootReducer = combineReducers({
     LocalSale:LocalSaleReducer,
     EmployeeTrial:EmployeeTrialReducer,
     Gratuity:GratuityReducer,
+    PaymentPlan:PaymentPlanReducer,
     // Roles And Permission
     Role: RolesReducer, 
     RoleRight: RolesRightReducer, 
