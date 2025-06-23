@@ -4,6 +4,7 @@ import {
 } from "reactstrap";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
 import MonthlyAttSalarySheetPreview from "../../../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
+import SalaryReportPreview from "../../../Components/pdfsPreviews/SalaryReportPreview";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
@@ -140,7 +141,27 @@ const SalaryReport = () => {
       setTableData([]);
     }
   };
-
+function groupByEmployee(data) {
+  const grouped = {};
+  data.forEach(row => {
+    const key = row.EmpID;
+    if (!grouped[key]) {
+      grouped[key] = {
+        EmpID: row.EmpID,
+        EmpCode: row.EmpCode,
+        EName: row.EName,
+        Department: row.Department,
+        Designation: row.Designation,
+        DOJ: row.DOJ,
+        Attendance: [],
+        // Add more fields if needed
+      };
+    }
+    grouped[key].Attendance.push(row);
+  });
+  return Object.values(grouped);
+}
+const employeeCards = groupByEmployee(tableData);
 
   return (
     <React.Fragment>
@@ -923,24 +944,44 @@ const SalaryReport = () => {
               </Card>
             </Col>
           </Row>
-          <Row>
-            {showFilters && (
-              <Col lg={12}>
+         <Row>
+          {showFilters && (
+             <Col lg={12}>
                 {showTable && filters.VType === "SalarySheet" && (
-                  Array.isArray(tableData) && tableData.length > 0 ? (
-                    <MonthlyAttSalarySheetPreview
-                      allEmployees={tableData}
-                      reportHeading={filters.ReportHeading}
-                      dateFrom={filters.DateFrom}
-                      dateTo={filters.DateTo}
-                    />
-                  ) : (
-                    <div className="text-center text-muted">No data found.</div>
-                  )
+                    Array.isArray(tableData) && tableData.length > 0 ? (
+                        <SalaryReportPreview
+                            // We don't need `emp` anymore if SalaryReportPreview always shows the full report
+                            // key="full-salary-report" // A static key since it's a single instance
+                            allEmployees={employeeCards} // Pass the grouped data here
+                            reportHeading={filters.ReportHeading}
+                            dateFrom={filters.DateFrom}
+                            dateTo={filters.DateTo}
+                        />
+                    ) : (
+                        <div className="text-center text-muted">No data found.</div>
+                    )
                 )}
-              </Col>
-            )}
-          </Row>
+            </Col>
+            // <Col lg={12}>
+            //   {showTable && filters.VType === "SalarySheet" && (
+            //     Array.isArray(tableData) && tableData.length > 0 ? (
+            //             groupByEmployee(tableData).map((emp, idx) => (
+            //               <SalaryReportPreview
+            //                 key={emp.EmpID || idx}
+            //                 emp={emp}
+            //                 allEmployees={employeeCards}
+            //                 reportHeading={filters.ReportHeading}
+            //                 dateFrom={filters.DateFrom}
+            //                 dateTo={filters.DateTo}
+            //               />
+            //             ))
+            //           ) : (
+            //             <div className="text-center text-muted">No data found.</div>
+            //           )
+            //   )}
+            // </Col>
+          )}
+        </Row>
         </Container>
       </div>
     </React.Fragment>

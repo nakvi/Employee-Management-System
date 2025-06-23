@@ -3,12 +3,21 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const MonthlyAttSalarySheetPreview = ({ emp, allEmployees = [], reportHeading, dateFrom, dateTo }) => {
+
+  console.log("Employee Data:", emp);
+  // Check if employee data is available
+  if (!emp || !emp.Attendance || emp.Attendance.length === 0) {
+    console.log("No attendance data available.");
+    return null;
+  }
+
   // Helper
   const formatTime = (val) => {
     if (!val) return "";
     if (val.length > 8) return val.slice(11, 19);
     return val;
   };
+
 
   // Dummy salary data (replace with real API if available)
   const salaryInfo = emp?.SalaryInfo || {
