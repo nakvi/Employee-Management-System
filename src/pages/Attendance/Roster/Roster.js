@@ -56,8 +56,6 @@ const Roster = () => {
   const { employee = [] } = useSelector((state) => state.Employee || {});
   const { rosterShifts = [] } = useSelector((state) => state.Roster || {});
 
-  // console.log("Roster Departments:", rosterDepartments); // Debug log
-
   // Days of the week for the offDay dropdown
   const daysOfWeek = [
     "Monday",
@@ -86,8 +84,14 @@ const Roster = () => {
     }));
   };
 
-  // Handle day input changes
+  // Handle day input changes with validation
   const handleDayInputChange = (rowIndex, dayIndex, value) => {
+    // Prevent entry of 'O' or 'o'
+    if (/[Oo]/.test(value)) {
+      toast.error("The letter 'O' is not allowed in day entries.");
+      return;
+    }
+
     const updatedEntries = [...formData.otEntries];
     updatedEntries[rowIndex].days[dayIndex] = value;
     setFormData((prev) => ({ ...prev, otEntries: updatedEntries }));
@@ -140,11 +144,22 @@ const Roster = () => {
           Array.isArray(response.payload) &&
           response.payload.length > 0
         ) {
-          const newEntries = response.payload.map((item) => ({
-            employee: item.VName || "N/A",
-            EmpID: item.EmpID || 0, // Store EmpID for submission
-            days: Array(31).fill(""),
-          }));
+          const newEntries = response.payload.map((item) => {
+            // Initialize days array with empty strings
+            const days = Array(31).fill("");
+            // Populate days with D01 to D31 if they exist in the response
+            for (let i = 1; i <= 31; i++) {
+              const dayKey = `D${String(i).padStart(2, "0")}`;
+              if (item[dayKey] !== undefined && item[dayKey] !== null) {
+                days[i - 1] = item[dayKey];
+              }
+            }
+            return {
+              employee: item.VName || "N/A",
+              EmpID: item.EmpID || 0,
+              days,
+            };
+          });
           setFormData((prev) => ({
             ...prev,
             otEntries: newEntries,
@@ -328,8 +343,7 @@ const Roster = () => {
                               Employee
                             </Label>
                             <select
-                              className={`form-select form-select-sm ${formData.employeeidlist ? "is-invalid" : ""
-                                }`}
+                              className={`form-select form-select-sm ${formData.employeeidlist ? "is-invalid" : ""}`}
                               name="employeeidlist"
                               id="employeeidlist"
                               value={formData.employeeidlist}
