@@ -417,7 +417,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
 
 
       autoTable(doc, {
-        startY: 65,
+        startY: 70, 
         head: tableHeaders, // Pass the combined header array here
         body: tableBody,
         foot: tableFoot,
@@ -467,7 +467,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
           lineColor: [230, 230, 230],
           lineWidth: 0.5,
         },
-        margin: { left: 10, right: 10, top: 100, bottom: 60 },
+        margin: { left: 10, right: 10, top: 70, bottom: 80 }, 
         columnStyles: {
           0: { cellWidth: 20 },   // Srl #
           1: { cellWidth: 30 },   // E-Code
@@ -491,7 +491,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
           19: { cellWidth: 65 }   // Signature
         },
         didDrawPage: function (data) {
-          const signatureY = doc.internal.pageSize.height - 50;
+          const signatureY = doc.internal.pageSize.height - 40;
           doc.setFontSize(9);
           doc.setFont('helvetica', 'normal');
 

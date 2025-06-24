@@ -82,6 +82,7 @@ import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLea
 // Salary reports 
 // import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
 import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview";
+import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
 
 const authProtectedRoutes = [
   // my routes setup
@@ -93,6 +94,7 @@ const authProtectedRoutes = [
   // Salary reports
   // { path: "/monthly-attendance-salary-report-preview", component: <MonthlyAttSalarySheetPreview /> },
   { path: "/salary-report-preview", component: <SalaryReportPreview /> },
+  { path: "/salary-summary-report-preview", component: <SalarySummaryReportPreview /> },
 
   // daily att reports 
   { path: "/report-preview", component: <ReportsPreview /> },

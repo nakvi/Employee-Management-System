@@ -5,6 +5,8 @@ import {
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
 import MonthlyAttSalarySheetPreview from "../../../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
 import SalaryReportPreview from "../../../Components/pdfsPreviews/SalaryReportPreview";
+import SalarySummaryReportPreview from "../../../Components/pdfsPreviews/SalarySummaryReportPreview";
+
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
@@ -125,6 +127,9 @@ const SalaryReport = () => {
       case "SalarySheet":
         apiUrl = `${config.api.API_URL}rptMonthSalarySheet?${params}`;
         break;
+      case "SummarySheet":
+        apiUrl = `${config.api.API_URL}rptMonthSalarySummary?${params}`;
+        break;
       // ...add more cases as needed...
       default:
         setTableData([]);
@@ -136,7 +141,13 @@ const SalaryReport = () => {
       const response = await fetch(apiUrl);
       const data = await response.json();
       console.log("API Response:", data);
-      setTableData(data);
+      if (filters.VType === "SummarySheet" && data && data.length > 0 && data[0].Attendance) {
+        // If it's the "SummarySheet" report AND the data is wrapped inside 'Attendance'
+        setTableData(data[0].Attendance); // Take ONLY the list from inside 'Attendance'
+      } else {
+        // For ALL other reports (like "SalarySheet"), use the data as is
+        setTableData(data);
+      }
     } catch (error) {
       setTableData([]);
     }
@@ -953,6 +964,18 @@ const employeeCards = groupByEmployee(tableData);
                             // We don't need `emp` anymore if SalaryReportPreview always shows the full report
                             // key="full-salary-report" // A static key since it's a single instance
                             allEmployees={employeeCards} // Pass the grouped data here
+                            reportHeading={filters.ReportHeading}
+                            dateFrom={filters.DateFrom}
+                            dateTo={filters.DateTo}
+                        />
+                    ) : (
+                        <div className="text-center text-muted">No data found.</div>
+                    )
+                )}
+                 {showTable && filters.VType === "SummarySheet" && (
+                    Array.isArray(tableData) && tableData.length > 0 ? (
+                        <SalarySummaryReportPreview
+                            summaryData={tableData} 
                             reportHeading={filters.ReportHeading}
                             dateFrom={filters.DateFrom}
                             dateTo={filters.DateTo}
