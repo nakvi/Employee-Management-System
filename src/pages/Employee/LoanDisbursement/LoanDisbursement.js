@@ -446,6 +446,7 @@ const LoanDisbursement = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee
@@ -505,7 +506,7 @@ const LoanDisbursement = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="AccountID" className="form-label">
                               Bank
@@ -531,7 +532,7 @@ const LoanDisbursement = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="ChequeNo" className="form-label">
                               Cheque No
@@ -552,7 +553,7 @@ const LoanDisbursement = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="ChequeDate" className="form-label">
                               Cheque Date

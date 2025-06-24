@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 //Dashboard
 import DashboardCrm from "../pages/DashboardCrm";
 import DashboardEcommerce from "../pages/DashboardEcommerce";
-
+import Dashboard from "../pages/Dashboard/Index";
 //login
 import Login from "../pages/Authentication/Login";
 import ForgetPasswordPage from "../pages/Authentication/ForgetPassword";
@@ -67,6 +67,7 @@ import Configuration from "../pages/Administration/Configuration/Configuration";
 import EmployeeList from "../pages/Employee/Employee/EmployeeList";
 import EmployeeProfile from "../pages/Employee/Employee/EmployeeProfile";
 import SalaryAllowanceDeduction from "../pages/Employee/SalaryAllowanceDeduction/SalaryAllowanceDeduction";
+
 // daily att reports 
 import Invoice from "../Components/pdfsPreviews/invoice";
 import ReportsPreview from "../Components/pdfsPreviews/reports";
@@ -83,6 +84,7 @@ import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLea
 // import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
 import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview";
 import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
+
 
 const authProtectedRoutes = [
   // my routes setup
@@ -176,9 +178,11 @@ const authProtectedRoutes = [
 
 
   // Attendance routes setup
+  // My Dashboard
+  { path: "/dashboard",component: <Dashboard/>},
 
   { path: "/dashboard-crm", component: <DashboardCrm /> },
-  { path: "/dashboard", component: <DashboardEcommerce /> },
+  // { path: "/dashboard", component: <DashboardEcommerce /> },
   { path: "/index", component: <DashboardEcommerce /> },
   { path: "/dashboard-blog", component: <DashboardBlog /> },
 
