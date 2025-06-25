@@ -6,6 +6,7 @@ import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeade
 import MonthlyAttSalarySheetPreview from "../../../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
 import SalaryReportPreview from "../../../Components/pdfsPreviews/SalaryReportPreview";
 import SalarySummaryReportPreview from "../../../Components/pdfsPreviews/SalarySummaryReportPreview";
+import SalarySlipPreview from "../../../Components/pdfsPreviews/SalarySlipPreview";
 
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
@@ -130,6 +131,9 @@ const SalaryReport = () => {
       case "SummarySheet":
         apiUrl = `${config.api.API_URL}rptMonthSalarySummary?${params}`;
         break;
+       case "PaymentSlipEnglish":
+        apiUrl = `${config.api.API_URL}rptMonthSalarySheet?${params}`;
+        break;
       // ...add more cases as needed...
       default:
         setTableData([]);
@@ -173,7 +177,7 @@ function groupByEmployee(data) {
   return Object.values(grouped);
 }
 const employeeCards = groupByEmployee(tableData);
-
+console.log("Grouped Employee Cards:", employeeCards);
   return (
     <React.Fragment>
       <div className="page-content">
@@ -976,6 +980,18 @@ const employeeCards = groupByEmployee(tableData);
                     Array.isArray(tableData) && tableData.length > 0 ? (
                         <SalarySummaryReportPreview
                             summaryData={tableData} 
+                            reportHeading={filters.ReportHeading}
+                            dateFrom={filters.DateFrom}
+                            dateTo={filters.DateTo}
+                        />
+                    ) : (
+                        <div className="text-center text-muted">No data found.</div>
+                    )
+                )}
+                 {showTable && filters.VType === "PaymentSlipEnglish" && (
+                    Array.isArray(tableData) && tableData.length > 0 ? (
+                        <SalarySlipPreview
+                            employeesData={employeeCards}  
                             reportHeading={filters.ReportHeading}
                             dateFrom={filters.DateFrom}
                             dateTo={filters.DateTo}
