@@ -5,6 +5,7 @@ import {
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
 import MonthlyAttSalarySheetPreview from "../../../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
 import SalaryReportPreview from "../../../Components/pdfsPreviews/SalaryReportPreview";
+import SalaryReportTwoPreview from "../../../Components/pdfsPreviews/SalaryReportTwoPreview";
 import SalarySummaryReportPreview from "../../../Components/pdfsPreviews/SalarySummaryReportPreview";
 import SalarySlipPreview from "../../../Components/pdfsPreviews/SalarySlipPreview";
 
@@ -964,7 +965,7 @@ console.log("Grouped Employee Cards:", employeeCards);
              <Col lg={12}>
                 {showTable && filters.VType === "SalarySheet" && (
                     Array.isArray(tableData) && tableData.length > 0 ? (
-                        <SalaryReportPreview
+                        <SalaryReportTwoPreview
                             // We don't need `emp` anymore if SalaryReportPreview always shows the full report
                             // key="full-salary-report" // A static key since it's a single instance
                             allEmployees={employeeCards} // Pass the grouped data here

@@ -122,7 +122,7 @@ const SalarySlipPreview = ({ employeesData = [], reportHeading, monthYear, dateF
             doc.setFontSize(8);
             doc.setTextColor(0);
 
-            const employeeDetailsY = currentY + 15; // Vertical alignment for text
+            const employeeDetailsY = currentY + 15/////////////////////////////////////////////////////////////////////////////////////////////////////////; // Vertical alignment for text
             const empCol1X = innerContentXStart + 5; // Start X for E-Code
             const empCol2X = innerContentXStart + 105; // Start X for Name
             const empCol3X = innerContentXStart + 245; // Start X for Department

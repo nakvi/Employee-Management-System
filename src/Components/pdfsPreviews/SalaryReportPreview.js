@@ -33,7 +33,8 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
       return;
     }
 
-    const doc = new jsPDF('l', 'pt', 'a4');
+    // const doc = new jsPDF('l', 'pt', 'a4');
+    const doc = new jsPDF('l', 'pt', 'letter');
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
@@ -68,40 +69,40 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
       // --- IMPORTANT CHANGE HERE: Define grouped headers ---
       const departmentNameRow = [
         {
-          content: departmentName, colSpan: 20, styles: {
+          content: departmentName, colSpan: 21, styles: {
             halign: 'left', fontSize: 9, fillColor: '#F7EDD4', textColor: '#222', lineColor: [230, 230, 230], // Gray border
-            lineWidth: 0.5,
+            lineWidth: 0.5, cellPadding: 2, fontStyle: 'bold',
           }
         },
       ];
       const mainHeaders = [
         {
           content: 'Employee Profile', colSpan: 5, styles: {
-            halign: 'center', fontSize: 7, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
+            halign: 'center', fontSize: 6.5, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
           }
         }, // Light Blue for main headers
         {
           content: 'Salary', colSpan: 3, styles: {
-            halign: 'center', fontSize: 7, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
+            halign: 'center', fontSize: 6.5, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
           }
         },
         {
           content: 'Arr/Allow', colSpan: 2, styles: {
-            halign: 'center', fontSize: 7, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
+            halign: 'center', fontSize: 6.5, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
           }
         },
         {
           content: 'Deductions', colSpan: 7, styles: {
-            halign: 'center', fontSize: 7, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
+            halign: 'center', fontSize: 6.5, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
           }
         },
         {
-          content: 'Payable', colSpan: 3, styles: {
-            halign: 'center', fontSize: 7, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
+          content: 'Payable', colSpan: 4, styles: {
+            halign: 'center', fontSize: 6.5, fillColor: '#e1f5fe', textColor: '#222', lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
           }
         },
@@ -112,7 +113,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Srl #", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -123,7 +124,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "E-Code", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -134,7 +135,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Employee Name", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -145,7 +146,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Designation", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -156,7 +157,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Date of Joining", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -167,7 +168,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Basic Salary", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -178,7 +179,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Work Days", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -189,7 +190,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Earned Salary", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -200,7 +201,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Arrears", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -211,7 +212,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Allowance", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -222,7 +223,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Gross Salary", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -233,7 +234,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "EOBI", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -244,7 +245,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "PF", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -255,7 +256,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Income Tax", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -266,7 +267,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Health Insur.", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -277,7 +278,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Canteen", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -288,7 +289,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "L / Sale", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -299,7 +300,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Adv / Loan", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -310,7 +311,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Tot Deduct", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -321,7 +322,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Net Salary", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -332,7 +333,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         {
           content: "Signature", styles: {
             fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
-            fontSize: 7,
+            fontSize: 6.5,
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
@@ -342,7 +343,8 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
       ];
       // --- END IMPORTANT CHANGE ---
 
-      const tableHeaders = [departmentNameRow, mainHeaders, subHeaders]; // Combine them for autoTable `head`
+      const tableHeaders = [departmentNameRow, mainHeaders, subHeaders];
+      // const tableHeaders = [subHeaders,departmentNameRow];
 
       const tableBody = departmentEmployees.map((employee, idx) => {
         const doj = employee.DOJ ? new Date(employee.DOJ).toLocaleDateString('en-GB') : '';
@@ -355,21 +357,21 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
           employeeName,
           designation,
           doj,
-          formatNumber(employee.BasicSalary),
-          formatNumber(employee.WorkingDays),
-          formatNumber(employee.EarnedSalary),
-          formatNumber(employee.Arrears), // Now separate
-          formatNumber(employee.Allowance), // Now separate
-          formatNumber(employee.GrossSalary),
-          formatNumber(employee.EOBIAmount),
-          formatNumber(employee.PFAmount),
-          formatNumber(employee.IncomeTax),
-          formatNumber(employee.Deduction4),
-          formatNumber(employee.Canteen),
-          formatNumber(employee.LocalSale),
-          formatNumber(employee.Deduction3),
-          formatNumber(employee.TotalDeduction),
-          formatNumber(employee.NetPayable),
+          formatNumber(employee.BasicSalary || 350000),
+          formatNumber(employee.WorkingDays || 30),
+          formatNumber(employee.EarnedSalary || 546000),
+          formatNumber(employee.Arrears || 0), // Now separate
+          formatNumber(employee.Allowance || 5550), // Now separate
+          formatNumber(employee.GrossSalary || 205560),
+          formatNumber(employee.EOBIAmount || 30000),
+          formatNumber(employee.PFAmount || 1000),
+          formatNumber(employee.IncomeTax || 2000),
+          formatNumber(employee.Deduction4 || 3500),
+          formatNumber(employee.Canteen || 500),
+          formatNumber(employee.LocalSale || 6000),
+          formatNumber(employee.Deduction3 || 5000),
+          formatNumber(employee.TotalDeduction || 5200),
+          formatNumber(employee.NetPayable || 36900),
           employee.Signature || ''
         ];
       });
@@ -418,6 +420,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
 
       autoTable(doc, {
         startY: 70, 
+        tableWidth: 'auto',
         head: tableHeaders, // Pass the combined header array here
         body: tableBody,
         foot: tableFoot,
@@ -428,7 +431,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
             // fillColor and textColor are already defined in mainHeaders objects, so they might not be needed here.
             // However, fontStyle, fontSize, alignment, and line properties are still useful here.
             fontStyle: 'bold',
-            fontSize: 8,
+            fontSize: 7,
             halign: 'center',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
@@ -448,7 +451,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
           }
         ],
         bodyStyles: {
-          fontSize: 7,
+          fontSize: 6.5,
           halign: 'center',
           valign: 'middle',
           lineColor: [220, 220, 220],
@@ -461,34 +464,56 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
           fillColor: '#e1f5fe',
           textColor: '#222',
           fontStyle: 'bold',
-          fontSize: 7,
+          fontSize: 6.5,
           halign: 'center',
           valign: 'middle',
           lineColor: [230, 230, 230],
           lineWidth: 0.5,
         },
         margin: { left: 10, right: 10, top: 70, bottom: 80 }, 
-        columnStyles: {
-          0: { cellWidth: 20 },   // Srl #
-          1: { cellWidth: 30 },   // E-Code
-          2: { cellWidth: 60 },   // Employee Name
-          3: { cellWidth: 60 },   // Designation
-          4: { cellWidth: 50 },   // Date of Joining
-          5: { cellWidth: 45 },   // Basic Salary
-          6: { cellWidth: 30 },   // Work Days
-          7: { cellWidth: 45 },   // Earned Salary
-          8: { cellWidth: 40 },   // Arr/Allow
-          9: { cellWidth: 45 },   // Gross Salary
-          10: { cellWidth: 30 },  // EOBI
-          11: { cellWidth: 30 },  // PF
-          12: { cellWidth: 35 },  // Income Tax
-          13: { cellWidth: 40 },  // Health Insur.
-          14: { cellWidth: 35 },  // Canteen
-          15: { cellWidth: 35 },  // L / Sale
-          16: { cellWidth: 40 },  // Adv / Loan
-          17: { cellWidth: 40 },  // Tot Deduct
-          18: { cellWidth: 45 },  // Net Salary
-          19: { cellWidth: 65 }   // Signature
+        // columnStyles: {
+        //   0: { cellWidth: 20 },   // Srl #
+        //   1: { cellWidth: 30 },   // E-Code
+        //   2: { cellWidth: 60 },   // Employee Name
+        //   3: { cellWidth: 60 },   // Designation
+        //   4: { cellWidth: 50 },   // Date of Joining
+        //   5: { cellWidth: 45 },   // Basic Salary
+        //   6: { cellWidth: 30 },   // Work Days
+        //   7: { cellWidth: 45 },   // Earned Salary
+        //   8: { cellWidth: 40 },   // Arr/Allow
+        //   9: { cellWidth: 45 },   // Gross Salary
+        //   10: { cellWidth: 30 },  // EOBI
+        //   11: { cellWidth: 30 },  // PF
+        //   12: { cellWidth: 35 },  // Income Tax
+        //   13: { cellWidth: 40 },  // Health Insur.
+        //   14: { cellWidth: 35 },  // Canteen
+        //   15: { cellWidth: 35 },  // L / Sale
+        //   16: { cellWidth: 40 },  // Adv / Loan
+        //   17: { cellWidth: 40 },  // Tot Deduct
+        //   18: { cellWidth: 45 },  // Net Salary
+        //   19: { cellWidth: 65 }   // Signature
+        // },
+           columnStyles: {
+          0: { cellWidth: 'auto' },   // Srl #
+          1: { cellWidth: 'auto' },   // E-Code
+          2: { cellWidth: 'auto' },   // Employee Name
+          3: { cellWidth: 'auto' },   // Designation
+          4: { cellWidth: 'auto' },   // Date of Joining
+          5: { cellWidth: 'auto' },   // Basic Salary
+          6: { cellWidth: 'auto' },   // Work Days
+          7: { cellWidth: 'auto' },   // Earned Salary
+          8: { cellWidth: 'auto' },   // Arr/Allow
+          9: { cellWidth: 'auto' },   // Gross Salary
+          10: { cellWidth: 'auto' },  // EOBI
+          11: { cellWidth: 'auto' },  // PF
+          12: { cellWidth: 'auto' },  // Income Tax
+          13: { cellWidth: 'auto' },  // Health Insur.
+          14: { cellWidth: 'auto' },  // Canteen
+          15: { cellWidth: 'auto' },  // L / Sale
+          16: { cellWidth: 'auto' },  // Adv / Loan
+          17: { cellWidth: 'auto' },  // Tot Deduct
+          18: { cellWidth: 'auto' },  // Net Salary
+          19: { cellWidth: 'auto' }   // Signature
         },
         didDrawPage: function (data) {
           const signatureY = doc.internal.pageSize.height - 40;
