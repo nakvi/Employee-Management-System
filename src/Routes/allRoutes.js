@@ -2,8 +2,6 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 //Dashboard
-import DashboardCrm from "../pages/DashboardCrm";
-import DashboardEcommerce from "../pages/DashboardEcommerce";
 import Dashboard from "../pages/Dashboard/Index";
 //login
 import Login from "../pages/Authentication/Login";
@@ -13,7 +11,6 @@ import Register from "../pages/Authentication/Register";
 
 // User Profile
 import UserProfile from "../pages/Authentication/user-profile";
-import DashboardBlog from "../pages/DashboardBlog";
 // My setup form
 import Location from "../pages/Setup/Location/Location";
 import DepartmentGroup from "../pages/Setup/DepartmentGroup/DepartmentGroup";
@@ -173,14 +170,9 @@ const authProtectedRoutes = [
 
 
 
-  // Attendance routes setup
   // My Dashboard
   { path: "/dashboard",component: <Dashboard/>},
 
-  { path: "/dashboard-crm", component: <DashboardCrm /> },
-  // { path: "/dashboard", component: <DashboardEcommerce /> },
-  { path: "/index", component: <DashboardEcommerce /> },
-  { path: "/dashboard-blog", component: <DashboardBlog /> },
 
   //User Profile
   { path: "/profile", component: <UserProfile /> },
