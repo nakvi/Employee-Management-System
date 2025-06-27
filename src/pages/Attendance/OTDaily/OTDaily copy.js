@@ -24,6 +24,7 @@ const OTDaily = () => {
 
   const dispatch = useDispatch();
 
+  // State for form inputs
   const [formData, setFormData] = useState({
     eType: "",
     department: [],
@@ -33,20 +34,24 @@ const OTDaily = () => {
     otEntries: [],
   });
 
+  // Validation error state
   const [errors, setErrors] = useState({
     eType: "",
   });
 
+  // Selectors for department and employee type data
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
   const { otDaily, loading, error } = useSelector((state) => state.OTDaily || {});
 
+  // Fetch department and employee type data on mount
   useEffect(() => {
     dispatch(getDepartment());
     dispatch(getEmployeeType());
   }, [dispatch]);
 
+  // Handle input changes
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -58,6 +63,7 @@ const OTDaily = () => {
     }
   };
 
+  // Handle multi-select changes for department
   const handleMultiChange = (name, selectedOptions) => {
     setFormData((prev) => ({
       ...prev,
@@ -65,12 +71,14 @@ const OTDaily = () => {
     }));
   };
 
+  // Handle OT entry changes (for the table row)
   const handleOTEntryChange = (index, field, value) => {
     const updatedEntries = [...formData.otEntries];
     updatedEntries[index] = { ...updatedEntries[index], [field]: value };
     setFormData((prev) => ({ ...prev, otEntries: updatedEntries }));
   };
 
+  // Validate E-Type
   const validateEType = () => {
     if (!formData.eType) {
       setErrors((prev) => ({ ...prev, eType: "E-Type is required" }));
@@ -80,22 +88,28 @@ const OTDaily = () => {
     return true;
   };
 
+  // Construct employeeIdList string
   const buildEmployeeIdList = () => {
     const conditions = [];
+
     if (formData.eType) {
       conditions.push(`E."ETypeID" = ${formData.eType}`);
     }
+    
     if (formData.department.length > 0) {
       conditions.push(`E."DeptID" IN (${formData.department.join(",")})`);
     }
+
     return conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
   };
 
+  // Handle Fetch button click
   const handleFetch = () => {
     if (!validateEType()) return;
 
     const filterConditions = {
       Orgini: "LLT",
+      // Vdate: new Date().toISOString().split("T")[0],
       Vdate: "2025-05-28",
       DateFrom: formData.dateFrom || "2025-01-01",
       DateTo: formData.dateTo || "2025-12-31",
@@ -111,93 +125,52 @@ const OTDaily = () => {
       InFlage: "0",
     };
 
-    console.log("Fetch Payload:", filterConditions);
+    console.log("Fetch Payload:", JSON.stringify(filterConditions, null, 2));
 
-    dispatch(getOTDaily(filterConditions))
-      .then((response) => {
-        console.log("Thunk Response:", response);
-        const dataArray = response.payload || [];
-        console.log("Response Data Array:", dataArray);
-
-        if (dataArray.length > 0) {
-          const mappedEntries = dataArray.map((item) => ({
-            employee: item.EName || "N/A",
-            attCode: item.AttCode || "N/A",
-            shiftTime: item.ShiftID || 0,
-            totalTime: item.TotTime || 0,
-            overTime: item.OverTime ? item.OverTime.toFixed(1) : "0.0",
-            remarks: item.Remarks || "",
-            post: item.post || false,
-            empID: item.EmpID || 0, // Store EmpID from API
-          }));
-
-          setFormData((prev) => ({
-            ...prev,
-            otEntries: mappedEntries,
-          }));
-          console.log("Mapped Entries:", mappedEntries);
-        } else {
-          setFormData((prev) => ({
-            ...prev,
-            otEntries: [],
-          }));
-          toast.info("No records found for the selected criteria.");
-        }
-      })
-      .catch((error) => {
-        console.error("Fetch Error:", error);
+    dispatch(getOTDaily(filterConditions)).then((response) => {
+      if (response.payload) {
+        const dataArray = Array.isArray(response.payload) ? response.payload : response.payload.data || [];
+        setFormData((prev) => ({
+          ...prev,
+          otEntries: dataArray.length
+            ? dataArray.map((item) => ({
+                employee: item.employee || "N/A",
+                attCode: item.attCode || "N/A",
+                shiftTime: item.shiftTime || 0,
+                totalTime: item.totalTime || 0,
+                overTime: item.overTime || "00.0",
+                remarks: item.remarks || "",
+                post: item.post || false,
+              }))
+            : [],
+        }));
+      } else {
         setFormData((prev) => ({
           ...prev,
           otEntries: [],
         }));
-        toast.error("Failed to fetch data: " + error.message);
-      });
+        toast.info("No records found for the selected criteria.");
+      }
+    });
   };
 
-  const handleSave = async (e) => {
+  // Handle Save button click
+  const handleSave = (e) => {
     e.preventDefault();
     if (!validateEType()) return;
-
-    const selectedEntries = formData.otEntries.filter((entry) => entry.post);
-    if (selectedEntries.length === 0) {
-      toast.warning("Please select at least one entry to save!");
-      return;
-    }
-
-    try {
-      for (const entry of selectedEntries) {
-        const payload = {
-          VID: 1, // Hardcoded or auto-increment
-          VName: "Overtime Entry",
-          VNo: `OT-${new Date().getFullYear()}-001`, // Dynamic or hardcoded
-          VDate: formData.dateFrom || new Date().toISOString(),
-          EmpID: entry.empID,
-          OverTime: parseFloat(entry.overTime) || 0,
-          LeaveTypeID: 3,
-          UID: 1001,
-          CompanyID: 10,
-          Tranzdatetime: new Date().toISOString(),
-        };
-
-        console.log("Submitting Payload:", payload);
-        await dispatch(submitOTDaily(payload)).unwrap();
-      }
-
-      // Clear selected entries after successful save
-      setFormData((prev) => ({
-        ...prev,
-        otEntries: prev.otEntries.map((entry) => ({
-          ...entry,
-          post: false,
-        })),
-      }));
-      toast.success("Selected O/T entries saved successfully!");
-    } catch (error) {
-      console.error("Save Error:", error);
-      toast.error("Failed to save O/T entries: " + error);
-    }
+    const payload = {
+      eType: formData.eType,
+      department: formData.department,
+      dateFrom: formData.dateFrom,
+      dateTo: formData.dateTo,
+      otOnly: formData.otOnly,
+      otEntries: formData.otEntries,
+      EmployeeIDList: buildEmployeeIdList(), // Add EmployeeIDList to payload
+    };
+    dispatch(submitOTDaily(payload));
   };
 
+  // Handle Cancel button click
   const handleCancel = () => {
     setFormData({
       eType: "",
@@ -205,10 +178,9 @@ const OTDaily = () => {
       dateFrom: "",
       dateTo: "",
       otOnly: false,
-      otEntries: [], // Fixed typo from ot11
+      otEntries: [],
     });
     setErrors({ eType: "" });
-    toast.info("Form reset successfully!");
   };
 
   return (

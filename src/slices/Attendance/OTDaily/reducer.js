@@ -24,20 +24,24 @@ const OTDailySlice = createSlice({
       .addCase(getOTDaily.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Something went wrong";
-      });
-    builder
+      })
       .addCase(submitOTDaily.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(submitOTDaily.fulfilled, (state, action) => {
         state.loading = false;
         state.otDaily = [...state.otDaily, action.payload];
+        console.log("Reducer: Added to otDaily:", action.payload);
       })
       .addCase(submitOTDaily.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
-      });
-    builder
+        state.error = action.payload || "Failed to submit O/T Daily.";
+      })
+      .addCase(updateOTDaily.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(updateOTDaily.fulfilled, (state, action) => {
         const updatedOT = action.payload;
         state.otDaily = state.otDaily.map(
@@ -48,10 +52,10 @@ const OTDailySlice = createSlice({
       .addCase(updateOTDaily.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to update O/T Daily.";
-      });
-    builder
+      })
       .addCase(deleteOTDaily.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(deleteOTDaily.fulfilled, (state, action) => {
         state.loading = false;

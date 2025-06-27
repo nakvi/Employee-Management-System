@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
+  Button,
   Card,
   CardBody,
   Col,
@@ -8,207 +9,178 @@ import {
   Input,
   Label,
   Form,
-  FormFeedback,
+  CardHeader,
 } from "reactstrap";
-import Select from "react-select";
-import { toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
+import PreviewCardHeader4 from "../../../Components/Common/PreviewCardHeader4";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
-import { getOTDaily, submitOTDaily } from "../../../slices/Attendance/OTDaily/thunk";
+import { getRoster, submitRoster } from "../../../slices/Attendance/Roaster/thunk";
+import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getShift } from "../../../slices/setup/shift/thunk";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const OTDaily = () => {
-  document.title = "O/T Daily | EMS";
-
+const Roster = () => {
+  document.title = "Roster | EMS";
   const dispatch = useDispatch();
 
+  // State for form inputs
   const [formData, setFormData] = useState({
     eType: "",
-    department: [],
+    department: "",
+    month: "",
     dateFrom: "",
     dateTo: "",
-    otOnly: false,
     otEntries: [],
+    ShiftID: "",
+    offDay: "", // Added offDay to formData
   });
 
-  const [errors, setErrors] = useState({
-    eType: "",
-  });
-
+  // Selectors for data
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
-  const { otDaily, loading, error } = useSelector((state) => state.OTDaily || {});
+  const { roster, loading, error } = useSelector((state) => state.Roster || {});
+  const { employee = [] } = useSelector((state) => state.Employee || {});
+  const { shift = [] } = useSelector((state) => state.Shift || {});
 
+  // Days of the week for the offDay dropdown
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+
+  // Fetch data on mount
   useEffect(() => {
     dispatch(getDepartment());
     dispatch(getEmployeeType());
+    dispatch(getEmployee());
+    dispatch(getShift());
   }, [dispatch]);
 
+  // Handle input changes
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    if (name === "eType" && value) {
-      setErrors((prev) => ({ ...prev, eType: "" }));
-    }
-  };
-
-  const handleMultiChange = (name, selectedOptions) => {
-    setFormData((prev) => ({
-      ...prev,
-      [name]: selectedOptions ? selectedOptions.map((option) => option.value) : [],
+      [name]: value,
     }));
   };
 
+  // Handle OT entry changes (for the table row)
   const handleOTEntryChange = (index, field, value) => {
     const updatedEntries = [...formData.otEntries];
     updatedEntries[index] = { ...updatedEntries[index], [field]: value };
     setFormData((prev) => ({ ...prev, otEntries: updatedEntries }));
   };
 
+  // Validate E-Type
   const validateEType = () => {
     if (!formData.eType) {
-      setErrors((prev) => ({ ...prev, eType: "E-Type is required" }));
       toast.error("E-Type is required!");
       return false;
     }
     return true;
   };
 
+  // Construct employeeIdList string
   const buildEmployeeIdList = () => {
     const conditions = [];
+
     if (formData.eType) {
       conditions.push(`E."ETypeID" = ${formData.eType}`);
     }
-    if (formData.department.length > 0) {
-      conditions.push(`E."DeptID" IN (${formData.department.join(",")})`);
+
+    if (formData.department) {
+      conditions.push(`E."DeptID" = ${formData.department}`);
     }
-    return conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+
+    const employeeIdList = conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    console.log("Step 1 - Generated employeeIdList:", employeeIdList);
+    return employeeIdList;
   };
 
+  // Handle Fetch button click
   const handleFetch = () => {
     if (!validateEType()) return;
 
+    const employeeIdList = buildEmployeeIdList();
     const filterConditions = {
-      Orgini: "LLT",
-      Vdate: "2025-05-28",
-      DateFrom: formData.dateFrom || "2025-01-01",
-      DateTo: formData.dateTo || "2025-12-31",
-      DeptIDs: formData.department.length > 0 ? formData.department.join(",") : "",
-      EmployeeIDList: buildEmployeeIdList(),
-      CompanyID: "1",
-      LocationID: "1",
-      ETypeID: formData.eType || "1",
-      EmpID: "1",
-      IsAu: "0",
-      IsExport: "0",
-      UID: "0",
-      InFlage: "0",
+      eType: formData.eType,
+      department: formData.department,
+      month: formData.month,
+      dateFrom: formData.dateFrom,
+      dateTo: formData.dateTo,
+      ShiftID: formData.ShiftID,
+      offDay: formData.offDay, // Added offDay to filterConditions
+      employeeIdList: employeeIdList,
     };
 
-    console.log("Fetch Payload:", filterConditions);
+    console.log("Step 2 - Fetch Payload (filterConditions):", JSON.stringify(filterConditions, null, 2));
 
-    dispatch(getOTDaily(filterConditions))
-      .then((response) => {
-        console.log("Thunk Response:", response);
-        const dataArray = response.payload || [];
-        console.log("Response Data Array:", dataArray);
-
-        if (dataArray.length > 0) {
-          const mappedEntries = dataArray.map((item) => ({
-            employee: item.EName || "N/A",
-            attCode: item.AttCode || "N/A",
-            shiftTime: item.ShiftID || 0,
-            totalTime: item.TotTime || 0,
-            overTime: item.OverTime ? item.OverTime.toFixed(1) : "0.0",
-            remarks: item.Remarks || "",
-            post: item.post || false,
-            empID: item.EmpID || 0, // Store EmpID from API
-          }));
-
-          setFormData((prev) => ({
-            ...prev,
-            otEntries: mappedEntries,
-          }));
-          console.log("Mapped Entries:", mappedEntries);
-        } else {
-          setFormData((prev) => ({
-            ...prev,
-            otEntries: [],
-          }));
-          toast.info("No records found for the selected criteria.");
-        }
-      })
-      .catch((error) => {
-        console.error("Fetch Error:", error);
+    dispatch(getRoster(filterConditions)).then((response) => {
+      if (response.payload) {
+        const dataArray = Array.isArray(response.payload) ? response.payload : response.payload.data || [];
+        setFormData((prev) => ({
+          ...prev,
+          otEntries: dataArray.length
+            ? dataArray.map((item) => ({
+              employee: item.employee || "N/A",
+              attCode: item.attCode || "N/A",
+              shiftTime: item.shiftTime || 0,
+              totalTime: item.totalTime || 0,
+              overTime: item.overTime || "00.0",
+              remarks: item.remarks || "",
+              post: item.post || false,
+            }))
+            : [],
+        }));
+      } else {
         setFormData((prev) => ({
           ...prev,
           otEntries: [],
         }));
-        toast.error("Failed to fetch data: " + error.message);
-      });
+        toast.info("No records found for the selected criteria.");
+      }
+    });
   };
 
-  const handleSave = async (e) => {
+  // Handle Save button click
+  const handleSave = (e) => {
     e.preventDefault();
     if (!validateEType()) return;
 
-    const selectedEntries = formData.otEntries.filter((entry) => entry.post);
-    if (selectedEntries.length === 0) {
-      toast.warning("Please select at least one entry to save!");
-      return;
-    }
-
-    try {
-      for (const entry of selectedEntries) {
-        const payload = {
-          VID: 1, // Hardcoded or auto-increment
-          VName: "Overtime Entry",
-          VNo: `OT-${new Date().getFullYear()}-001`, // Dynamic or hardcoded
-          VDate: formData.dateFrom || new Date().toISOString(),
-          EmpID: entry.empID,
-          OverTime: parseFloat(entry.overTime) || 0,
-          LeaveTypeID: 3,
-          UID: 1001,
-          CompanyID: 10,
-          Tranzdatetime: new Date().toISOString(),
-        };
-
-        console.log("Submitting Payload:", payload);
-        await dispatch(submitOTDaily(payload)).unwrap();
-      }
-
-      // Clear selected entries after successful save
-      setFormData((prev) => ({
-        ...prev,
-        otEntries: prev.otEntries.map((entry) => ({
-          ...entry,
-          post: false,
-        })),
-      }));
-      toast.success("Selected O/T entries saved successfully!");
-    } catch (error) {
-      console.error("Save Error:", error);
-      toast.error("Failed to save O/T entries: " + error);
-    }
+    const payload = {
+      eType: formData.eType,
+      department: formData.department,
+      month: formData.month,
+      dateFrom: formData.dateFrom,
+      dateTo: formData.dateTo,
+      otEntries: formData.otEntries,
+      ShiftID: formData.ShiftID,
+      offDay: formData.offDay, // Added offDay to payload
+    };
+    dispatch(submitRoster(payload));
   };
 
+  // Handle Cancel button click
   const handleCancel = () => {
     setFormData({
       eType: "",
-      department: [],
+      department: "",
+      month: "",
       dateFrom: "",
       dateTo: "",
-      otOnly: false,
-      otEntries: [], // Fixed typo from ot11
+      ShiftID: "",
+      offDay: "", // Added offDay to reset
+      otEntries: [],
     });
-    setErrors({ eType: "" });
-    toast.info("Form reset successfully!");
   };
 
   return (
@@ -220,9 +192,9 @@ const OTDaily = () => {
           <Row>
             <Col lg={12}>
               <Card>
-                <Form onSubmit={(e) => e.preventDefault()}>
-                  <PreviewCardHeader2
-                    title="O/T Daily"
+                <Form onSubmit={handleSave}>
+                  <PreviewCardHeader4
+                    title="Roster"
                     onFetch={handleFetch}
                     onSave={handleSave}
                     onCancel={handleCancel}
@@ -231,49 +203,112 @@ const OTDaily = () => {
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label htmlFor="eType" className="form-label">
-                              E-Type
+                            <Label htmlFor="department" className="form-label">
+                              Department
                             </Label>
                             <select
-                              className={`form-select form-select-sm ${errors.eType ? "is-invalid" : ""}`}
-                              name="eType"
-                              id="eType"
-                              value={formData.eType}
+                              className="form-select form-select-sm"
+                              name="department"
+                              id="department"
+                              value={formData.department}
                               onChange={handleInputChange}
                             >
                               <option value="">---Select---</option>
-                              {employeeType.map((item) => (
+                              {departmentList.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
-                            {errors.eType && <FormFeedback>{errors.eType}</FormFeedback>}
                           </div>
                         </Col>
-                        <Col xxl={2} md={4}>
-                          <div className="mb-3">
-                            <Label htmlFor="department" className="form-label">
-                              Department
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="month" className="form-label">
+                              Month
                             </Label>
-                            <Select
-                              isMulti
-                              name="department"
-                              id="department"
-                              value={departmentList
-                                .filter((dept) => formData.department.includes(dept.VID))
-                                .map((dept) => ({
-                                  value: dept.VID,
-                                  label: dept.VName || dept.DepartmentName || dept.title,
-                                }))}
-                              onChange={(selected) => handleMultiChange("department", selected)}
-                              options={departmentList.map((dept) => ({
-                                value: dept.VID,
-                                label: dept.VName || dept.DepartmentName || dept.title,
-                              }))}
+                            <Input
+                              type="month"
+                              className="form-control-sm"
+                              id="month"
+                              name="month"
+                              value={formData.month}
+                              onChange={handleInputChange}
                             />
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="employeeidlist" className="form-label">
+                              Employee
+                            </Label>
+                            <select
+                              className={`form-select form-select-sm ${formData.employeeidlist ? "is-invalid" : ""}`}
+                              name="employeeidlist"
+                              id="employeeidlist"
+                              value={formData.employeeidlist}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">---Select---</option>
+                              {employee.map((item) => (
+                                <option key={item.EmpID} value={item.EmpID}>
+                                  {item.EName}
+                                </option>
+                              ))}
+                            </select>
+                            {formData.employeeidlist && (
+                              <div className="invalid-feedback">{formData.employeeidlist}</div>
+                            )}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="ShiftID" className="form-label">
+                              Shift
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="ShiftID"
+                              name="ShiftID"
+                              value={formData.ShiftID}
+                              onChange={handleInputChange} // Fixed to use handleInputChange
+                            >
+                              <option value="">---Select---</option>
+                              {shift?.length > 0 ? (
+                                shift.map((group) => (
+                                  <option key={group.VID} value={group.VID}>
+                                    {group.VName}
+                                  </option>
+                                ))
+                              ) : (
+                                <option value="0" disabled>
+                                  No Shift available
+                                </option>
+                              )}
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div>
+                            <Label htmlFor="offDay" className="form-label">
+                              Off Days
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              id="offDay"
+                              name="offDay"
+                              value={formData.offDay}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">---Select---</option>
+                              {daysOfWeek.map((day) => (
+                                <option key={day} value={day}>
+                                  {day}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -294,7 +329,7 @@ const OTDaily = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="dateTo" className="form-label">
-                              To
+                              Date To
                             </Label>
                             <Input
                               type="date"
@@ -304,21 +339,6 @@ const OTDaily = () => {
                               value={formData.dateTo}
                               onChange={handleInputChange}
                             />
-                          </div>
-                        </Col>
-                        <Col xxl={2} md={2} className="mt-3">
-                          <div className="form-check mt-4">
-                            <Input
-                              className="form-check-input"
-                              type="checkbox"
-                              id="otOnly"
-                              name="otOnly"
-                              checked={formData.otOnly}
-                              onChange={handleInputChange}
-                            />
-                            <Label className="form-check-label" htmlFor="otOnly">
-                              O/T Only
-                            </Label>
                           </div>
                         </Col>
                       </Row>
@@ -430,4 +450,4 @@ const OTDaily = () => {
   );
 };
 
-export default OTDaily;
+export default Roster;

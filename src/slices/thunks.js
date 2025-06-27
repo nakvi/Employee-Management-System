@@ -71,4 +71,4 @@ export * from "./Attendance/OTDaily/thunk";
 // OTMonthly
 export * from "./Attendance/OTMonthly/thunk";
 // Roaster
-export * from "./Attendance/Roaster/thunk";
+export * from "./Attendance/Roster/thunk";
