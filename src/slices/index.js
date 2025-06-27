@@ -5,17 +5,9 @@ import LayoutReducer from "./layouts/reducer";
 
 // Authentication
 import LoginReducer from "./auth/login/reducer";
-import AccountReducer from "./auth/register/reducer";
 import ForgetPasswordReducer from "./auth/forgetpwd/reducer";
 import ProfileReducer from "./auth/profile/reducer";
-//Calendar
-import CalendarReducer from "./calendar/reducer";
-//Chat
-import chatReducer from "./chat/reducer";
-//Crm
-// import CrmReducer from "./crm/reducer";
-// Dashboard Analytics
-import DashboardAnalyticsReducer from "./dashboardAnalytics/reducer";
+
 
 
 
@@ -91,14 +83,8 @@ import RosterReducer from "./Attendance/Roster/reducer"; // Assuming Roaster is 
 const rootReducer = combineReducers({
     Layout: LayoutReducer,
     Login: LoginReducer,
-    Account: AccountReducer,
     ForgetPassword: ForgetPasswordReducer,
     Profile: ProfileReducer,
-    Calendar: CalendarReducer,
-    Chat: chatReducer,
-
-    // Crm: CrmReducer,
-    DashboardAnalytics: DashboardAnalyticsReducer,
     APIKey: APIKeyReducer,
     Company: CompanyReducer, // Here is my work 01/23/2025
     Location: LocationReducer,
