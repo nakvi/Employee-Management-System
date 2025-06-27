@@ -32,6 +32,7 @@ import {
   updateSalaryAllowanceDeduction,
   deleteSalaryAllowanceDeduction,
 } from "../../../slices/employee/salaryAllowanceDeduction/thunk";
+import PreviewCardHeaderUpload from "../../../Components/Common/PreviewCardHeaderUpload";
 const LocalSale = () => {
   const dispatch = useDispatch();
   const [editingGroup, setEditingGroup] = useState(null);
@@ -374,14 +375,14 @@ const LocalSale = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
+                  <PreviewCardHeaderUpload
                     title="Local Sale"
-                    onCancel={formik.resetForm}
+                    // onCancel={formik.resetForm}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={2}>
+                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="ETypeID" className="form-label">
                               E-Type
@@ -420,6 +421,7 @@ const LocalSale = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee
