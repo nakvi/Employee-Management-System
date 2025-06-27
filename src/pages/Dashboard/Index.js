@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { Col, Container, Row, Card, CardBody } from "reactstrap";
-import Widget from "./Widgets";
 import Flatpickr from "react-flatpickr";
 import TileBoxs from "./TileBoxs";
-import { Link } from "react-router-dom";
 import TableHeader from "../../Components/Common/TableHeader";
 import DepartmentChart from "./DepartmentChart";
 
