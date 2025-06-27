@@ -4,8 +4,8 @@ import "react-toastify/dist/ReactToastify.css";
 import config from "../../../config";
 
 // Define the API endpoints
-const FETCH_API_ENDPOINT = `${config.api.API_URL}attOTMonthFillGrid/`;
-const SUBMIT_API_ENDPOINT = `${config.api.API_URL}attOTMonth/`;
+const FETCH_API_ENDPOINT = `${config.api.API_URL}attDailyAttendanceFillGrid/`;
+const SUBMIT_API_ENDPOINT = `${config.api.API_URL}attDailyAttendance/`;
 
 // Helper function to manually encode query parameters without escaping quotes
 const encodeQueryParam = (key, value) => {
@@ -15,35 +15,24 @@ const encodeQueryParam = (key, value) => {
   return `${encodeURIComponent(key)}=${encodedValue}`;
 };
 
-// Fetch O/T Monthly data
-export const getOTMonthly = createAsyncThunk(
-  "otMonthly/getOTMonthly",
+// Fetch Daily Attendance data
+export const getDailyAttendance = createAsyncThunk(
+  "dailyAttendance/getDailyAttendance",
   async (filters, { rejectWithValue }) => {
-    console.log("Fetching O/T Monthly with filters:", filters);
+    console.log("Fetching Daily Attendance with filters:", filters);
     try {
-      // Calculate DateFrom and DateTo from month (YYYY-MM)
-      let dateFrom = "2025-01-01";
-      let dateTo = "2025-12-31";
-      if (filters.month) {
-        const [year, month] = filters.month.split("-");
-        dateFrom = `${year}-${month}-01`;
-        // Calculate the last day of the month
-        const lastDay = new Date(year, month, 0).getDate();
-        dateTo = `${year}-${month}-${lastDay}`;
-      }
-
       // Construct query parameters manually
       const params = [
         encodeQueryParam("Orgini", "LLT"),
-        encodeQueryParam("Vdate", "2025-06-04"),
-        encodeQueryParam("DateFrom", dateFrom),
-        encodeQueryParam("DateTo", dateTo),
+        encodeQueryParam("Vdate", new Date().toISOString().split("T")[0]),
+        encodeQueryParam("DateFrom", filters.dateFrom || ""),
+        encodeQueryParam("DateTo", filters.dateTo || ""),
         encodeQueryParam("DeptIDs", filters.department ? filters.department.join(",") : ""),
-        // Send EmployeeIDList as-is, replacing spaces with '+'
-        filters.employeeIdList ? `EmployeeIDList=${filters.employeeIdList.replace(/ /g, "+")}` : "",
+        encodeQueryParam("ETypeID", filters.eType || ""),
+        encodeQueryParam("PendingPosting", filters.pendingPosting ? "1" : "0"),
+        encodeQueryParam("ResignEmployee", filters.resignEmployee ? "1" : "0"),
         encodeQueryParam("CompanyID", "1"),
         encodeQueryParam("LocationID", filters.location || "1"),
-        encodeQueryParam("ETypeID", filters.eType || "1"),
         encodeQueryParam("EmpID", "1"),
         encodeQueryParam("IsAu", "0"),
         encodeQueryParam("IsExport", "0"),
@@ -73,23 +62,23 @@ export const getOTMonthly = createAsyncThunk(
 
       return returnData;
     } catch (error) {
-      console.error("Error fetching O/T Monthly:", error.message);
-      toast.error("Failed to fetch O/T Monthly. Please try again!");
+      console.error("Error fetching Daily Attendance:", error.message);
+      toast.error("Failed to fetch Daily Attendance. Please try again!");
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Submit O/T Monthly data
-export const submitOTMonthly = createAsyncThunk(
-  "otMonthly/submitOTMonthly",
+// Submit Daily Attendance data
+export const submitDailyAttendance = createAsyncThunk(
+  "dailyAttendance/submitDailyAttendance",
   async (payload, { rejectWithValue }) => {
     try {
-      const { employeeIdList, otEntries } = payload;
+      const { selectedEmployees, attendanceData } = payload;
 
-      // Send each entry as a separate POST request
+      // Send each attendance entry as a separate POST request
       const responses = await Promise.all(
-        otEntries.map(async (entry) => {
+        attendanceData.map(async (entry) => {
           const response = await fetch(SUBMIT_API_ENDPOINT, {
             method: "POST",
             headers: {
@@ -97,7 +86,7 @@ export const submitOTMonthly = createAsyncThunk(
             },
             body: JSON.stringify({
               ...entry,
-              EmployeeIdList: employeeIdList, // Include EmployeeIdList in each entry
+              EmployeeIDList: selectedEmployees.join(","), // Include selected employees
             }),
           });
 
@@ -124,27 +113,27 @@ export const submitOTMonthly = createAsyncThunk(
       }
 
       // All requests succeeded
-      toast.success("O/T Monthly submitted successfully!");
+      toast.success("Daily Attendance submitted successfully!");
       return responses.map((res) => res.data); // Return array of response data
     } catch (error) {
       const errorMessage = error.message || "Unknown error occurred";
-      toast.error("Failed to submit O/T Monthly. Please try again!\n" + errorMessage);
+      toast.error("Failed to submit Daily Attendance. Please try again!\n" + errorMessage);
       return rejectWithValue(errorMessage);
     }
   }
 );
 
-// Update O/T Monthly data
-export const updateOTMonthly = createAsyncThunk(
-  "otMonthly/updateOTMonthly",
-  async (otData, { rejectWithValue }) => {
+// Update Daily Attendance data
+export const updateDailyAttendance = createAsyncThunk(
+  "dailyAttendance/updateDailyAttendance",
+  async (attendanceData, { rejectWithValue }) => {
     try {
       const response = await fetch(SUBMIT_API_ENDPOINT, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(otData),
+        body: JSON.stringify(attendanceData),
       });
 
       if (!response.ok) {
@@ -159,7 +148,7 @@ export const updateOTMonthly = createAsyncThunk(
 
       const data = await response.json();
       if (data.status === "0") {
-        toast.success(data.message || "O/T Monthly updated successfully!");
+        toast.success(data.message || "Daily Attendance updated successfully!");
         return data.data;
       } else if (data.status === "1") {
         const errorMessage = data.error || data.message || "An error occurred!";
@@ -172,15 +161,15 @@ export const updateOTMonthly = createAsyncThunk(
       }
     } catch (error) {
       const errorMessage = error.message || "Unknown error occurred";
-      toast.error("Failed to update O/T Monthly. Please try again!\n" + errorMessage);
+      toast.error("Failed to update Daily Attendance. Please try again!\n" + errorMessage);
       return rejectWithValue(errorMessage);
     }
   }
 );
 
-// Delete O/T Monthly data
-export const deleteOTMonthly = createAsyncThunk(
-  "otMonthly/deleteOTMonthly",
+// Delete Daily Attendance data
+export const deleteDailyAttendance = createAsyncThunk(
+  "dailyAttendance/deleteDailyAttendance",
   async (id, { rejectWithValue }) => {
     try {
       const response = await fetch(SUBMIT_API_ENDPOINT, {
@@ -197,13 +186,13 @@ export const deleteOTMonthly = createAsyncThunk(
 
       const responseData = await response.json();
       if (responseData.status) {
-        toast.success("O/T Monthly deleted successfully!");
+        toast.success("Daily Attendance deleted successfully!");
         return id;
       } else {
         throw new Error(responseData.message || "Failed to delete data.");
       }
     } catch (error) {
-      toast.error("Failed to delete O/T Monthly. Please try again!");
+      toast.error("Failed to delete Daily Attendance. Please try again!");
       return rejectWithValue(error.message);
     }
   }

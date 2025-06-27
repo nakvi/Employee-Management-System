@@ -389,9 +389,9 @@ const OTMonthly = () => {
                           <tr>
                             <th>Sr #</th>
                             <th>Employee</th>
-                            <th>Attendance Code</th>
+                            {/* <th>Attendance Code</th>
                             <th>Shift Time</th>
-                            <th>Total Time</th>
+                            <th>Total Time</th> */}
                             <th>Over Time</th>
                             <th>Remarks</th>
                             <th>
@@ -416,9 +416,9 @@ const OTMonthly = () => {
                             <tr key={index}>
                               <td>{index + 1}</td>
                               <td>{entry.employee}</td>
-                              <td>{entry.attCode}</td>
+                              {/* <td>{entry.attCode}</td>
                               <td>{entry.shiftTime}</td>
-                              <td>{entry.totalTime}</td>
+                              <td>{entry.totalTime}</td> */}
                               <td>
                                 <Input
                                   type="number"
