@@ -54,20 +54,6 @@ export const logoutUser = () => async (dispatch) => {
   }
 };
 
-export const socialLogin = (type, history) => async (dispatch) => {
-  try {
-    const response = await api.create(POST_SOCIAL_LOGIN, { type });
-    if (response && response.status === "success") {
-      sessionStorage.setItem("authUser", JSON.stringify(response));
-      dispatch(loginSuccess(response.data));
-      history("/dashboard");
-    } else {
-      dispatch(apiError(response.message || "Social login failed"));
-    }
-  } catch (error) {
-    dispatch(apiError(error));
-  }
-};
 
 export const resetLoginFlag = () => (dispatch) => {
   dispatch(reset_login_flag());
