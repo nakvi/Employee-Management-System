@@ -134,9 +134,9 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         },
         {
           content: "Employee Name", styles: {
-            fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
+            fillColor: '#e1f5fe', textColor: '#222', halign: 'left', fontStyle: 'bold', // <-- Comma added here
             fontSize: 6.5,
-            halign: 'center',
+            halign: 'left',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
@@ -145,9 +145,9 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         },
         {
           content: "Designation", styles: {
-            fillColor: '#e1f5fe', textColor: '#222', halign: 'center', fontStyle: 'bold', // <-- Comma added here
+            fillColor: '#e1f5fe', textColor: '#222', halign: 'left', fontStyle: 'bold', // <-- Comma added here
             fontSize: 6.5,
-            halign: 'center',
+            halign: 'left',
             valign: 'middle',
             lineColor: [230, 230, 230], // Gray border
             lineWidth: 0.5,
@@ -347,189 +347,146 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
       // const tableHeaders = [subHeaders,departmentNameRow];
 
       const tableBody = departmentEmployees.map((employee, idx) => {
-        const doj = employee.DOJ ? new Date(employee.DOJ).toLocaleDateString('en-GB') : '';
-        const employeeName = employee.EName?.replace(/\n/g, ' ') || '';
-        const designation = employee.Designation?.replace(/\n/g, ' ') || '';
+         const att = employee.Attendance?.[0] || {};
+
+        const doj = att.DOJ ? new Date(att.DOJ).toLocaleDateString('en-GB') : '';
+        const employeeName = att.EName?.replace(/\n/g, ' ') || '';
+        const designation = att.Designation?.replace(/\n/g, ' ') || '';
+        const advLoan = att.Deduction1 + att.Deduction2 || 0; 
 
         return [
           idx + 1,
-          employee.EmpCode || '',
+          att.EmpCode || '',
           employeeName,
           designation,
           doj,
-          formatNumber(employee.BasicSalary || 350000),
-          formatNumber(employee.WorkingDays || 30),
-          formatNumber(employee.EarnedSalary || 546000),
-          formatNumber(employee.Arrears || 0), // Now separate
-          formatNumber(employee.Allowance || 5550), // Now separate
-          formatNumber(employee.GrossSalary || 205560),
-          formatNumber(employee.EOBIAmount || 30000),
-          formatNumber(employee.PFAmount || 1000),
-          formatNumber(employee.IncomeTax || 2000),
-          formatNumber(employee.Deduction4 || 3500),
-          formatNumber(employee.Canteen || 500),
-          formatNumber(employee.LocalSale || 6000),
-          formatNumber(employee.Deduction3 || 5000),
-          formatNumber(employee.TotalDeduction || 5200),
-          formatNumber(employee.NetPayable || 36900),
-          employee.Signature || ''
+          formatNumber(att.SalaryWithAllow || '-'),
+          formatNumber(att.SalaryDays || '-'),
+          formatNumber(att.EarnedSalary || '-'),
+          formatNumber(att.Arrears || '-'), // Now separate
+          formatNumber(att.TotalAllowances || '-'), // Now separate
+          formatNumber(att.GrossSalary || '-'),
+          formatNumber(att.EOBIAmount || '-'),
+          formatNumber(att.PFAmount || '-'),
+          formatNumber(att.IncomeTax || '-'),
+          formatNumber(att.Deduction3 || '-'),
+          formatNumber(att.Canteen || '-'),
+          formatNumber(att.LocalSale || '-'),
+          advLoan ? formatNumber(advLoan) : '-',
+          formatNumber(att.TotalDeduction || '-'),
+          formatNumber(att.NetPayable || '-'),
+          att.Signature || ''
         ];
       });
 
       // Recalculate department totals based on new column structure
       const departmentTotals = departmentEmployees.reduce((acc, employee) => {
-        acc.earnedSalary += parseFloat(employee.EarnedSalary || 0);
-        acc.arrears += parseFloat(employee.Arrears || 0); // Separate
-        acc.allowance += parseFloat(employee.Allowance || 0); // Separate
-        acc.grossSalary += parseFloat(employee.GrossSalary || 0);
-        acc.eobi += parseFloat(employee.EOBIAmount || 0);
-        acc.pf += parseFloat(employee.PFAmount || 0);
-        acc.incomeTax += parseFloat(employee.IncomeTax || 0);
-        acc.healthInsur += parseFloat(employee.Deduction4 || 0);
-        acc.canteen += parseFloat(employee.Canteen || 0);
-        acc.lSale += parseFloat(employee.LocalSale || 0);
-        acc.advLoan += parseFloat(employee.Deduction3 || 0);
-        acc.totDeduct += parseFloat(employee.TotalDeduction || 0);
-        acc.netSalary += parseFloat(employee.NetPayable || 0);
+        const att = employee.Attendance?.[0] || {};
+        const advLoan = (parseFloat(att.Deduction1 || 0) + parseFloat(att.Deduction2 || 0));
+        acc.salaryWithAllow += parseFloat(att.SalaryWithAllow || 0);
+        acc.earnedSalary += parseFloat(att.EarnedSalary || 0);
+        acc.arrears += parseFloat(att.Arrears || 0);
+        acc.totalAllowances += parseFloat(att.TotalAllowances || 0);
+        acc.grossSalary += parseFloat(att.GrossSalary || 0);
+        acc.eobi += parseFloat(att.EOBIAmount || 0);
+        acc.pf += parseFloat(att.PFAmount || 0);
+        acc.incomeTax += parseFloat(att.IncomeTax || 0);
+        acc.healthInsur += parseFloat(att.Deduction3 || 0);
+        acc.canteen += parseFloat(att.Canteen || 0);
+        acc.lSale += parseFloat(att.LocalSale || 0);
+        acc.advLoan += advLoan;
+        acc.totDeduct += parseFloat(att.TotalDeduction || 0);
+        acc.netSalary += parseFloat(att.NetPayable || 0);
         return acc;
       }, {
-        earnedSalary: 0, arrears: 0, allowance: 0, grossSalary: 0, eobi: 0, pf: 0, // Separate arrears/allowance
+        salaryWithAllow: 0, earnedSalary: 0, arrears: 0, totalAllowances: 0, grossSalary: 0, eobi: 0, pf: 0,
         incomeTax: 0, healthInsur: 0, canteen: 0, lSale: 0, advLoan: 0,
         totDeduct: 0, netSalary: 0
       });
 
       // Adjust tableFoot for the new header structure (20 columns instead of 19 from before)
       const tableFoot = [[
-        { content: 'Department Totals :', colSpan: 7, styles: { fontStyle: 'bold', halign: 'right' } },
-        formatNumber(departmentTotals.earnedSalary),
-        formatNumber(departmentTotals.arrears), // Now separate
-        formatNumber(departmentTotals.allowance), // Now separate
-        formatNumber(departmentTotals.grossSalary),
-        formatNumber(departmentTotals.eobi),
-        formatNumber(departmentTotals.pf),
-        formatNumber(departmentTotals.incomeTax),
-        formatNumber(departmentTotals.healthInsur),
-        formatNumber(departmentTotals.canteen),
-        formatNumber(departmentTotals.lSale),
-        formatNumber(departmentTotals.advLoan),
-        formatNumber(departmentTotals.totDeduct),
-        formatNumber(departmentTotals.netSalary),
+        { content: 'Department Totals :', colSpan: 5, styles: { fontStyle: 'bold', halign: 'right' } },
+        formatNumber(departmentTotals.salaryWithAllow || '-'),
+        '', // Empty for Work Days
+        formatNumber(departmentTotals.earnedSalary || '-'),
+        formatNumber(departmentTotals.arrears || '-'), // Now separate
+        formatNumber(departmentTotals.totalAllowances || '-'), // Now separate
+        formatNumber(departmentTotals.grossSalary || '-'),
+        formatNumber(departmentTotals.eobi || '-'),
+        formatNumber(departmentTotals.pf || '-'),
+        formatNumber(departmentTotals.incomeTax || '-'),
+        formatNumber(departmentTotals.healthInsur || '-'),
+        formatNumber(departmentTotals.canteen || '-'),
+        formatNumber(departmentTotals.lSale || '-'),
+        formatNumber(departmentTotals.advLoan || '-'),
+        formatNumber(departmentTotals.totDeduct || '-'),
+        formatNumber(departmentTotals.netSalary || '-'),
         '' // Empty for signature
       ]];
 
 
-      autoTable(doc, {
-        startY: 70, 
-        tableWidth: 'auto',
-        head: tableHeaders, // Pass the combined header array here
-        body: tableBody,
-        foot: tableFoot,
-        theme: 'grid',
-        headStyles: [
-          // General styles for the FIRST row (main group headers)
-          {
-            // fillColor and textColor are already defined in mainHeaders objects, so they might not be needed here.
-            // However, fontStyle, fontSize, alignment, and line properties are still useful here.
-            fontStyle: 'bold',
-            fontSize: 7,
-            halign: 'center',
-            valign: 'middle',
-            lineColor: [230, 230, 230], // Gray border
-            lineWidth: 0.5,
-            cellPadding: 2,
-          },
-          // General styles for the SECOND row (sub-headers)
-          {
-            // fillColor and textColor are defined in each subHeaders object.
-            fontStyle: 'bold',
-            fontSize: 7,
-            halign: 'center',
-            valign: 'middle',
-            lineColor: [230, 230, 230], // Gray border
-            lineWidth: 0.5,
-            cellPadding: 2,
-          }
-        ],
-        bodyStyles: {
-          fontSize: 6.5,
-          halign: 'center',
-          valign: 'middle',
-          lineColor: [220, 220, 220],
-          lineWidth: 0.5,
-        },
-        alternateRowStyles: {
-          fillColor: '',
-        },
-        footStyles: {
-          fillColor: '#e1f5fe',
-          textColor: '#222',
-          fontStyle: 'bold',
-          fontSize: 6.5,
-          halign: 'center',
-          valign: 'middle',
-          lineColor: [230, 230, 230],
-          lineWidth: 0.5,
-        },
-        margin: { left: 10, right: 10, top: 70, bottom: 80 }, 
-        // columnStyles: {
-        //   0: { cellWidth: 20 },   // Srl #
-        //   1: { cellWidth: 30 },   // E-Code
-        //   2: { cellWidth: 60 },   // Employee Name
-        //   3: { cellWidth: 60 },   // Designation
-        //   4: { cellWidth: 50 },   // Date of Joining
-        //   5: { cellWidth: 45 },   // Basic Salary
-        //   6: { cellWidth: 30 },   // Work Days
-        //   7: { cellWidth: 45 },   // Earned Salary
-        //   8: { cellWidth: 40 },   // Arr/Allow
-        //   9: { cellWidth: 45 },   // Gross Salary
-        //   10: { cellWidth: 30 },  // EOBI
-        //   11: { cellWidth: 30 },  // PF
-        //   12: { cellWidth: 35 },  // Income Tax
-        //   13: { cellWidth: 40 },  // Health Insur.
-        //   14: { cellWidth: 35 },  // Canteen
-        //   15: { cellWidth: 35 },  // L / Sale
-        //   16: { cellWidth: 40 },  // Adv / Loan
-        //   17: { cellWidth: 40 },  // Tot Deduct
-        //   18: { cellWidth: 45 },  // Net Salary
-        //   19: { cellWidth: 65 }   // Signature
-        // },
-           columnStyles: {
-          0: { cellWidth: 'auto' },   // Srl #
-          1: { cellWidth: 'auto' },   // E-Code
-          2: { cellWidth: 'auto' },   // Employee Name
-          3: { cellWidth: 'auto' },   // Designation
-          4: { cellWidth: 'auto' },   // Date of Joining
-          5: { cellWidth: 'auto' },   // Basic Salary
-          6: { cellWidth: 'auto' },   // Work Days
-          7: { cellWidth: 'auto' },   // Earned Salary
-          8: { cellWidth: 'auto' },   // Arr/Allow
-          9: { cellWidth: 'auto' },   // Gross Salary
-          10: { cellWidth: 'auto' },  // EOBI
-          11: { cellWidth: 'auto' },  // PF
-          12: { cellWidth: 'auto' },  // Income Tax
-          13: { cellWidth: 'auto' },  // Health Insur.
-          14: { cellWidth: 'auto' },  // Canteen
-          15: { cellWidth: 'auto' },  // L / Sale
-          16: { cellWidth: 'auto' },  // Adv / Loan
-          17: { cellWidth: 'auto' },  // Tot Deduct
-          18: { cellWidth: 'auto' },  // Net Salary
-          19: { cellWidth: 'auto' }   // Signature
-        },
-        didDrawPage: function (data) {
-          const signatureY = doc.internal.pageSize.height - 40;
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-
-          doc.text('Prepared By', data.settings.margin.left + 50, signatureY);
-          doc.text('Checked By', pageWidth / 2, signatureY, { align: 'center' });
-          doc.text('Approved By', pageWidth - data.settings.margin.right - 50, signatureY, { align: 'right' });
-
-          // Page number on each page
-          // doc.setFontSize(8);
-          // const pageText = 'Page ' + data.pageNumber + ' of ' + totalPages; // Will update after the loop
-          // doc.text(pageText, pageWidth / 2, pageHeight - 15, { align: 'right' });
-        }
-      });
+     autoTable(doc, {
+      startY: 70,
+      tableWidth: 'auto',
+      head: tableHeaders,
+      body: tableBody,
+      foot: tableFoot,
+      theme: 'grid',
+      headStyles: [
+        { fontStyle: 'bold', fontSize: 6.5, halign: 'center', valign: 'middle', lineColor: [230,    230, 230], lineWidth: 0.5, cellPadding: 2 },
+        { fontStyle: 'bold', fontSize: 6.5, halign: 'center', valign: 'middle', lineColor: [230,    230, 230], lineWidth: 0.5, cellPadding: 2 }
+      ],
+      bodyStyles: {
+        fontSize: 6,
+        valign: 'top',
+        lineColor: [220, 220, 220],
+        lineWidth: 0.5,
+      },
+      alternateRowStyles: { fillColor: '' },
+      footStyles: {
+        fillColor: '#e1f5fe',
+        textColor: '#222',
+        fontStyle: 'bold',
+        fontSize: 6,
+        halign: 'right',
+        valign: 'top',
+        lineColor: [230, 230, 230],
+        lineWidth: 0.5,
+      },
+      margin: { left: 10, right: 10, top: 70, bottom: 80 },
+      columnStyles: {
+        0: { cellWidth: 'auto', halign: 'center' },   // Srl #
+        1: { cellWidth: 'auto', halign: 'center' },   // E-Code
+        2: { cellWidth: 'auto', halign: 'left' },     // Employee Name
+        3: { cellWidth: 'auto', halign: 'left' },     // Designation
+        4: { cellWidth: 'auto', halign: 'center' },   // Date of Joining
+        5: { cellWidth: 'auto', halign: 'right' },    // Basic Salary
+        6: { cellWidth: 'auto', halign: 'center' },   // Work Days
+        7: { cellWidth: 'auto', halign: 'right' },    // Earned Salary
+        8: { cellWidth: 'auto', halign: 'right' },    // Arrears
+        9: { cellWidth: 'auto', halign: 'right' },    // Allowance
+        10: { cellWidth: 'auto', halign: 'right' },   // Gross Salary
+        11: { cellWidth: 'auto', halign: 'right' },   // EOBI
+        12: { cellWidth: 'auto', halign: 'right' },   // PF
+        13: { cellWidth: 'auto', halign: 'right' },   // Income Tax
+        14: { cellWidth: 'auto', halign: 'right' },   // Health Insur.
+        15: { cellWidth: 'auto', halign: 'right' },   // Canteen
+        16: { cellWidth: 'auto', halign: 'right' },   // L / Sale
+        17: { cellWidth: 'auto', halign: 'right' },   // Adv / Loan
+        18: { cellWidth: 'auto', halign: 'right' },   // Tot Deduct
+        19: { cellWidth: 'auto', halign: 'right' }    // Net Salary
+        // Signature column (20) default (center)
+      },
+      didDrawPage: function (data) {
+        const signatureY = doc.internal.pageSize.height - 40;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Prepared By', data.settings.margin.left + 50, signatureY);
+        doc.text('Checked By', pageWidth / 2, signatureY, { align: 'center' });
+        doc.text('Approved By', pageWidth - data.settings.margin.right - 50, signatureY, {    align: 'right' });
+      }
+    });
     }
     totalPages = doc.internal.getNumberOfPages();
 
@@ -545,9 +502,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
     window.open(doc.output("bloburl"), "_blank");
   };
 
-  // --- HTML/CSS for the Preview ---
-  // This section now needs to be updated to mirror the two-row header structure for consistency.
-  // It will be a bit more involved as HTML table headers naturally don't colspan across different rows without extra JSX.
+
 
   // Let's create the HTML version of the headers to match the PDF.
   const htmlTableHeaders = (

@@ -386,32 +386,41 @@ console.log("Grouped Employee Cards:", employeeCards);
                             <Label htmlFor="DateFrom" className="form-label">
                               Month From
                             </Label>
-                            <Input
-                              type="date"
+                           <Input
+                              type="month"
                               className="form-control-sm"
                               id="DateFrom"
                               name="DateFrom"
-                              value={formik.values.DateFrom}
-                              onChange={formik.handleChange}
+                              value={formik.values.DateFrom.slice(0, 7)} // MM/YYYY format
+                              onChange={e => {
+                                // Formik ko yyyy-MM-dd format chahiye, to first day set karen
+                                const val = e.target.value;
+                                formik.setFieldValue("DateFrom", val + "-01");
+                              }}
                             />
                           </div>
                         </Col>
                         {/* Month To */}
                         <Col xxl={2} md={2}>
-                          <div>
-                            <Label htmlFor="DateTo" className="form-label">
-                              Month To
-                            </Label>
-                            <Input
-                              type="date"
-                              className="form-control-sm"
-                              id="DateTo"
-                              name="DateTo"
-                              value={formik.values.DateTo}
-                              onChange={formik.handleChange}
-                            />
-                          </div>
-                        </Col>
+                        <div>
+                          <Label htmlFor="DateTo" className="form-label">
+                            Month To
+                          </Label>
+                         <Input
+                          type="month"
+                          className="form-control-sm"
+                          id="DateTo"
+                          name="DateTo"
+                          value={formik.values.DateTo.slice(0, 7)}
+                          onChange={e => {
+                            // Formik ko yyyy-MM-dd format chahiye, to last day set karen
+                            const val = e.target.value;
+                            formik.setFieldValue("DateTo", getLastDayOfMonth(val + "-01"));
+                          }}
+                          readOnly={formik.values.VType !== "SalaryHistory"}
+                        />
+                        </div>
+                      </Col>
                         {/* Report Heading */}
                         <Col xxl={4} md={9}>
                           <div className="mb-3 mt-2">
@@ -961,8 +970,8 @@ console.log("Grouped Employee Cards:", employeeCards);
              <Col lg={12}>
                 {showTable && filters.VType === "SalarySheet" && (
                     Array.isArray(tableData) && tableData.length > 0 ? (
-                        <SalaryReportTwoPreview
-                        // <SalaryReportPreview
+                        // <SalaryReportTwoPreview
+                        <SalaryReportPreview
                             // We don't need `emp` anymore if SalaryReportPreview always shows the full report
                             // key="full-salary-report" // A static key since it's a single instance
                             allEmployees={employeeCards} // Pass the grouped data here

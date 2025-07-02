@@ -26,7 +26,6 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
     return acc;
   }, {});
 
-
   const handlePrintAllPDF = () => {
     if (!allEmployees.length) {
         console.warn("No employee data to print.");
@@ -42,9 +41,9 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         : new Date().getFullYear() + '-' + (new Date().getMonth() + 1).toString().padStart(2, '0');
 
     const subHeaders = [
-        "Srl #", "Code Name", "Hire Date", "Monthly Salary",
+        "Srl #", "Code", "Name", "Hire Date", "Monthly Salary",
         "Incrmt", "Cal. Salary", "Alwns", "G Salary", "OT", "Tot Payable", "I-Tax/EOBI",
-        "Adv Ded", "Canteen", "Tot Dedu", "PP LW OF HD AB", "Net Payable  Signature"
+        "Adv Ded", "Canteen", "Tot Dedu", "PP LW OF HD AB", "Net Payable", "Signature"
     ].map(text => ({
         content: text,
         styles: {
@@ -52,7 +51,7 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
             textColor: '#222',
             halign: 'center',
             fontStyle: 'bold',
-            fontSize: 6,
+            fontSize: 6.5,
             valign: 'middle',
             lineColor: [230, 230, 230],
             lineWidth: 0.5,
@@ -60,42 +59,53 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
         }
     }));
 
-    // Define common column styles for all data rows and subheaders
-      const commonColumnStyles = {
-          0: { cellWidth: 15, halign: 'center' },  // Srl #
-          1: { cellWidth: 90, halign: 'left' },    // Code Name
-          2: { cellWidth: 45, halign: 'center' },  // Hire Date
-          3: { cellWidth: 35, halign: 'right' },   // Monthly Salary
-          4: { cellWidth: 35, halign: 'right' },   // Incrmt
-          5: { cellWidth: 35, halign: 'right' },   // Cal. Salary
-          6: { cellWidth: 35, halign: 'right' },   // Alwns
-          7: { cellWidth: 35, halign: 'right' },   // G Salary
-          8: { cellWidth: 35, halign: 'right' },   // OT
-          9: { cellWidth: 35, halign: 'right' },   // Tot Payable
-          10: { cellWidth: 35, halign: 'right' },  // I-Tax/EOBI
-          11: { cellWidth: 35, halign: 'right' },  // Adv Ded
-          12: { cellWidth: 35, halign: 'right' },  // Canteen
-          13: { cellWidth: 35, halign: 'right' },  // Tot Dedu
-          14: { cellWidth: 65, halign: 'center' }, // PP LW OF HD AB
-          15: { cellWidth: 100, halign: 'left' },  // Net Payable
-      };
+    const commonColumnStyles = {
+        0: { cellWidth: 15, halign: 'center' },  // Srl #
+        1: { cellWidth: 25, halign: 'left' },    // Code
+        2: { cellWidth: 90, halign: 'left' },    // Name
+        3: { cellWidth: 45, halign: 'center' },  // Hire Date
+        4: { cellWidth: 38, halign: 'right' },   // Monthly Salary
+        5: { cellWidth: 38, halign: 'right' },   // Incrmt
+        6: { cellWidth: 38, halign: 'right' },   // Cal. Salary
+        7: { cellWidth: 38, halign: 'right' },   // Alwns
+        8: { cellWidth: 38, halign: 'right' },   // G Salary
+        9: { cellWidth: 38, halign: 'right' },   // OT
+        10: { cellWidth: 38, halign: 'right' },  // Tot Payable
+        11: { cellWidth: 38, halign: 'right' },  // I-Tax/EOBI
+        12: { cellWidth: 38, halign: 'right' },  // Adv Ded
+        13: { cellWidth: 38, halign: 'right' },  // Canteen
+        14: { cellWidth: 38, halign: 'right' },  // Tot Dedu
+        15: { cellWidth: 65, halign: 'center' }, // PP LW OF HD AB
+        16: { cellWidth: 55, halign: 'right' },  // Net Payable
+        17: { cellWidth: 60, halign: 'left' },   // Signature
+    };
 
+    // Group employees by department
+    const groupedByDepartment = allEmployees.reduce((acc, employee) => {
+        const department = employee.Department || "Unknown Department";
+        if (!acc[department]) acc[department] = [];
+        acc[department].push(employee);
+        return acc;
+    }, {});
 
-    // Initialize totalGrossSalary and totalNetPayable outside the loop
-    let overallTotals = {
-        BasicSalary: 0,  earnedSalary: 0, arrears: 0, allowance: 0, grossSalary: 0,  OverTime: 0,  SalaryWithAllow: 0,
-        eobi: 0, pf: 0, incomeTax: 0, healthInsur: 0, canteen: 0,
-        lSale: 0, advLoan: 0, totalDeduction: 0, netPayable: 0
+    // Initialize grand totals
+    let grandTotals = {
+        BasicSalary: 0, Increment: 0, EarnedSalary: 0, Allowance: 0, GrossSalary: 0, OverTime: 0, SalaryWithAllow: 0,
+        IncomeTax: 0, EOBIAmount: 0, AdvDed: 0, Canteen: 0, TotalDeduction: 0, NetPayable: 0,
+        PPDays: 0, Annual: 0, Casual: 0, Sick: 0, GHDays: 0, FHDays: 0, WEDays: 0, HDDay: 0, ABDays: 0
     };
 
     const allTableData = [];
 
+    let srl = 1;
+
     for (const departmentName in groupedByDepartment) {
         const departmentEmployees = groupedByDepartment[departmentName];
 
-        const deptHeader = [{
+        // Department header row
+        allTableData.push([{
             content: departmentName,
-            colSpan: 21, // Span all 21 columns
+            colSpan: 18,
             styles: {
                 halign: 'left',
                 fontSize: 9,
@@ -106,181 +116,168 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
                 cellPadding: 1.5,
                 fontStyle: 'bold',
             }
-        }];
+        }]);
 
-          const totals = departmentEmployees.reduce((acc, emp) => {
-              const att = emp.Attendance?.[0] || {};
+        // Department totals accumulator
+        let deptTotals = {
+            BasicSalary: 0, Increment: 0, EarnedSalary: 0, Allowance: 0, GrossSalary: 0, OverTime: 0, SalaryWithAllow: 0,
+            IncomeTax: 0, EOBIAmount: 0, AdvDed: 0, Canteen: 0, TotalDeduction: 0, NetPayable: 0,
+            PPDays: 0, Annual: 0, Casual: 0, Sick: 0, GHDays: 0, FHDays: 0, WEDays: 0, HDDay: 0, ABDays: 0
+        };
 
-              acc.BasicSalary += parseFloat(att.BasicSalary || 0);
-              acc.Increment += parseFloat(att.Increment || 0);
-              acc.earnedSalary += parseFloat(att.EarnedSalary || 0);
-              acc.allowance += parseFloat(att.TotalAllowances || 0);
-              acc.grossSalary += parseFloat(att.GrossSalary || 0);
-              acc.OverTime += parseFloat(att.OverTime || 0);
-              acc.SalaryWithAllow += parseFloat(att.SalaryWithAllow || 0);
-              acc.eobi += parseFloat(att.EOBIAmount || 0);
-              acc.pf += parseFloat(att.PFAmount || 0);
-              acc.incomeTax += parseFloat(att.IncomeTax || 0);
-              acc.healthInsur += parseFloat(att.Deduction4 || 0);
-              acc.canteen += parseFloat(att.Canteen || 0);
-              acc.lSale += parseFloat(att.LocalSale || 0);
-              acc.advLoan += parseFloat(att.Deduction3 || 0);
-              acc.totalDeduction += parseFloat(att.TotalDeduction || 0);
-              acc.netPayable += parseFloat(att.NetPayable || 0);
-
-              return acc;
-          }, {
-              BasicSalary: 0, earnedSalary: 0, Increment: 0, allowance: 0, grossSalary: 0, OverTime: 0, SalaryWithAllow: 0,
-              eobi: 0, pf: 0, incomeTax: 0, healthInsur: 0, canteen: 0,
-              lSale: 0, advLoan: 0, totalDeduction: 0, netPayable: 0
-          });
-
-
-        // Accumulate to overall totals
-        overallTotals.BasicSalary += totals.BasicSalary;
-        overallTotals.Increment += totals.Increment;
-        overallTotals.earnedSalary += totals.earnedSalary;
-        overallTotals.allowance += totals.allowance;
-        overallTotals.grossSalary += totals.grossSalary;
-        overallTotals.OverTime += totals.OverTime || 0;
-        overallTotals.SalaryWithAllow += totals.SalaryWithAllow || 0;
-        overallTotals.eobi += totals.eobi;
-        overallTotals.pf += totals.pf;
-        overallTotals.incomeTax += totals.incomeTax;
-        overallTotals.healthInsur += totals.healthInsur;
-        overallTotals.canteen += totals.canteen;
-        overallTotals.lSale += totals.lSale;
-        overallTotals.advLoan += totals.advLoan;
-        overallTotals.totalDeduction += totals.totalDeduction;
-        overallTotals.netPayable += totals.netPayable;
-
-
+        // Data rows
         const rows = departmentEmployees.map((emp, idx) => {
-          const doj = emp.DOJ ? new Date(emp.DOJ).toLocaleDateString('en-GB') : '';
-          const att = emp.Attendance?.[0] || {};
+            const att = emp.Attendance?.[0] || {};
+            deptTotals.BasicSalary += parseFloat(att.SalaryWithAllow || 0);
+            deptTotals.Increment += parseFloat(att.Increment || 0);
+            deptTotals.EarnedSalary += parseFloat(att.EarnedSalary || 0);
+            deptTotals.Allowance += parseFloat(att.TotalAllowances || 0);
+            deptTotals.GrossSalary += parseFloat(att.GrossSalary || 0) - parseFloat(att.TotalOverTimeRs || 0);
+            deptTotals.OverTime += parseFloat(att.TotalOverTimeRs || 0);
+            deptTotals.SalaryWithAllow += parseFloat(att.GrossSalary || 0);
+            deptTotals.IncomeTax += parseFloat(att.IncomeTax || 0);
+            deptTotals.EOBIAmount += parseFloat(att.EOBIAmount || 0);
+            deptTotals.AdvDed += parseFloat((att.TotalDeduction || 0) - (att.Canteen || 0));
+            deptTotals.Canteen += parseFloat(att.Canteen || 0);
+            deptTotals.TotalDeduction += parseFloat(att.TotalDeduction || 0);
+            deptTotals.NetPayable += parseFloat(att.NetPayable || 0);
 
-          const incomeTax = parseFloat(att.IncomeTax || 0);
-          const eobi = parseFloat(att.EOBIAmount || 0);
-          const advDed = parseFloat(att.Deduction3 || 0);
-          const canteen = parseFloat(att.Canteen || 0);
-          const totalDedu = parseFloat(att.TotalDeduction || 0);
+            // For PP LW OF HD AB
+            deptTotals.PPDays += parseFloat(att.PPDays || 0);
+            deptTotals.Annual += parseFloat(att.Annual || 0);
+            deptTotals.Casual += parseFloat(att.Casual || 0);
+            deptTotals.Sick += parseFloat(att.Sick || 0);
+            deptTotals.GHDays += parseFloat(att.GHDays || 0);
+            deptTotals.FHDays += parseFloat(att.FHDays || 0);
+            deptTotals.WEDays += parseFloat(att.WEDays || 0);
+            deptTotals.HDDay += parseFloat(att.HDDay || 0);
+            deptTotals.ABDays += parseFloat(att.ABDays || 0);
 
-          return [
-            idx + 1,
-            `${emp.EmpCode || ''} - ${emp.EName?.replace(/\n/g, ' ') || ''} (${emp.Designation?.replace(/\n/g, ' ') || ''})`,
-            doj,
-            formatNumber(att.BasicSalary),
-            formatNumber(att.Increment),
-            formatNumber(att.EarnedSalary),
-            formatNumber(att.TotalAllowances),
-            formatNumber(att.GrossSalary),
-            formatNumber(att.OverTime || 0),
-            formatNumber(att.SalaryWithAllow || 0),
-            `${incomeTax}\n${eobi}`,
-            formatNumber(advDed),
-            formatNumber(canteen),
-            formatNumber(totalDedu),
-            `${att.PPDays || '0'} : ${att.LW || '0'} : ${att.OF || '0'} : ${att.HDDays || '0'} : ${att.ABDays || '0'}`,
-            formatNumber(att.NetPayable),
-            emp.Signature || ''
-          ];
+            const lw = (parseFloat(att.Annual || 0) + parseFloat(att.Casual || 0) + parseFloat(att.Sick || 0));
+            const of = (parseFloat(att.GHDays || 0) + parseFloat(att.FHDays || 0) + parseFloat(att.WEDays || 0));
+            const advDed = (parseFloat(att.TotalDeduction || 0) + parseFloat(att.Canteen || 0));
+            return [
+                idx + 1,
+                `${emp.EmpCode || ''}`,
+                { 
+                  content: `${emp.EName?.replace(/\n/g, ' ') || ''} \n (${emp.Designation?.replace(/\n/g, ' ') || ''})`,
+                  styles: { fontSize: 6 } 
+                },
+                emp.DOJ || '',
+                formatNumber(att.SalaryWithAllow || '-'),
+                formatNumber(att.Increment || '-'),
+                formatNumber(att.EarnedSalary || '-'),
+                formatNumber(att.TotalAllowances || '-'),
+                formatNumber((att.GrossSalary || 0) - (att.TotalOverTimeRs || 0)),
+                formatNumber(att.TotalOverTimeRs || '-'),
+                formatNumber(att.GrossSalary || '-'),
+                `${formatNumber(att.IncomeTax || '-')}\n${formatNumber(att.EOBIAmount || '-')}`,
+                advDed ? formatNumber(advDed) : '-',
+                formatNumber(att.Canteen || '-'),
+                formatNumber(att.TotalDeduction || '-'),
+                `${formatNumber(att.PPDays)}:${lw || 0}:${of || 0}:${formatNumber(att.HDDay || 0)}:${formatNumber(att.ABDays || 0)}`,
+                formatNumber(att.NetPayable || '-'),
+                emp.NIC || '-'
+            ];
         });
 
+        // Add department rows
+        allTableData.push(...rows);
 
+        // Department Totals for "PP LW OF HD AB"
+        const deptLW = deptTotals.Annual + deptTotals.Casual + deptTotals.Sick;
+        const deptOF = deptTotals.GHDays + deptTotals.FHDays + deptTotals.WEDays;
+        const deptPPCol = `${formatNumber(deptTotals.PPDays)} : ${deptLW || 0} : ${deptOF || 0} : ${formatNumber(deptTotals.HDDay)} : ${formatNumber(deptTotals.ABDays)}`;
 
+        // Add department totals row
+        allTableData.push([
+            { content: `Total for ${departmentName} : `, colSpan: 4, styles: { fontSize: 7, fontStyle: 'bold', halign: 'right', fillColor: '#e1f5fe', textColor: '#222' } },
+            formatNumber(deptTotals.BasicSalary || '-'),
+            formatNumber(deptTotals.Increment || '-'),
+            formatNumber(deptTotals.EarnedSalary || '-'),
+            formatNumber(deptTotals.Allowance || '-'),
+            formatNumber(deptTotals.GrossSalary || '-'),
+            formatNumber(deptTotals.OverTime || '-'),
+            formatNumber(deptTotals.SalaryWithAllow || '-'),
+            { content: `${formatNumber(deptTotals.IncomeTax || '-')}\n${formatNumber(deptTotals.EOBIAmount || '-')}`, styles: { cellWidth: 35, halign: 'right' } },
+            formatNumber(deptTotals.AdvDed || '-'),
+            formatNumber(deptTotals.Canteen || '-'),
+            formatNumber(deptTotals.TotalDeduction || '-'),
+            '',
+            // deptPPCol, // <-- Show department totals for PP LW OF HD AB
+            formatNumber(deptTotals.NetPayable || '-'),
+            '' // Signature
+        ]);
 
-
-
-
-
-        const footer = [[
-            { content: 'Department Totals:', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' , fillColor: '#e1f5fe', textColor: '#222' } },
-            formatNumber(totals.BasicSalary),
-            formatNumber(totals.Increment),
-            formatNumber(totals.earnedSalary),
-            formatNumber(totals.allowance),
-            formatNumber(totals.grossSalary),
-            formatNumber(totals.OverTime || 0),
-            formatNumber(totals.SalaryWithAllow || 0),
-            { content: `${formatNumber(totals.incomeTax)}\n${formatNumber(totals.eobi)}`, styles: { cellWidth: 35, halign: 'right' } },
-            // formatNumber(totals.eobi),
-            // formatNumber(totals.pf),
-            formatNumber(totals.incomeTax),
-            formatNumber(totals.healthInsur),
-            formatNumber(totals.canteen),
-            formatNumber(totals.lSale),
-            formatNumber(totals.advLoan),
-            formatNumber(totals.totalDeduction),
-            formatNumber(totals.netPayable),
-            '' // For signature column
-        ]];
-
-        allTableData.push(deptHeader, ...rows, ...footer); // Add department header, rows, and footer to main data
+        // Add to grand totals (same as before)
+        Object.keys(grandTotals).forEach(key => {
+            if (deptTotals[key] !== undefined) {
+                grandTotals[key] += deptTotals[key];
+            }
+        });
     }
 
+
     // Add grand totals row at the end
-    const grandTotalFooter = [[
-        { content: 'Grand Totals:', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right', fillColor: '#e1f5fe', textColor: '#222' } },
-        formatNumber(overallTotals.BasicSalary),
-        formatNumber(overallTotals.Increment),
-        formatNumber(overallTotals.earnedSalary),
-        formatNumber(overallTotals.allowance),
-        formatNumber(overallTotals.grossSalary),
-        formatNumber(overallTotals.OverTime || 0),
-        formatNumber(overallTotals.SalaryWithAllow || 0),
-        { content: `${formatNumber(overallTotals.incomeTax)}\n${formatNumber(overallTotals.eobi)}`, styles: { cellWidth: 35, halign: 'right' } },
-        // formatNumber(overallTotals.eobi),
-        // formatNumber(overallTotals.pf),
-        formatNumber(overallTotals.incomeTax),
-        formatNumber(overallTotals.healthInsur),
-        formatNumber(overallTotals.canteen),
-        formatNumber(overallTotals.lSale),
-        formatNumber(overallTotals.advLoan),
-        formatNumber(overallTotals.totalDeduction),
-        formatNumber(overallTotals.netPayable),
-        '' // For signature column
-    ]];
+    const grandLW = (grandTotals.Annual || 0) + (grandTotals.Casual || 0) + (grandTotals.Sick || 0);
+    const grandOF = (grandTotals.GHDays || 0) + (grandTotals.FHDays || 0) + (grandTotals.WEDays || 0);
+    const grandPPCol = `${formatNumber(grandTotals.PPDays)} : ${grandLW || 0} : ${grandOF || 0} : ${formatNumber(grandTotals.HDDay)} : ${formatNumber(grandTotals.ABDays)}`;
 
-    allTableData.push(...grandTotalFooter);
-
+    allTableData.push([
+        { content: 'Grand Totals:', colSpan: 4, styles: { fontStyle: 'bold', halign: 'right', fillColor: '#e1f5fe', textColor: '#222' } },
+        formatNumber(grandTotals.BasicSalary || '-'),
+        formatNumber(grandTotals.Increment || '-'),
+        formatNumber(grandTotals.EarnedSalary || '-'),
+        formatNumber(grandTotals.Allowance || '-'),
+        formatNumber(grandTotals.GrossSalary || '-'),
+        formatNumber(grandTotals.OverTime || '-'),
+        formatNumber(grandTotals.SalaryWithAllow || '-'),
+        { content: `${formatNumber(grandTotals.IncomeTax || '-')}\n${formatNumber(grandTotals.EOBIAmount || '-')}`, styles: { cellWidth: 35, halign: 'right' } },
+        formatNumber(grandTotals.AdvDed || '-'),
+        formatNumber(grandTotals.Canteen || '-'),
+        formatNumber(grandTotals.TotalDeduction || '-'),
+        '',
+        // grandPPCol, // <-- Show grand totals for PP LW OF HD AB
+        formatNumber(grandTotals.NetPayable || '-'),
+        '' // Signature
+    ]);
 
     autoTable(doc, {
-        startY: 70, // Start below the main title
-        head: [subHeaders], // This will be the recurring header for all pages
-        body: allTableData, // All department data + grand totals
+        startY: 70,
+        head: [subHeaders],
+        body: allTableData,
         theme: 'grid',
-        margin: { top: 75, bottom: 60, left: 10, right: 10 }, // Adjust top margin to account for main header
+        margin: { top: 75, bottom: 90, left: 10, right: 10 },
         columnStyles: commonColumnStyles,
         headStyles: {
-            // Apply subHeader styles directly here as well to ensure consistency
             fillColor: '#e1f5fe',
             textColor: '#222',
             halign: 'center',
             fontStyle: 'bold',
             fontSize: 6.5,
-            valign: 'middle',
+            valign: 'top',
             lineColor: [230, 230, 230],
             lineWidth: 0.5,
             cellPadding: 1.5,
         },
         bodyStyles: {
-            fontSize: 6.5,
-            halign: 'center', // Default for body cells
-            valign: 'middle',
+            fontSize: 6,
+            cellPadding: 2.5,
+            halign: 'center',
+            valign: 'top',
             lineColor: [220, 220, 220],
             lineWidth: 0.5,
         },
         footStyles: {
             fillColor: '#e1f5fe',
             textColor: '#222',
-            fontSize: 6.5,
+            fontSize: 6,
             halign: 'center',
-            valign: 'middle',
+            valign: 'top',
             lineColor: [230, 230, 230],
             lineWidth: 0.5,
         },
         didDrawPage: function (data) {
-            // Draw the main page header on every page
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(12);
             doc.text(`Salary Sheet for the Month (${selectedMonth})`, pageWidth / 2, 60, { align: 'center' });
@@ -288,24 +285,290 @@ const SalaryReportPreview = ({ allEmployees = [], reportHeading, dateFrom, dateT
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.text(`Print Date: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 130, 65);
-            // doc.text(`Print Time: ${new Date().toLocaleTimeString('en-GB')}`, pageWidth - 130, 60);
 
-            // Footer for Prepared/Checked/Approved
-            const y = doc.internal.pageSize.height - 40;
+            const y = doc.internal.pageSize.height - 60;
             doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
             doc.text('Prepared By', data.settings.margin.left + 50, y);
             doc.text('Checked By', pageWidth / 2, y, { align: 'center' });
             doc.text('Approved By', pageWidth - data.settings.margin.right - 50, y, { align: 'right' });
 
-            // Page numbers
             doc.setFontSize(8);
-            doc.text(`Page ${data.pageNumber} of ${data.pageCount}`, pageWidth - 100, pageHeight - 15, { align: 'right' });
-        }
+            const totalPages = doc.internal.getNumberOfPages();
+            doc.text(`Page ${data.pageNumber} of ${totalPages}`, pageWidth - 100, pageHeight - 15, { align: 'right' });
+          }
     });
 
     window.open(doc.output("bloburl"), "_blank");
 };
+  
+
+//   const handlePrintAllPDF = () => {
+//     if (!allEmployees.length) {
+//         console.warn("No employee data to print.");
+//         return;
+//     }
+
+//     const doc = new jsPDF('l', 'pt', 'letter');
+//     const pageWidth = doc.internal.pageSize.getWidth();
+//     const pageHeight = doc.internal.pageSize.getHeight();
+
+//     const selectedMonth = dateFrom
+//         ? dateFrom.slice(0, 7)
+//         : new Date().getFullYear() + '-' + (new Date().getMonth() + 1).toString().padStart(2, '0');
+
+//     const subHeaders = [
+//         "Srl #", "Code Name", "Hire Date", "Monthly Salary",
+//         "Incrmt", "Cal. Salary", "Alwns", "G Salary", "OT", "Tot Payable", "I-Tax/EOBI",
+//         "Adv Ded", "Canteen", "Tot Dedu", "PP LW OF HD AB", "Net Payable  Signature"
+//     ].map(text => ({
+//         content: text,
+//         styles: {
+//             fillColor: '#e1f5fe',
+//             textColor: '#222',
+//             halign: 'center',
+//             fontStyle: 'bold',
+//             fontSize: 6,
+//             valign: 'top',
+//             lineColor: [230, 230, 230],
+//             lineWidth: 0.5,
+//             cellPadding: 1.5,
+//         }
+//     }));
+
+//     // Define common column styles for all data rows and subheaders
+//       const commonColumnStyles = {
+//           0: { cellWidth: 15, halign: 'center' },  // Srl #
+//           1: { cellWidth: 90, halign: 'left' },    // Code Name
+//           2: { cellWidth: 45, halign: 'center' },  // Hire Date
+//           3: { cellWidth: 35, halign: 'right' },   // Monthly Salary
+//           4: { cellWidth: 35, halign: 'right' },   // Incrmt
+//           5: { cellWidth: 35, halign: 'right' },   // Cal. Salary
+//           6: { cellWidth: 35, halign: 'right' },   // Alwns
+//           7: { cellWidth: 35, halign: 'right' },   // G Salary
+//           8: { cellWidth: 35, halign: 'right' },   // OT
+//           9: { cellWidth: 35, halign: 'right' },   // Tot Payable
+//           10: { cellWidth: 35, halign: 'right' },  // I-Tax/EOBI
+//           11: { cellWidth: 35, halign: 'right' },  // Adv Ded
+//           12: { cellWidth: 35, halign: 'right' },  // Canteen
+//           13: { cellWidth: 35, halign: 'right' },  // Tot Dedu
+//           14: { cellWidth: 65, halign: 'center' }, // PP LW OF HD AB
+//           15: { cellWidth: 100, halign: 'left' },  // Net Payable
+//       };
+
+
+//     // Initialize totalGrossSalary and totalNetPayable outside the loop
+//     let overallTotals = {
+//         BasicSalary: 0,  earnedSalary: 0, arrears: 0, allowance: 0, grossSalary: 0,  OverTime: 0,  SalaryWithAllow: 0,
+//         eobi: 0, pf: 0, incomeTax: 0, healthInsur: 0, canteen: 0,
+//         lSale: 0, advLoan: 0, totalDeduction: 0, netPayable: 0
+//     };
+
+//     const allTableData = [];
+
+//     for (const departmentName in groupedByDepartment) {
+//         const departmentEmployees = groupedByDepartment[departmentName];
+
+//         const deptHeader = [{
+//             content: departmentName,
+//             colSpan: 21, // Span all 21 columns
+//             styles: {
+//                 halign: 'left',
+//                 fontSize: 9,
+//                 fillColor: '#F7EDD4',
+//                 textColor: '#222',
+//                 lineColor: [230, 230, 230],
+//                 lineWidth: 0.5,
+//                 cellPadding: 1.5,
+//                 fontStyle: 'bold',
+//             }
+//         }];
+
+//           const totals = departmentEmployees.reduce((acc, emp) => {
+//               const att = emp.Attendance?.[0] || {};
+
+//               acc.BasicSalary += parseFloat(att.BasicSalary || 0);
+//               acc.Increment += parseFloat(att.Increment || 0);
+//               acc.earnedSalary += parseFloat(att.EarnedSalary || 0);
+//               acc.allowance += parseFloat(att.TotalAllowances || 0);
+//               acc.grossSalary += parseFloat(att.GrossSalary || 0);
+//               acc.OverTime += parseFloat(att.OverTime || 0);
+//               acc.SalaryWithAllow += parseFloat(att.SalaryWithAllow || 0);
+//               acc.eobi += parseFloat(att.EOBIAmount || 0);
+//               acc.pf += parseFloat(att.PFAmount || 0);
+//               acc.incomeTax += parseFloat(att.IncomeTax || 0);
+//               acc.healthInsur += parseFloat(att.Deduction4 || 0);
+//               acc.canteen += parseFloat(att.Canteen || 0);
+//               acc.lSale += parseFloat(att.LocalSale || 0);
+//               acc.advLoan += parseFloat(att.Deduction3 || 0);
+//               acc.totalDeduction += parseFloat(att.TotalDeduction || 0);
+//               acc.netPayable += parseFloat(att.NetPayable || 0);
+
+//               return acc;
+//           }, {
+//               BasicSalary: 0, earnedSalary: 0, Increment: 0, allowance: 0, grossSalary: 0, OverTime: 0, SalaryWithAllow: 0,
+//               eobi: 0, pf: 0, incomeTax: 0, healthInsur: 0, canteen: 0,
+//               lSale: 0, advLoan: 0, totalDeduction: 0, netPayable: 0
+//           });
+
+//         // Accumulate to overall totals
+//         overallTotals.BasicSalary += totals.BasicSalary;
+//         overallTotals.Increment += totals.Increment;
+//         overallTotals.earnedSalary += totals.earnedSalary;
+//         overallTotals.allowance += totals.allowance;
+//         overallTotals.grossSalary += totals.grossSalary;
+//         overallTotals.OverTime += totals.OverTime || 0;
+//         overallTotals.SalaryWithAllow += totals.SalaryWithAllow || 0;
+//         overallTotals.eobi += totals.eobi;
+//         overallTotals.pf += totals.pf;
+//         overallTotals.incomeTax += totals.incomeTax;
+//         overallTotals.healthInsur += totals.healthInsur;
+//         overallTotals.canteen += totals.canteen;
+//         overallTotals.lSale += totals.lSale;
+//         overallTotals.advLoan += totals.advLoan;
+//         overallTotals.totalDeduction += totals.totalDeduction;
+//         overallTotals.netPayable += totals.netPayable;
+
+//         const rows = departmentEmployees.map((emp, idx) => {
+//           const doj = emp.DOJ ? new Date(emp.DOJ).toLocaleDateString('en-GB') : '';
+//           const att = emp.Attendance?.[0] || {};
+
+//           const incomeTax = parseFloat(att.IncomeTax || 0);
+//           const eobi = parseFloat(att.EOBIAmount || 0);
+//           const advDed = parseFloat(att.Deduction3 || 0);
+//           const canteen = parseFloat(att.Canteen || 0);
+//           const totalDedu = parseFloat(att.TotalDeduction || 0);
+
+//           return [
+//             idx + 1,
+//             `${emp.EmpCode || ''} - ${emp.EName?.replace(/\n/g, ' ') || ''} (${emp.Designation?.replace(/\n/g, ' ') || ''})`,
+//             doj,
+//             formatNumber(att.BasicSalary),
+//             formatNumber(att.Increment),
+//             formatNumber(att.EarnedSalary),
+//             formatNumber(att.TotalAllowances),
+//             formatNumber(att.GrossSalary),
+//             formatNumber(att.OverTime || 0),
+//             formatNumber(att.SalaryWithAllow || 0),
+//             `${incomeTax}\n${eobi}`,
+//             formatNumber(advDed),
+//             formatNumber(canteen),
+//             formatNumber(totalDedu),
+//             `${att.PPDays || '0'} : ${att.LW || '0'} : ${att.OF || '0'} : ${att.HDDays || '0'} : ${att.ABDays || '0'}`,
+//             formatNumber(att.NetPayable),
+//             emp.Signature || ''
+//           ];
+//         });
+
+//         const footer = [[
+//             { content: 'Department Totals:', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' , fillColor: '#e1f5fe', textColor: '#222' } },
+//             formatNumber(totals.BasicSalary),
+//             formatNumber(totals.Increment),
+//             formatNumber(totals.earnedSalary),
+//             formatNumber(totals.allowance),
+//             formatNumber(totals.grossSalary),
+//             formatNumber(totals.OverTime || 0),
+//             formatNumber(totals.SalaryWithAllow || 0),
+//             { content: `${formatNumber(totals.incomeTax)}\n${formatNumber(totals.eobi)}`, styles: { cellWidth: 35, halign: 'right' } },
+//             formatNumber(totals.incomeTax),
+//             formatNumber(totals.healthInsur),
+//             formatNumber(totals.canteen),
+//             formatNumber(totals.lSale),
+//             formatNumber(totals.advLoan),
+//             formatNumber(totals.totalDeduction),
+//             formatNumber(totals.netPayable),
+//             '' // For signature column
+//         ]];
+
+//         allTableData.push(deptHeader, ...rows, ...footer); // Add department header, rows, and footer to main data
+//     }
+
+//     // Add grand totals row at the end
+//     const grandTotalFooter = [[
+//         { content: 'Grand Totals:', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right', fillColor: '#e1f5fe', textColor: '#222' } },
+//         formatNumber(overallTotals.BasicSalary),
+//         formatNumber(overallTotals.Increment),
+//         formatNumber(overallTotals.earnedSalary),
+//         formatNumber(overallTotals.allowance),
+//         formatNumber(overallTotals.grossSalary),
+//         formatNumber(overallTotals.OverTime || 0),
+//         formatNumber(overallTotals.SalaryWithAllow || 0),
+//         { content: `${formatNumber(overallTotals.incomeTax)}\n${formatNumber(overallTotals.eobi)}`, styles: { cellWidth: 35, halign: 'right' } },
+//         formatNumber(overallTotals.incomeTax),
+//         formatNumber(overallTotals.healthInsur),
+//         formatNumber(overallTotals.canteen),
+//         formatNumber(overallTotals.lSale),
+//         formatNumber(overallTotals.advLoan),
+//         formatNumber(overallTotals.totalDeduction),
+//         formatNumber(overallTotals.netPayable),
+//         '' // For signature column
+//     ]];
+
+//     allTableData.push(...grandTotalFooter);
+
+
+//     autoTable(doc, {
+//         startY: 70, // Start below the main title
+//         head: [subHeaders], // This will be the recurring header for all pages
+//         body: allTableData, // All department data + grand totals
+//         theme: 'grid',
+//         margin: { top: 75, bottom: 60, left: 10, right: 10 }, // Adjust top margin to account for main header
+//         columnStyles: commonColumnStyles,
+//         headStyles: {
+//             // Apply subHeader styles directly here as well to ensure consistency
+//             fillColor: '#e1f5fe',
+//             textColor: '#222',
+//             halign: 'center',
+//             fontStyle: 'bold',
+//             fontSize: 6.5,
+//             valign: 'top',
+//             lineColor: [230, 230, 230],
+//             lineWidth: 0.5,
+//             cellPadding: 1.5,
+//         },
+//         bodyStyles: {
+//             fontSize: 6.5,
+//             halign: 'center', // Default for body cells
+//             valign: 'top',
+//             lineColor: [220, 220, 220],
+//             lineWidth: 0.5,
+//         },
+//         footStyles: {
+//             fillColor: '#e1f5fe',
+//             textColor: '#222',
+//             fontSize: 6.5,
+//             halign: 'center',
+//             valign: 'top',
+//             lineColor: [230, 230, 230],
+//             lineWidth: 0.5,
+//         },
+//         didDrawPage: function (data) {
+//             // Draw the main page header on every page
+//             doc.setFont('helvetica', 'bold');
+//             doc.setFontSize(12);
+//             doc.text(`Salary Sheet for the Month (${selectedMonth})`, pageWidth / 2, 60, { align: 'center' });
+
+//             doc.setFontSize(9);
+//             doc.setFont('helvetica', 'normal');
+//             doc.text(`Print Date: ${new Date().toLocaleDateString('en-GB')}`, pageWidth - 130, 65);
+//             // doc.text(`Print Time: ${new Date().toLocaleTimeString('en-GB')}`, pageWidth - 130, 60);
+
+//             // Footer for Prepared/Checked/Approved
+//             const y = doc.internal.pageSize.height - 40;
+//             doc.setFontSize(9);
+//             doc.setFont('helvetica', 'normal');
+//             doc.text('Prepared By', data.settings.margin.left + 50, y);
+//             doc.text('Checked By', pageWidth / 2, y, { align: 'center' });
+//             doc.text('Approved By', pageWidth - data.settings.margin.right - 50, y, { align: 'right' });
+
+//             // Page numbers
+//             doc.setFontSize(8);
+//             doc.text(`Page ${data.pageNumber} of ${data.pageCount}`, pageWidth - 100, pageHeight - 15, { align: 'right' });
+//         }
+//     });
+
+//     window.open(doc.output("bloburl"), "_blank");
+// };
 
 
   // Let's create the HTML version of the headers to match the PDF.
