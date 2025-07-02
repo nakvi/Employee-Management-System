@@ -2,8 +2,6 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 //Dashboard
-import DashboardCrm from "../pages/DashboardCrm";
-import DashboardEcommerce from "../pages/DashboardEcommerce";
 import Dashboard from "../pages/Dashboard/Index";
 //login
 import Login from "../pages/Authentication/Login";
@@ -13,7 +11,6 @@ import Register from "../pages/Authentication/Register";
 
 // User Profile
 import UserProfile from "../pages/Authentication/user-profile";
-import DashboardBlog from "../pages/DashboardBlog";
 // My setup form
 import Location from "../pages/Setup/Location/Location";
 import DepartmentGroup from "../pages/Setup/DepartmentGroup/DepartmentGroup";
@@ -81,7 +78,9 @@ import MonthlyAttSheetPreview from "../Components/pdfsPreviews/MonthlyAttSheetPr
 import MonthlyAttSummaryPreview from "../Components/pdfsPreviews/MonthlyAttSummaryPreview";
 import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLeaveListPreview";
 // Salary reports 
-import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
+// import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
+import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview";
+import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
 
 
 const authProtectedRoutes = [
@@ -92,7 +91,9 @@ const authProtectedRoutes = [
   { path: "/monthly-attendance-summary-preview", component: <MonthlyAttSummaryPreview /> },
   { path: "/monthly-attendance-leave-list-preview", component: <MonthlyAttLeaveListPreview /> },
   // Salary reports
-  { path: "/monthly-attendance-salary-sheet-preview", component: <MonthlyAttSalarySheetPreview /> },
+  // { path: "/monthly-attendance-salary-report-preview", component: <MonthlyAttSalarySheetPreview /> },
+  { path: "/salary-report-preview", component: <SalaryReportPreview /> },
+  { path: "/salary-summary-report-preview", component: <SalarySummaryReportPreview /> },
 
   // daily att reports 
   { path: "/report-preview", component: <ReportsPreview /> },
@@ -173,14 +174,9 @@ const authProtectedRoutes = [
 
 
 
-  // Attendance routes setup
   // My Dashboard
   { path: "/dashboard",component: <Dashboard/>},
 
-  { path: "/dashboard-crm", component: <DashboardCrm /> },
-  // { path: "/dashboard", component: <DashboardEcommerce /> },
-  { path: "/index", component: <DashboardEcommerce /> },
-  { path: "/dashboard-blog", component: <DashboardBlog /> },
 
   //User Profile
   { path: "/profile", component: <UserProfile /> },

@@ -452,7 +452,7 @@ const SalaryAllowanceDeduction = () => {
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={2}>
+                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="ETypeID" className="form-label">
                               E-Type
@@ -473,7 +473,9 @@ const SalaryAllowanceDeduction = () => {
                               ))}
                             </select>
                             {formik.touched.ETypeID && formik.errors.ETypeID ? (
-                              <div className="text-danger">{formik.errors.ETypeID}</div>
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -489,10 +491,15 @@ const SalaryAllowanceDeduction = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee
-                                .filter((emp) => emp.ETypeID === parseInt(formik.values.ETypeID))
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
                                 .map((item) => (
                                   <option key={item.EmpID} value={item.EmpID}>
                                     {item.EName}
@@ -500,7 +507,9 @@ const SalaryAllowanceDeduction = () => {
                                 ))}
                             </select>
                             {formik.touched.EmpID && formik.errors.EmpID ? (
-                              <div className="text-danger">{formik.errors.EmpID}</div>
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
                             ) : null}
                           </div>
                         </Col>

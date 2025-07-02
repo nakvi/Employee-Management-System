@@ -34,6 +34,7 @@ import {
   updateLeave,
 } from "../../../slices/Attendance/leave/thunk";
 import config from "../../../config";
+import PreviewCardHeaderUpload from "../../../Components/Common/PreviewCardHeaderUpload";
 
 const Leaves = () => {
   const dispatch = useDispatch();
@@ -440,7 +441,7 @@ document.title = "Leave | EMS";
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader title="Leave" onCancel={handleCancel} />
+                  <PreviewCardHeaderUpload title="Leave" onCancel={handleCancel} />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row>
