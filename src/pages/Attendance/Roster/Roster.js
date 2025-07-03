@@ -382,7 +382,7 @@ const Roster = () => {
                         </Col>
                       </Row>
                       <Row className="gy-4">
-                        <Col xxl={3} md={3}>
+                        {/* <Col xxl={3} md={3}>
                           <div>
                             <Label htmlFor="empCode" className="form-label">
                               Emp-Code
@@ -396,15 +396,15 @@ const Roster = () => {
                               onChange={handleInputChange}
                             />
                           </div>
-                        </Col>
-                        <Col xxl={3} md={3}>
+                        </Col> */}
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="ShiftID" className="form-label">
                               Shift
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              id="ShiftID"
+                              id="ShiftID"  
                               name="ShiftID"
                               value={formData.ShiftID}
                               onChange={handleInputChange}
