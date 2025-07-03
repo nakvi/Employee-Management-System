@@ -25,7 +25,6 @@ const PaymentPlan = () => {
   const { employeeType } = useSelector((state) => state.EmployeeType || {});
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
-  console.log("11",paymentPlan);
 
   // Fetch employee types and departments on mount
   useEffect(() => {

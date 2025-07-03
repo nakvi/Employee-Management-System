@@ -39,9 +39,7 @@ import AttendanceEmployee from "../pages/Attendance/AttendanceEmployee/Attendanc
 import OTEntry from "../pages/Attendance/OTEntry/OTEntry";
 import DailyAttendanceReport from "../pages/Reports/DailyAttendanceReport/DailyAttendanceReport";
 import MonthlyAttendanceReport from "../pages/Reports/MonthlyAttendanceReport/MonthlyAttendanceReport";
-import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
 import EmployeeReport from "../pages/Employee/Reports/EmployeeReport";
-import DailyAttendancePosting from "../pages/Posting/DailyAttendance/DailyAttendance";
 import EmployeeLetter from "../pages/Employee/Letters/EmployeeLetter";
 import Roster from "../pages/Attendance/Roster/Roster";
 import SalaryPosting from "../pages/Posting/SalaryPosting/SalaryPosting";
@@ -81,6 +79,9 @@ import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLea
 // import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
 import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview";
 import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
+// Posting
+import AttendancePosting from "../pages/Posting/AttendancePosting/AttendancePosting";
+import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
 
 
 const authProtectedRoutes = [
@@ -145,7 +146,7 @@ const authProtectedRoutes = [
   { path: "/roster", component: <Roster/>},
   { path: "/backdate-entry", component: <BackdateEntry/>},
   // Posting
-  { path: "/daily-attendance-posting", component: <DailyAttendancePosting /> },
+  { path: "/attendance-posting", component: <AttendancePosting /> },
   { path: "/salary-posting", component: <SalaryPosting /> },
 
 
