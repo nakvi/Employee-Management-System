@@ -39,9 +39,7 @@ import AttendanceEmployee from "../pages/Attendance/AttendanceEmployee/Attendanc
 import OTEntry from "../pages/Attendance/OTEntry/OTEntry";
 import DailyAttendanceReport from "../pages/Reports/DailyAttendanceReport/DailyAttendanceReport";
 import MonthlyAttendanceReport from "../pages/Reports/MonthlyAttendanceReport/MonthlyAttendanceReport";
-import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
 import EmployeeReport from "../pages/Employee/Reports/EmployeeReport";
-import DailyAttendancePosting from "../pages/Posting/DailyAttendance/DailyAttendance";
 import EmployeeLetter from "../pages/Employee/Letters/EmployeeLetter";
 import Roster from "../pages/Attendance/Roster/Roster";
 import SalaryPosting from "../pages/Posting/SalaryPosting/SalaryPosting";
@@ -82,8 +80,11 @@ import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLea
 import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview";
 import SalaryReportTwoPreview from "../Components/pdfsPreviews/SalaryReportTwoPreview";
 import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
-import SalarySlipPreview from "../Components/pdfsPreviews/SalarySlipPreview";
 
+import AttendancePosting from "../pages/Posting/AttendancePosting/AttendancePosting";
+import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
+
+import SalarySlipPreview from "../Components/pdfsPreviews/SalarySlipPreview";
 
 
 const authProtectedRoutes = [
@@ -151,7 +152,7 @@ const authProtectedRoutes = [
   { path: "/roster", component: <Roster/>},
   { path: "/backdate-entry", component: <BackdateEntry/>},
   // Posting
-  { path: "/daily-attendance-posting", component: <DailyAttendancePosting /> },
+  { path: "/attendance-posting", component: <AttendancePosting /> },
   { path: "/salary-posting", component: <SalaryPosting /> },
 
 

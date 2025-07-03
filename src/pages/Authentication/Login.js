@@ -25,7 +25,7 @@ const Login = () => {
 
   const { error, loading, errorMsg } = useSelector(selectLoginData);
   const [passwordShow, setPasswordShow] = useState(false);
-    const [userLogin, setUserLogin] = useState([]);
+  const [userLogin, setUserLogin] = useState([]);
 
   const validation = useFormik({
     enableReinitialize: true,
@@ -34,9 +34,9 @@ const Login = () => {
     //   password: "",
     // },
     initialValues: {
-            email: userLogin.email || "admin@themesbrand.com" || '',
-            password: userLogin.password || "123456" || '',
-        },
+      email: userLogin.email || "admin@themesbrand.com" || '',
+      password: userLogin.password || "123456" || '',
+    },
     validationSchema: Yup.object({
       email: Yup.string().email("Invalid email format").required("Please Enter Your Email"),
       password: Yup.string().required("Please Enter Your Password"),
@@ -138,7 +138,7 @@ const Login = () => {
                             </button>
                           </div>
                         </div>
-                        <div className="form-check">
+                        {/* <div className="form-check">
                           <Input
                             className="form-check-input"
                             type="checkbox"
@@ -148,7 +148,7 @@ const Login = () => {
                           <Label className="form-check-label" htmlFor="auth-remember-check">
                             Remember me
                           </Label>
-                        </div>
+                        </div> */}
                         <div className="mt-4">
                           <Button
                             color="success"

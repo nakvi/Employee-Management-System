@@ -398,9 +398,9 @@ const Navdata = () => {
       },
       subItems: [
         {
-          id: "dailyAttendance",
-          label: "Daily Attendance",
-          link: "/daily-attendance-posting",
+          id: "attendancePosting",
+          label: "Attendance Posting",
+          link: "/attendance-posting",
           parentId: "posting",
         },
         // {
