@@ -82,6 +82,7 @@ import MonthlyAttSummaryPreview from "../Components/pdfsPreviews/MonthlyAttSumma
 import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLeaveListPreview";
 // Salary reports 
 // import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
+import SalaryHistoryPreview from "../Components/pdfsPreviews/SalaryHistoryPreview";
 import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview";
 import SalaryReportTwoPreview from "../Components/pdfsPreviews/SalaryReportTwoPreview";
 import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
@@ -98,6 +99,7 @@ const authProtectedRoutes = [
   { path: "/monthly-attendance-leave-list-preview", component: <MonthlyAttLeaveListPreview /> },
   // Salary reports
   // { path: "/monthly-attendance-salary-report-preview", component: <MonthlyAttSalarySheetPreview /> },
+  { path: "/salary-history-preview", component: <SalaryHistoryPreview /> },
   { path: "/salary-report-preview", component: <SalaryReportPreview /> },
   { path: "/salary-report-two-preview", component: <SalaryReportTwoPreview /> },
   { path: "/salary-summary-report-preview", component: <SalarySummaryReportPreview /> },

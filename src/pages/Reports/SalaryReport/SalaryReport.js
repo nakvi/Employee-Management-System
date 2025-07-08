@@ -5,6 +5,7 @@ import {
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
 import MonthlyAttSalarySheetPreview from "../../../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
 import SalaryReportPreview from "../../../Components/pdfsPreviews/SalaryReportPreview";
+import SalaryHistoryPreview from "../../../Components/pdfsPreviews/SalaryHistoryPreview";
 import SalaryReportTwoPreview from "../../../Components/pdfsPreviews/SalaryReportTwoPreview";
 import SalarySummaryReportPreview from "../../../Components/pdfsPreviews/SalarySummaryReportPreview";
 import SalarySlipPreview from "../../../Components/pdfsPreviews/SalarySlipPreview";
@@ -83,17 +84,25 @@ function getLastDayOfMonth(dateStr) {
       if (values.DateFrom && values.DateTo) {
         const from = new Date(values.DateFrom);
         const to = new Date(values.DateTo);
-        if (
-          from.getFullYear() !== to.getFullYear() ||
-          from.getMonth() !== to.getMonth() ||
-          to < from
-        ) {
-          errors.DateTo = "DateTo must be in the same month as DateFrom.";
+
+        if (values.VType === "SalaryHistory1") {
+          if (from > to) {
+            errors.DateTo = "DateFrom must not be after DateTo.";
+          }
+        } else {
+          if (
+            from.getFullYear() !== to.getFullYear() ||
+            from.getMonth() !== to.getMonth() ||
+            to < from
+          ) {
+            errors.DateTo = "DateTo must be in the same month as DateFrom.";
+          }
         }
       }
       return errors;
     },
     onSubmit: async (values) => {
+      //  console.log("Formik Submit Values:", values);
       const selectedFilters = {
         UserID: 1,
         LoginComapnyID: 1,
@@ -108,7 +117,7 @@ function getLastDayOfMonth(dateStr) {
   });
 useEffect(() => {
   if (
-    formik.values.VType !== "SalaryHistory" &&
+    formik.values.VType !== "SalaryHistory1" &&
     formik.values.DateFrom
   ) {
     const lastDay = getLastDayOfMonth(formik.values.DateFrom);
@@ -122,6 +131,7 @@ useEffect(() => {
   // eslint-disable-next-line
 }, [formik.values.DateFrom, formik.values.VType]);
  
+// console.log("Formik Values:", formik.values);
   // Params builder
   const generateQueryString = (filters) => {
     // EmployeeIDList
@@ -143,6 +153,19 @@ useEffect(() => {
     if (filters.SalaryBankID) cWhereArr.push(`AND A."CompanyBankID" = ${filters.SalaryBankID}`);
     if (filters.WithOverTime) cWhereArr.push(`AND A."HaveOT" = 1`);
     if (filters.IsManager) cWhereArr.push(`AND A."IsManager" = 1`);
+    // if (filters.VType === "SalarySheet") {
+    //   cWhereArr.push(`AND A."isStopsalary" = 0 AND A."isActive" = 1`);
+    // }
+    // if (filters.VType === "FinalSettlement") {
+    //   cWhereArr.push(`AND A.isstopsalary=0 AND A.isactive=0 AND A.dol BETWEEN '${filters.DateFrom}' AND '${filters.DateTo}'`);
+    // }
+    //  if (filters.VType === "StopSalary") {
+    //   cWhereArr.push(`AND A."isStopsalary" = 1`);
+    // }
+    //  if (filters.VType === "SalaryAll") {
+    //   cWhereArr.push(`AND A."isStopsalary" = 0`);
+    // }
+
     let cWhere = cWhereArr.join(" ");
 
     return { employeeIDList, cWhere };
@@ -156,8 +179,10 @@ useEffect(() => {
       `DateFrom=${filters.DateFrom || ""}`,
       `DateTo=${filters.DateTo || ""}`,
       `DeptIDs=${filters.DeptID || ""}`,
-      `EmployeeIDList=${encodeURIComponent(employeeIDList)}`,
-      `cWhere=${encodeURIComponent(cWhere)}`,
+      // `EmployeeIDList=${encodeURIComponent(employeeIDList)}`,
+      // `cWhere=${encodeURIComponent(cWhere)}`,
+      `EmployeeIDList=${employeeIDList}`,
+      `cWhere=${cWhere}`,
       `CompanyID=${filters.LoginComapnyID || 1}`,
       `LocationID=${filters.LocationID || 0}`,
       `ETypeID=${filters.EType || 0}`,
@@ -172,6 +197,9 @@ useEffect(() => {
     let apiUrl = "";
     switch (filters.VType) {
       case "SalarySheet":
+      case "FinalSettlement":
+      case "StopSalary":
+      case "SalaryAll":
         apiUrl = `${config.api.API_URL}rptMonthSalarySheet?${params}`;
         break;
       case "SummarySheet":
@@ -180,8 +208,11 @@ useEffect(() => {
        case "PaymentSlipEnglish":
         apiUrl = `${config.api.API_URL}rptMonthSalarySheet?${params}`;
         break;
-      // ...add more cases as needed...
+      case "SalaryHistory1":
+        apiUrl = `${config.api.API_URL}RptSalaryEmployee?${params}`;
+        break;
       default:
+          console.log("Unknown VType:", filters.VType); // <-- Add this
         setTableData([]);
         return;
     }
@@ -190,7 +221,7 @@ useEffect(() => {
     try {
       const response = await fetch(apiUrl);
       const data = await response.json();
-      console.log("API Response:", data);
+      // console.log("API Response:", data);
       if (filters.VType === "SummarySheet" && data && data.length > 0 && data[0].Attendance) {
         // If it's the "SummarySheet" report AND the data is wrapped inside 'Attendance'
         setTableData(data[0].Attendance); // Take ONLY the list from inside 'Attendance'
@@ -223,13 +254,16 @@ function groupByEmployee(data) {
   return Object.values(grouped);
 }
 const employeeCards = groupByEmployee(tableData);
-console.log("Grouped Employee Cards:", employeeCards);
+// console.log("Grouped Employee Cards:", employeeCards);
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
           {/* {loading && <p>Loading...</p>}
           {error && <p className="text-danger">{error}</p>} */}
+            {formik.errors.DateTo && (
+              <div style={{ color: "red" }}>{formik.errors.DateTo}</div>
+            )}
           <Row>
             <Col lg={12}>
               <Card>
@@ -417,7 +451,7 @@ console.log("Grouped Employee Cards:", employeeCards);
                             const val = e.target.value;
                             formik.setFieldValue("DateTo", getLastDayOfMonth(val + "-01"));
                           }}
-                          readOnly={formik.values.VType !== "SalaryHistory"}
+                          readOnly={formik.values.VType !== "SalaryHistory1"}
                         />
                         </div>
                       </Col>
@@ -653,14 +687,14 @@ console.log("Grouped Employee Cards:", employeeCards);
                             <Input
                               type="radio"
                               className="form-check-input"
-                              id="SalaryHistory"
+                              id="SalaryHistory1"
                               name="VType"
-                              value="SalaryHistory"
-                              checked={formik.values.VType === "SalaryHistory"}
+                              value="SalaryHistory1"
+                              checked={formik.values.VType === "SalaryHistory1"}
                               onChange={formik.handleChange}
                             />
-                            <Label className="form-check-label" htmlFor="SalaryHistory">
-                              Salary History
+                            <Label className="form-check-label" htmlFor="SalaryHistory1">
+                              Salary History 1
                             </Label>
                           </div>
                         </Col>
@@ -968,7 +1002,7 @@ console.log("Grouped Employee Cards:", employeeCards);
          <Row>
           {showFilters && (
              <Col lg={12}>
-                {showTable && filters.VType === "SalarySheet" && (
+                {showTable && (filters.VType === "SalarySheet" || filters.VType === "FinalSettlement" || filters.VType === "StopSalary" || filters.VType === "SalaryAll") && (
                     Array.isArray(tableData) && tableData.length > 0 ? (
                         // <SalaryReportTwoPreview
                         <SalaryReportPreview
@@ -1006,6 +1040,18 @@ console.log("Grouped Employee Cards:", employeeCards);
                     ) : (
                         <div className="text-center text-muted">No data found.</div>
                     )
+                )}
+                {showTable && filters.VType === "SalaryHistory1" && (
+                  Array.isArray(tableData) && tableData.length > 0 ? (
+                    <SalaryHistoryPreview
+                      data={employeeCards}
+                      reportHeading={filters.ReportHeading}
+                      dateFrom={filters.DateFrom}
+                      dateTo={filters.DateTo}
+                    />
+                  ) : (
+                    <div className="text-center text-muted">No data found.</div>
+                  )
                 )}
             </Col>
             // <Col lg={12}>
