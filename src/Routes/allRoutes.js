@@ -87,6 +87,9 @@ import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview"
 import SalaryReportTwoPreview from "../Components/pdfsPreviews/SalaryReportTwoPreview";
 import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
 import SalarySlipPreview from "../Components/pdfsPreviews/SalarySlipPreview";
+import SalaryOverTimeSheetPreview from "../Components/pdfsPreviews/SalaryOverTimeSheetPreview";
+import SalaryOverTimeSummaryReportPreview from "../Components/pdfsPreviews/SalaryOverTimeSummaryReportPreview";
+import SalaryFinalSettlementPreview from "../Components/pdfsPreviews/SalaryFinalSettlementPreview";
 
 
 
@@ -104,6 +107,9 @@ const authProtectedRoutes = [
   { path: "/salary-report-two-preview", component: <SalaryReportTwoPreview /> },
   { path: "/salary-summary-report-preview", component: <SalarySummaryReportPreview /> },
   { path: "/salary-slip-preview", component: <SalarySlipPreview /> },
+  { path: "/salary-over-time-sheet-preview", component: <SalaryOverTimeSheetPreview /> },
+  { path: "/salary-over-time-summary-report-preview", component: <SalaryOverTimeSummaryReportPreview /> },
+  { path: "/salary-final-settlement-preview", component: <SalaryFinalSettlementPreview /> },
 
 
   // daily att reports 

@@ -65,10 +65,50 @@ const SalaryHistoryPreview = ({ data = [], reportHeading, dateFrom, dateTo }) =>
     }
   );
 
-  // PDF Export
-  const handlePrintPDF = () => {
-    const doc = new jsPDF("p", "pt", "a4");
-    const pageWidth = doc.internal.pageSize.getWidth();
+const handlePrintPDF = () => {
+  const doc = new jsPDF("l", "pt", "letter");
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  data.forEach((employee, empIdx) => {
+    const attendance = employee.Attendance || [];
+
+    // Totals for this employee
+    const totals = attendance.reduce(
+      (acc, att) => {
+        acc.salaryWithAllow += Number(att.SalaryWithAllow || 0);
+        acc.earnedSalary += Number(att.EarnedSalary || 0);
+        acc.totalAllowances += Number(att.TotalAllowances || 0);
+        acc.grossSalary += Number(att.GrossSalary || 0);
+        acc.incomeTax += Number(att.IncomeTax || 0);
+        acc.eobiAmount += Number(att.EOBIAmount || 0);
+        acc.deduction += Number(att.Deduction || 0);
+        acc.deduction1 += Number(att.Deduction1 || 0);
+        const dedAmount =
+          Number(att.IncomeTax || 0) +
+          Number(att.EOBIAmount || 0) +
+          Number(att.Deduction || 0) +
+          Number(att.Deduction1 || 0);
+        acc.otherDeductions += Math.max(0, Number(att.TotalDeduction || 0) - dedAmount);
+        acc.totalDeduction += Number(att.TotalDeduction || 0);
+        acc.netPayable += Number(att.NetPayable || 0);
+        return acc;
+      },
+      {
+        salaryWithAllow: 0,
+        earnedSalary: 0,
+        totalAllowances: 0,
+        grossSalary: 0,
+        incomeTax: 0,
+        eobiAmount: 0,
+        deduction: 0,
+        deduction1: 0,
+        otherDeductions: 0,
+        totalDeduction: 0,
+        netPayable: 0,
+      }
+    );
+
+    if (empIdx > 0) doc.addPage();
 
     // Header
     doc.setFont("helvetica", "bold");
@@ -105,14 +145,14 @@ const SalaryHistoryPreview = ({ data = [], reportHeading, dateFrom, dateTo }) =>
         ],
       ],
       theme: "grid",
-      styles: { fontSize: 7.5, cellPadding: 3, valign: "middle" },
+      styles: { fontSize: 7, cellPadding: 2, valign: "middle" },
       headStyles: { fillColor: "#F7EDD4", textColor: 0, },
       bodyStyles: { lineColor: [230, 230, 230], lineWidth: 0.5 },
       columnStyles: {
-        0: { fontStyle: "bold" },
-        2: { fontStyle: "bold" },
-        4: { fontStyle: "bold" },
-        6: { fontStyle: "bold" },
+        0: { fontSize: 7, fontStyle: "bold" },
+        2: { fontSize: 7, fontStyle: "bold" },
+        4: { fontSize: 7, fontStyle: "bold" },
+        6: { fontSize: 7, fontStyle: "bold" },
       },
       margin: { left: 20, right: 20 },
     });
@@ -170,12 +210,12 @@ const SalaryHistoryPreview = ({ data = [], reportHeading, dateFrom, dateTo }) =>
           "Cal Salary",
           "Allowances",
           "Payable",
-          "ITax",
+          "I - Tax",
           "EOBI",
           "Advance",
           "Loan",
-          "Other Deductions",
-          "Total Deductions",
+          "Others",
+          "Tot Deduct",
           "NetPayable",
         ],
       ],
@@ -202,25 +242,180 @@ const SalaryHistoryPreview = ({ data = [], reportHeading, dateFrom, dateTo }) =>
         12: { halign: "right" },
       },
       margin: { left: 20, right: 20 },
-      // tableWidth: "auto",
     });
+  });
 
-    // Footer
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const totalPages = doc.internal.getNumberOfPages();
-    const marginLeft = 10;
-    const marginRight = 10;
-    for (let i = 1; i <= totalPages; i++) {
-      doc.setPage(i);
-      doc.setFontSize(8);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Page ${i} of ${totalPages}`, pageWidth - marginRight - 10, pageHeight - 15, { align: 'right' });
-    }
+  // Footer (page numbers)
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const totalPages = doc.internal.getNumberOfPages();
+  const marginRight = 10;
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Page ${i} of ${totalPages}`, pageWidth - marginRight - 10, pageHeight - 15, { align: 'right' });
+  }
 
-    doc.setPage(totalPages);
+  doc.setPage(totalPages);
 
-    window.open(doc.output("bloburl"), "_blank");
-  };
+  window.open(doc.output("bloburl"), "_blank");
+};
+  // PDF Export
+  // const handlePrintPDF = () => {
+  //   const doc = new jsPDF("l", "pt", "letter");
+  //   const pageWidth = doc.internal.pageSize.getWidth();
+
+  //   // Header
+  //   doc.setFont("helvetica", "bold");
+  //   doc.setFontSize(14);
+  //   doc.text("Zeta Solutions Pvt Ltd", 20, 40);
+  //   doc.setFontSize(12);
+  //   doc.text("Employee Salary History", 20, 60);
+
+  //   // Department
+  //   doc.setFontSize(11);
+  //   doc.setTextColor(200, 0, 0);
+  //   doc.text(
+  //     employee.Department ? employee.Department.toUpperCase() : "",
+  //     20,
+  //     80
+  //   );
+  //   doc.setTextColor(0, 0, 0);
+
+  //   // Employee Info Row
+  //   autoTable(doc, {
+  //     startY: 90,
+  //     head: [
+  //       [
+  //         "E-Code",
+  //         employee.EmpCode || "",
+  //         "Name",
+  //         employee.EName || "",
+  //         "Designation",
+  //         employee.Designation || "",
+  //         "D O J",
+  //         employee.DOJ
+  //           ? new Date(employee.DOJ).toLocaleDateString("en-GB")
+  //           : "",
+  //       ],
+  //     ],
+  //     theme: "grid",
+  //     styles: { fontSize: 7, cellPadding: 2, valign: "middle" },
+  //     headStyles: { fillColor: "#F7EDD4", textColor: 0, },
+  //     bodyStyles: { lineColor: [230, 230, 230], lineWidth: 0.5 },
+  //     columnStyles: {
+  //       0: { fontSize: 7, fontStyle: "bold" },
+  //       2: { fontSize: 7, fontStyle: "bold" },
+  //       4: { fontSize: 7, fontStyle: "bold" },
+  //       6: { fontSize: 7, fontStyle: "bold" },
+  //     },
+  //     margin: { left: 20, right: 20 },
+  //   });
+
+  //   // Table Data
+  //   const tableBody = attendance.map((att, idx) => {
+  //     const dedAmount =
+  //       Number(att.IncomeTax || 0) +
+  //       Number(att.EOBIAmount || 0) +
+  //       Number(att.Deduction || 0) +
+  //       Number(att.Deduction1 || 0);
+  //     const othDed = Math.max(0, Number(att.TotalDeduction || 0) - dedAmount);
+
+  //     return [
+  //       idx + 1,
+  //       getMonthYear(att.VDate),
+  //       formatNumber(att.SalaryWithAllow || '-'),
+  //       formatNumber(att.EarnedSalary || '-'),
+  //       formatNumber(att.TotalAllowances || '-'),
+  //       formatNumber(att.GrossSalary || '-'),
+  //       formatNumber(att.IncomeTax || '-'),
+  //       formatNumber(att.EOBIAmount || '-'),
+  //       formatNumber(att.Deduction || '-'),
+  //       formatNumber(att.Deduction1 || '-'),
+  //       formatNumber(othDed || '-'),
+  //       formatNumber(att.TotalDeduction || '-'),
+  //       formatNumber(att.NetPayable || '-'),
+  //     ];
+  //   });
+
+  //   // Totals Row
+  //   const totalsRow = [
+  //     { content: "Employee Totals :", colSpan: 2, styles: { halign: "right", fontStyle: "bold" } },
+  //     formatNumber(totals.salaryWithAllow || '-'),
+  //     formatNumber(totals.earnedSalary || '-'),
+  //     formatNumber(totals.totalAllowances || '-'),
+  //     formatNumber(totals.grossSalary || '-'),
+  //     formatNumber(totals.incomeTax || '-'),
+  //     formatNumber(totals.eobiAmount || '-'),
+  //     formatNumber(totals.deduction || '-'),
+  //     formatNumber(totals.deduction1 || '-'),
+  //     formatNumber(totals.otherDeductions || '-'),
+  //     formatNumber(totals.totalDeduction || '-'),
+  //     formatNumber(totals.netPayable || '-'),
+  //   ];
+
+  //   // Table
+  //   autoTable(doc, {
+  //     startY: doc.lastAutoTable.finalY + 0,
+  //     head: [
+  //       [
+  //         "Srl#",
+  //         "Month",
+  //         "Monthly Salary",
+  //         "Cal Salary",
+  //         "Allowances",
+  //         "Payable",
+  //         "I - Tax",
+  //         "EOBI",
+  //         "Advance",
+  //         "Loan",
+  //         "Others",
+  //         "Tot Deduct",
+  //         "NetPayable",
+  //       ],
+  //     ],
+  //     body: tableBody,
+  //     foot: [totalsRow],
+  //     theme: "grid",
+  //     styles: { fontSize: 7, cellPadding: 2, valign: "top", lineColor: [230, 230, 230], lineWidth: 0.5, overflow: 'visible', whiteSpace: 'nowrap', cellWidth: 'auto' },
+  //     headStyles: { fillColor: "#e0f7fa", halign: "center", textColor: 0, lineColor: [230, 230, 230], lineWidth: 0.5 },
+  //     bodyStyles: { lineColor: [230, 230, 230], lineWidth: 0.5 },
+  //     footStyles: { fillColor: "#e0f7fa", fontStyle: "bold", halign: "right", textColor: 0, lineColor: [230, 230, 230], lineWidth: 0.5 },
+  //     columnStyles: {
+  //       0: { halign: "center" },
+  //       1: { halign: "center" },
+  //       2: { halign: "right" },
+  //       3: { halign: "right" },
+  //       4: { halign: "right" },
+  //       5: { halign: "right" },
+  //       6: { halign: "right" },
+  //       7: { halign: "right" },
+  //       8: { halign: "right" },
+  //       9: { halign: "right" },
+  //       10: { halign: "right" },
+  //       11: { halign: "right" },
+  //       12: { halign: "right" },
+  //     },
+  //     margin: { left: 20, right: 20 },
+  //     // tableWidth: "auto",
+  //   });
+
+  //   // Footer
+  //   const pageHeight = doc.internal.pageSize.getHeight();
+  //   const totalPages = doc.internal.getNumberOfPages();
+  //   const marginLeft = 10;
+  //   const marginRight = 10;
+  //   for (let i = 1; i <= totalPages; i++) {
+  //     doc.setPage(i);
+  //     doc.setFontSize(8);
+  //     doc.setFont('helvetica', 'normal');
+  //     doc.text(`Page ${i} of ${totalPages}`, pageWidth - marginRight - 10, pageHeight - 15, { align: 'right' });
+  //   }
+
+  //   doc.setPage(totalPages);
+
+  //   window.open(doc.output("bloburl"), "_blank");
+  // };
 
   // --- HTML Render ---
   return (

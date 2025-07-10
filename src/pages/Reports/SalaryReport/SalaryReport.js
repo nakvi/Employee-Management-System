@@ -9,6 +9,9 @@ import SalaryHistoryPreview from "../../../Components/pdfsPreviews/SalaryHistory
 import SalaryReportTwoPreview from "../../../Components/pdfsPreviews/SalaryReportTwoPreview";
 import SalarySummaryReportPreview from "../../../Components/pdfsPreviews/SalarySummaryReportPreview";
 import SalarySlipPreview from "../../../Components/pdfsPreviews/SalarySlipPreview";
+import SalaryOverTimeSheetPreview from "../../../Components/pdfsPreviews/SalaryOverTimeSheetPreview";
+import SalaryOverTimeSummaryReportPreview from "../../../Components/pdfsPreviews/SalaryOverTimeSummaryReportPreview";
+import SalaryFinalSettlementPreview from "../../../Components/pdfsPreviews/SalaryFinalSettlementPreview";
 
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
@@ -210,6 +213,15 @@ useEffect(() => {
         break;
       case "SalaryHistory1":
         apiUrl = `${config.api.API_URL}RptSalaryEmployee?${params}`;
+        break;
+      case "OTSheet":
+        apiUrl = `${config.api.API_URL}rptOverTimeSheet?${params}`;
+        break;
+      case "OTSummary":
+        apiUrl = `${config.api.API_URL}rptOverTimeSheetSummary?${params}`;
+        break;
+      case "EmpFinalSettlement":
+        apiUrl = `${config.api.API_URL}rptFinalSettlement?${params}`;
         break;
       default:
           console.log("Unknown VType:", filters.VType); // <-- Add this
@@ -1052,6 +1064,42 @@ const employeeCards = groupByEmployee(tableData);
                   ) : (
                     <div className="text-center text-muted">No data found.</div>
                   )
+                )}
+                 {showTable && filters.VType === "OTSheet" && (
+                        Array.isArray(tableData) && tableData.length > 0 ? (
+                          <SalaryOverTimeSheetPreview
+                            allEmployees={tableData}
+                            reportHeading={filters.ReportHeading}
+                            dateFrom={filters.DateFrom}
+                            dateTo={filters.DateTo}
+                          />
+                        ) : (
+                          <div className="text-center text-muted">No data found.</div>
+                        )
+                )}
+              {showTable && filters.VType === "OTSummary" && (
+                    Array.isArray(tableData) && tableData.length > 0 ? (
+                        <SalaryOverTimeSummaryReportPreview
+                            summaryData={tableData} 
+                            reportHeading={filters.ReportHeading}
+                            dateFrom={filters.DateFrom}
+                            dateTo={filters.DateTo}
+                        />
+                    ) : (
+                        <div className="text-center text-muted">No data found.</div>
+                    )
+                )}
+              {showTable && filters.VType === "EmpFinalSettlement" && (
+                    Array.isArray(tableData) && tableData.length > 0 ? (
+                        <SalaryFinalSettlementPreview
+                            allEmployees={tableData} 
+                            reportHeading={filters.ReportHeading}
+                            dateFrom={filters.DateFrom}
+                            dateTo={filters.DateTo}
+                        />
+                    ) : (
+                        <div className="text-center text-muted">No data found.</div>
+                    )
                 )}
             </Col>
             // <Col lg={12}>
