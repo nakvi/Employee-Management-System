@@ -58,7 +58,7 @@ const PaymentPlan = () => {
     validationSchema: Yup.object({
       // ETypeID: Yup.string().required("Employee Type is required"),
       // DeptID: Yup.string().required("Department is required"),
-      VDate: Yup.string().required("Date is required"),
+      VDate: Yup.string().required("Month is required"),
     }),
     onSubmit: () => {
       handleFetch();
@@ -70,11 +70,11 @@ const PaymentPlan = () => {
     const conditions = [];
 
     if (formik.values.ETypeID) {
-      conditions.push(`E.ETypeID = ${formik.values.ETypeID}`);
+      conditions.push(`E."ETypeID" = ${formik.values.ETypeID}`);
     }
 
     if (formik.values.DeptID) {
-      conditions.push(`E.DeptID  = ${formik.values.DeptID}`);
+      conditions.push(`E."DeptID"  = ${formik.values.DeptID}`);
     }
 
     const EmployeeIDList = conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
