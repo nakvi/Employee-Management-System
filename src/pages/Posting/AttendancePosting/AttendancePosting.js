@@ -22,7 +22,7 @@ import { getEmployee } from "../../../slices/employee/employee/thunk";
 import { getLocation } from "../../../slices/setup/location/thunk";
 
 const AttendancePosting = () => {
- 
+
 
   const dispatch = useDispatch();
   const { department = {} } = useSelector((state) => state.Department || {});
@@ -40,10 +40,11 @@ const AttendancePosting = () => {
   // Formik setup
   const formik = useFormik({
     initialValues: {
-      EType: "",
-      DeptID: "",
+      ETypeID: "",
+      DeptIDs: "",
       DateFrom: "",
       DateTo: "",
+      IgnoreOld: "",
       LocationID: "",
       UID: "",
       CompanyID: "",
@@ -51,7 +52,7 @@ const AttendancePosting = () => {
     validationSchema: Yup.object({
       // ETypeID: Yup.string().required("Employee Type is required"),
       // DeptID: Yup.string().required("Department is required"),
-      VDate: Yup.string().required("Date is required"),
+      DateFrom: Yup.string().required("Date From is required"),
     }),
     onSubmit: () => {
       // handleFetch();
@@ -59,18 +60,18 @@ const AttendancePosting = () => {
 
   });
 
-    // Fetch data
   // Fetch data
   const handleFetch = () => {
     formik.validateForm().then((errors) => {
       if (Object.keys(errors).length === 0) {
         const params = {
           Orgini: "LTT",
-          VDate:  "",
-          EmployeeIDList:  "",
+          DateFrom: "",
+          DateTo: "",
+          EmployeeIDList: "",
           CompanyID: "1",
           LocationID: "0",
-          EType: formik.values.EType || "0",
+          ETypeID: formik.values.ETypeID || "0",
           EmpID: "0",
           IsAu: "0",
           UID: "0",
@@ -79,17 +80,18 @@ const AttendancePosting = () => {
         console.log("Fetching with params:", params);
       } else {
         formik.setTouched({
-          EType : true,
-          DeptID: true,
-          VDate: true,
+          ETypeID: true,
+          DeptIDs: true,
+          DateFrom: true,
+          DateTo: true,
         });
         console.log("Form validation errors:", errors);
       }
     });
   };
 
-   document.title = "Attendance Posting | EMS";
-    return (
+  document.title = "Attendance Posting | EMS";
+  return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
@@ -108,15 +110,15 @@ const AttendancePosting = () => {
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
-                              htmlFor="EType"
+                              htmlFor="ETypeID"
                               className="form-label"
                             >
                               E-Type
                             </Label>
                             <select
                               className="form-select  form-select-sm"
-                              name="EType"
-                              id="EType"
+                              name="ETypeID"
+                              id="ETypeID"
                             >
                               <option value="">---Select--- </option>
                               {employeeType.map((item) => (
@@ -125,23 +127,26 @@ const AttendancePosting = () => {
                                 </option>
                               ))}
                             </select>
-                              {formik.touched.EType && formik.errors.EType ? (
-                              <div className="text-danger">{formik.errors.EType}</div>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">{formik.errors.ETypeID}</div>
                             ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label
-                              htmlFor="departmentGroupInput"
+                              htmlFor="DeptIDs"
                               className="form-label"
                             >
                               Department
                             </Label>
                             <select
                               className="form-select  form-select-sm"
-                              name="EType"
-                              id="EType"
+                              name="DeptIDs"
+                              id="DeptIDs"
+                              value={formik.values.DeptIDs}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
                               <option value="">---Select--- </option>
                               {departmentList.map((item) => (
@@ -154,15 +159,16 @@ const AttendancePosting = () => {
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label htmlFor="locationInput" className="form-label">
+                            <Label htmlFor="LocationID" className="form-label">
                               Location
                             </Label>
                             <select
                               className="form-select form-select-sm"
-                              name="location"
-                              id="locationInput"
-                            // value={formData.location}
-                            // onChange={handleInputChange}
+                              name="LocationID"
+                              id="LocationID"
+                             value={formik.values.LocationID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
                               <option value="">---Select---</option>
                               {location.length > 0 ? (
@@ -179,25 +185,30 @@ const AttendancePosting = () => {
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="DateFrom" className="form-label">
                               Date From
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="VName"
+                              id="DateFrom"
+                              {...formik.getFieldProps("DateFrom")}
                             />
+                             {formik.touched.DateFrom && formik.errors.DateFrom ? (
+                              <div className="text-danger">{formik.errors.DateFrom}</div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="DateTo" className="form-label">
                               Date To
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="VName"
+                              id="DateTo"
+                              {...formik.getFieldProps("DateTo")}
                             />
                           </div>
                         </Col>
@@ -257,7 +268,7 @@ const AttendancePosting = () => {
                                 className="form-check-input me-1"
                                 type="checkbox"
                               />
-                              Select ALL
+                              Select All
                             </th>
                           </tr>
                         </thead>

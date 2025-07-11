@@ -163,7 +163,7 @@ const SalaryPosting = () => {
                         color="danger"
                         className="add-btn me-1 py-1"
                       >
-                        <i className="align-bottom me-1"></i>Delete Salary
+                        <i className="align-bottom me-1"></i>Delete
                       </Button>
                     </div>
                   </CardHeader>
