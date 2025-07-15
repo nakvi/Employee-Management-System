@@ -16,8 +16,8 @@ const encodeQueryParam = (key, value) => {
 };
 
 // Fetch Daily Attendance data
-export const getDailyAttendance = createAsyncThunk(
-  "dailyAttendance/getDailyAttendance",
+export const getAttendancePosting = createAsyncThunk(
+  "attendancePosting/getAttendancePosting",
   async (filters, { rejectWithValue }) => {
     console.log("Fetching Daily Attendance with filters:", filters);
     try {
@@ -70,8 +70,8 @@ export const getDailyAttendance = createAsyncThunk(
 );
 
 // Submit Daily Attendance data
-export const submitDailyAttendance = createAsyncThunk(
-  "dailyAttendance/submitDailyAttendance",
+export const submitAttendancePosting = createAsyncThunk(
+  "attendancePosting/submitAttendancePosting",
   async (payload, { rejectWithValue }) => {
     try {
       const { selectedEmployees, attendanceData } = payload;
@@ -123,77 +123,5 @@ export const submitDailyAttendance = createAsyncThunk(
   }
 );
 
-// Update Daily Attendance data
-export const updateDailyAttendance = createAsyncThunk(
-  "dailyAttendance/updateDailyAttendance",
-  async (attendanceData, { rejectWithValue }) => {
-    try {
-      const response = await fetch(SUBMIT_API_ENDPOINT, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(attendanceData),
-      });
 
-      if (!response.ok) {
-        if (response.status === 400) {
-          const errorData = await response.json();
-          const message = errorData.error || errorData.message || "Validation failed!";
-          toast.error(message);
-          return rejectWithValue(message);
-        }
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
 
-      const data = await response.json();
-      if (data.status === "0") {
-        toast.success(data.message || "Daily Attendance updated successfully!");
-        return data.data;
-      } else if (data.status === "1") {
-        const errorMessage = data.error || data.message || "An error occurred!";
-        toast.error(errorMessage);
-        return rejectWithValue(errorMessage);
-      } else if (data.status === "2") {
-        const warningMessage = data.error || data.message || "Warning: Please check your input!";
-        toast.warning(warningMessage);
-        return rejectWithValue(warningMessage);
-      }
-    } catch (error) {
-      const errorMessage = error.message || "Unknown error occurred";
-      toast.error("Failed to update Daily Attendance. Please try again!\n" + errorMessage);
-      return rejectWithValue(errorMessage);
-    }
-  }
-);
-
-// Delete Daily Attendance data
-export const deleteDailyAttendance = createAsyncThunk(
-  "dailyAttendance/deleteDailyAttendance",
-  async (id, { rejectWithValue }) => {
-    try {
-      const response = await fetch(SUBMIT_API_ENDPOINT, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ VID: id }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const responseData = await response.json();
-      if (responseData.status) {
-        toast.success("Daily Attendance deleted successfully!");
-        return id;
-      } else {
-        throw new Error(responseData.message || "Failed to delete data.");
-      }
-    } catch (error) {
-      toast.error("Failed to delete Daily Attendance. Please try again!");
-      return rejectWithValue(error.message);
-    }
-  }
-);

@@ -5,13 +5,13 @@ import { Card, CardBody, CardHeader, Col, Container, Form, Input, Label, Nav, Na
 import PreviewCardHeader from "../../Components/Common/PreviewCardHeader";
 
 const Settings = () => {
-    document.title = "Profile Settings | EMS";
-    return (
-        <React.Fragment>
-            <div className="page-content">
-                <Container fluid>
-                    <Row>
-                    <Col lg={12}>
+  document.title = "Profile Settings | EMS";
+  return (
+    <React.Fragment>
+      <div className="page-content">
+        <Container fluid>
+          <Row>
+            <Col lg={12}>
               <Card>
                 <PreviewCardHeader title="Change Password" />
                 <CardBody className="card-body">
@@ -33,7 +33,7 @@ const Settings = () => {
                       <Col xxl={2} md={4}>
                         <div>
                           <Label htmlFor="newPasswordInput" className="form-label">
-                          New Password*
+                            New Password*
                           </Label>
                           <Input
                             type="password"
@@ -64,11 +64,11 @@ const Settings = () => {
                 </CardBody>
               </Card>
             </Col>
-                    </Row>
-                </Container>
-            </div>
-        </React.Fragment>
-    );
+          </Row>
+        </Container>
+      </div>
+    </React.Fragment>
+  );
 };
 
 export default Settings;

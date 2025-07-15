@@ -12,27 +12,85 @@ import {
   CardHeader,
 } from "reactstrap";
 import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
 
-const DailyAttendancePosting = () => {
-  document.title = "Daily Attendance Posting | EMS";
+const AttendancePosting = () => {
+
 
   const dispatch = useDispatch();
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
   const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { location = [] } = useSelector((state) => state.Location || {});
 
   useEffect(() => {
     dispatch(getDepartment());
     dispatch(getEmployeeType());
     dispatch(getEmployee());
+    dispatch(getLocation());
   }, [dispatch]);
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      ETypeID: "",
+      DeptIDs: "",
+      DateFrom: "",
+      DateTo: "",
+      IgnoreOld: "",
+      LocationID: "",
+      UID: "",
+      CompanyID: "",
+    },
+    validationSchema: Yup.object({
+      // ETypeID: Yup.string().required("Employee Type is required"),
+      // DeptID: Yup.string().required("Department is required"),
+      DateFrom: Yup.string().required("Date From is required"),
+    }),
+    onSubmit: () => {
+      // handleFetch();
+    },
 
+  });
+
+  // Fetch data
+  const handleFetch = () => {
+    formik.validateForm().then((errors) => {
+      if (Object.keys(errors).length === 0) {
+        const params = {
+          Orgini: "LTT",
+          DateFrom: "",
+          DateTo: "",
+          EmployeeIDList: "",
+          CompanyID: "1",
+          LocationID: "0",
+          ETypeID: formik.values.ETypeID || "0",
+          EmpID: "0",
+          IsAu: "0",
+          UID: "0",
+          IsExport: "0",
+        };
+        console.log("Fetching with params:", params);
+      } else {
+        formik.setTouched({
+          ETypeID: true,
+          DeptIDs: true,
+          DateFrom: true,
+          DateTo: true,
+        });
+        console.log("Form validation errors:", errors);
+      }
+    });
+  };
+
+  document.title = "Attendance Posting | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -43,22 +101,24 @@ const DailyAttendancePosting = () => {
             <Col lg={12}>
               <Card>
                 <Form>
-                  <PreviewCardHeader2 title="Daily Attendance Posting" />
+                  <PreviewCardHeader2 title="Attendance Posting"
+                    onFetch={handleFetch}
+                  />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
-                              htmlFor="departmentGroupInput"
+                              htmlFor="ETypeID"
                               className="form-label"
                             >
                               E-Type
                             </Label>
                             <select
                               className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              name="ETypeID"
+                              id="ETypeID"
                             >
                               <option value="">---Select--- </option>
                               {employeeType.map((item) => (
@@ -67,20 +127,26 @@ const DailyAttendancePosting = () => {
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">{formik.errors.ETypeID}</div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label
-                              htmlFor="departmentGroupInput"
+                              htmlFor="DeptIDs"
                               className="form-label"
                             >
                               Department
                             </Label>
                             <select
                               className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              name="DeptIDs"
+                              id="DeptIDs"
+                              value={formik.values.DeptIDs}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
                               <option value="">---Select--- </option>
                               {departmentList.map((item) => (
@@ -91,28 +157,58 @@ const DailyAttendancePosting = () => {
                             </select>
                           </div>
                         </Col>
-
                         <Col xxl={2} md={3}>
+                          <div className="mb-3">
+                            <Label htmlFor="LocationID" className="form-label">
+                              Location
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              name="LocationID"
+                              id="LocationID"
+                             value={formik.values.LocationID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            >
+                              <option value="">---Select---</option>
+                              {location.length > 0 ? (
+                                location.map((loc) => (
+                                  <option key={loc.VID} value={loc.VID}>
+                                    {loc.VName || loc.LocationName || loc.title}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>No locations available</option>
+                              )}
+                            </select>
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="DateFrom" className="form-label">
                               Date From
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="VName"
+                              id="DateFrom"
+                              {...formik.getFieldProps("DateFrom")}
                             />
+                             {formik.touched.DateFrom && formik.errors.DateFrom ? (
+                              <div className="text-danger">{formik.errors.DateFrom}</div>
+                            ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="DateTo" className="form-label">
                               Date To
                             </Label>
                             <Input
                               type="date"
                               className="form-control-sm"
-                              id="VName"
+                              id="DateTo"
+                              {...formik.getFieldProps("DateTo")}
                             />
                           </div>
                         </Col>
@@ -156,20 +252,6 @@ const DailyAttendancePosting = () => {
               <Card>
                 <CardBody>
                   <div className="Location-table" id="customerList">
-                    {/* <Row className="g-4 mb-3">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row> */}
-
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
@@ -186,7 +268,7 @@ const DailyAttendancePosting = () => {
                                 className="form-check-input me-1"
                                 type="checkbox"
                               />
-                              Select ALL
+                              Select All
                             </th>
                           </tr>
                         </thead>
@@ -215,10 +297,6 @@ const DailyAttendancePosting = () => {
                             style={{ width: "75px", height: "75px" }}
                           ></lord-icon>
                           <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
                         </div>
                       </div>
                     </div>
@@ -233,4 +311,4 @@ const DailyAttendancePosting = () => {
   );
 };
 
-export default DailyAttendancePosting;
+export default AttendancePosting;

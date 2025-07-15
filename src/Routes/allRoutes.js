@@ -2,8 +2,6 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 //Dashboard
-import DashboardCrm from "../pages/DashboardCrm";
-import DashboardEcommerce from "../pages/DashboardEcommerce";
 import Dashboard from "../pages/Dashboard/Index";
 //login
 import Login from "../pages/Authentication/Login";
@@ -13,7 +11,6 @@ import Register from "../pages/Authentication/Register";
 
 // User Profile
 import UserProfile from "../pages/Authentication/user-profile";
-import DashboardBlog from "../pages/DashboardBlog";
 // My setup form
 import Location from "../pages/Setup/Location/Location";
 import DepartmentGroup from "../pages/Setup/DepartmentGroup/DepartmentGroup";
@@ -42,9 +39,7 @@ import AttendanceEmployee from "../pages/Attendance/AttendanceEmployee/Attendanc
 import OTEntry from "../pages/Attendance/OTEntry/OTEntry";
 import DailyAttendanceReport from "../pages/Reports/DailyAttendanceReport/DailyAttendanceReport";
 import MonthlyAttendanceReport from "../pages/Reports/MonthlyAttendanceReport/MonthlyAttendanceReport";
-import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
 import EmployeeReport from "../pages/Employee/Reports/EmployeeReport";
-import DailyAttendancePosting from "../pages/Posting/DailyAttendance/DailyAttendance";
 import EmployeeLetter from "../pages/Employee/Letters/EmployeeLetter";
 import Roster from "../pages/Attendance/Roster/Roster";
 import SalaryPosting from "../pages/Posting/SalaryPosting/SalaryPosting";
@@ -92,6 +87,10 @@ import SalaryOverTimeSummaryReportPreview from "../Components/pdfsPreviews/Salar
 import SalaryFinalSettlementPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryFinalSettlementPreview";
 import SalaryAllwDedPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryAllwDedPreview";
 
+import AttendancePosting from "../pages/Posting/AttendancePosting/AttendancePosting";
+import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
+
+import SalarySlipPreview from "../Components/pdfsPreviews/SalarySlipPreview";
 
 
 const authProtectedRoutes = [
@@ -164,7 +163,7 @@ const authProtectedRoutes = [
   { path: "/roster", component: <Roster/>},
   { path: "/backdate-entry", component: <BackdateEntry/>},
   // Posting
-  { path: "/daily-attendance-posting", component: <DailyAttendancePosting /> },
+  { path: "/attendance-posting", component: <AttendancePosting /> },
   { path: "/salary-posting", component: <SalaryPosting /> },
 
 
@@ -193,14 +192,9 @@ const authProtectedRoutes = [
 
 
 
-  // Attendance routes setup
   // My Dashboard
   { path: "/dashboard",component: <Dashboard/>},
 
-  { path: "/dashboard-crm", component: <DashboardCrm /> },
-  // { path: "/dashboard", component: <DashboardEcommerce /> },
-  { path: "/index", component: <DashboardEcommerce /> },
-  { path: "/dashboard-blog", component: <DashboardBlog /> },
 
   //User Profile
   { path: "/profile", component: <UserProfile /> },

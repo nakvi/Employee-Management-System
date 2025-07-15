@@ -33,6 +33,7 @@ import {
   submitLoanDisbursement,
   updateLoanDisbursement,
 } from "../../../slices/employee/loanDisbursement/thunk";
+import PreviewCardHeaderUpload from "../../../Components/Common/PreviewCardHeaderUpload";
 
 const LoanDisbursement = () => {
   const dispatch = useDispatch();
@@ -400,7 +401,7 @@ const LoanDisbursement = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
+                  <PreviewCardHeaderUpload
                     title="Loan Disbursement"
                     onCancel={formik.resetForm}
                   />

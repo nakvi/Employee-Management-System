@@ -524,7 +524,68 @@ const TrialEmployee = () => {
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={2}>
+                         <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="ETypeID" className="form-label">
+                              E-Type
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              name="ETypeID"
+                              id="ETypeID"
+                              value={formik.values.ETypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                            >
+                              <option value="">---Select---</option>
+                              {employeeType.map((item) => (
+                                <option key={item.VID} value={item.VID}>
+                                  {item.VName}
+                                </option>
+                              ))}
+                            </select>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col>
+                        {/* <Col xxl={2} md={4}>
+                          <div className="mb-3">
+                            <Label htmlFor="EmpID" className="form-label">
+                              Employee
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              name="EmpID"
+                              id="EmpID"
+                              value={formik.values.EmpID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
+                            >
+                              <option value="">---Select---</option>
+                              {employee
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
+                                .map((item) => (
+                                  <option key={item.EmpID} value={item.EmpID}>
+                                    {item.EName}
+                                  </option>
+                                ))}
+                            </select>
+                            {formik.touched.EmpID && formik.errors.EmpID ? (
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
+                            ) : null}
+                          </div>
+                        </Col> */}
+                        {/* <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="ETypeID" className="form-label">
                               E-Type
@@ -548,7 +609,7 @@ const TrialEmployee = () => {
                               <div className="text-danger">{formik.errors.ETypeID}</div>
                             ) : null}
                           </div>
-                        </Col>
+                        </Col> */}
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="EmpIDOld" className="form-label">
@@ -561,6 +622,7 @@ const TrialEmployee = () => {
                               value={formik.values.EmpIDOld}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                               disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee

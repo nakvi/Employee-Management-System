@@ -39,11 +39,10 @@ const SalaryAllowanceDeduction = () => {
   const [deleteId, setDeleteId] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [filteredData, setFilteredData] = useState([]);
-  const [tableAllowanceDetails, setTableAllowanceDetails] = useState({});
-  const [dropdownAllowanceDetails, setDropdownAllowanceDetails] = useState([]);
+  const [tableAllowanceDetails, setTableAllowanceDetails] = useState([]);
 
   // Redux state
-  const { loading, error, salaryAllowanceDeduction } = useSelector((state) => state.SalaryAllowanceDeduction || {});
+  const { loading, error, salaryAllowanceDeduction } = useSelector((state) => state.SalaryAllowanceDeduction);
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
   const { employee = [] } = useSelector((state) => state.Employee || {});
   const { salaryBank = [] } = useSelector((state) => state.SalaryBank || {});
@@ -65,58 +64,26 @@ const SalaryAllowanceDeduction = () => {
     dispatch(getAllowanceDeductionGroup());
   }, [dispatch]);
 
-  // Fetch allowance details for table
+  // Update tableAllowanceDetails
   useEffect(() => {
-    const fetchDetailsForTable = async () => {
-      const detailsMap = {};
-      for (const group of salaryAllowanceDeduction || []) {
-        if (group.AllowDedID && !detailsMap[group.AllowDedID]) {
-          try {
-            const response = await fetch(
-              `${config.api.API_URL}getTypeByAllowDedId/?allowDedID=${group.AllowDedID}`
-            );
-            const data = await response.json();
-            if (data && data.length > 0) {
-              const { VType, EffectID } = data[0];
-              const detailsResponse = await dispatch(
-                getAllowanceDeductionDetails({
-                  VType,
-                  GroupID: EffectID.toString(),
-                })
-              ).unwrap();
-              const detail = detailsResponse.find((item) => item.VID === group.AllowDedID);
-              if (detail) {
-                detailsMap[group.AllowDedID] = detail;
-              }
-            }
-          } catch (error) {
-            console.error(`Error fetching details for AllowDedID ${group.AllowDedID}:`, error);
-          }
-        }
-      }
-      setTableAllowanceDetails(detailsMap);
-    };
-
-    if (salaryAllowanceDeduction?.length > 0) {
-      fetchDetailsForTable();
-    }
-  }, [salaryAllowanceDeduction, dispatch]);
+    setTableAllowanceDetails(allowanceDeductionDetails);
+  }, [allowanceDeductionDetails]);
 
   // Filter data based on search text
   useEffect(() => {
     if (salaryAllowanceDeduction && employee && salaryBank && tableAllowanceDetails) {
       const filtered = salaryAllowanceDeduction.filter((item) => {
         const empName = employee.find((emp) => String(emp.EmpID) === String(item.EmpID))?.EName || "";
-        const detailName = tableAllowanceDetails[item.AllowDedID]?.VName || "";
+        const detailName = tableAllowanceDetails.find((detail) => detail.VID === item.AllowDedID)?.VName || "";
         const bankName = salaryBank.find((bank) => bank.VID === item.AccountID)?.VName || "";
         const searchString = [
           empName,
           detailName,
           item.Amount,
-          formatDate(item.VDate),
+          item.VDate,
           bankName,
           item.ChequeNo,
-          formatDate(item.ChequeDate),
+          item.ChequeDate,
         ].join(" ").toLowerCase();
         return searchString.includes(searchText.toLowerCase());
       });
@@ -166,29 +133,20 @@ const SalaryAllowanceDeduction = () => {
           dispatch(getSalaryAllowanceDeduction());
           setEditingGroup(null);
           resetForm();
-          setDropdownAllowanceDetails([]);
         });
       } else {
         dispatch(submitSalaryAllowanceDeduction(transformedValues)).then(() => {
           dispatch(getSalaryAllowanceDeduction());
           resetForm();
-          setDropdownAllowanceDetails([]);
         });
       }
     },
   });
 
-  // Fetch allowanceDeductionDetails for dropdown
+  // Fetch allowanceDeductionDetails when VType or GroupID changes
   useEffect(() => {
     if (formik.values.VType && formik.values.GroupID && !editingGroup) {
-      dispatch(
-        getAllowanceDeductionDetails({
-          VType: formik.values.VType,
-          GroupID: formik.values.GroupID,
-        })
-      ).then((response) => {
-        setDropdownAllowanceDetails(response.payload || []);
-      });
+      dispatch(getAllowanceDeductionDetails({ VType: formik.values.VType, GroupID: formik.values.GroupID }));
       formik.setFieldValue("AllowDedID", "");
     }
   }, [formik.values.VType, formik.values.GroupID, dispatch, editingGroup]);
@@ -226,39 +184,33 @@ const SalaryAllowanceDeduction = () => {
   };
 
   // Handle edit button click
-  const handleEditClick = async (row) => {
-    const selectedEmployee = employee.find((emp) => String(emp.EmpID) === String(row.EmpID));
+  const handleEditClick = async (group) => {
+    const selectedEmployee = employee.find((emp) => String(emp.EmpID) === String(group.EmpID));
     const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
-    const { VType, GroupID } = await fetchTypeAndEffectDetails(row.AllowDedID);
+    const { VType, GroupID } = await fetchTypeAndEffectDetails(group.AllowDedID);
 
-    // Fetch allowanceDeductionDetails for dropdown
+    // Fetch allowanceDeductionDetails for the selected VType and GroupID
     if (VType && GroupID) {
-      const response = await dispatch(
-        getAllowanceDeductionDetails({
-          VType,
-          GroupID,
-        })
-      ).unwrap();
-      setDropdownAllowanceDetails(response || []);
+      await dispatch(getAllowanceDeductionDetails({ VType, GroupID }));
     }
 
-    setEditingGroup(row);
+    setEditingGroup(group);
     formik.setValues({
-      VName: row.VName || "",
-      VDate: formatDateForInput(row.VDate) || "",
-      EmpID: row.EmpID || "",
+      VName: group.VName || "",
+      VDate: formatDateForInput(group.VDate) || "",
+      EmpID: group.EmpID || "",
       ETypeID: employeeTypeId,
-      VType: VType || row.VType || "",
-      GroupID: GroupID || row.GroupID || "",
-      AllowDedID: row.AllowDedID || "",
-      Amount: row.Amount || 0,
-      AccountID: row.AccountID || "",
-      ChequeNo: row.ChequeNo || "",
-      ChequeDate: formatDateForInput(row.ChequeDate) || "",
-      IsActive: row.IsActive === 1,
-      UID: row.UID || 501,
-      CompanyID: row.CompanyID || "1001",
-      Tranzdatetime: row.Tranzdatetime || new Date().toISOString(),
+      VType: VType || group.VType || "",
+      GroupID: GroupID || group.GroupID || "",
+      AllowDedID: group.AllowDedID || "",
+      Amount: group.Amount || 0,
+      AccountID: group.AccountID || "",
+      ChequeNo: group.ChequeNo || "",
+      ChequeDate: formatDateForInput(group.ChequeDate) || "",
+      IsActive: group.IsActive === 1,
+      UID: group.UID || 501,
+      CompanyID: group.CompanyID || "1001",
+      Tranzdatetime: group.Tranzdatetime || new Date().toISOString(),
     });
   };
 
@@ -286,7 +238,7 @@ const SalaryAllowanceDeduction = () => {
     },
     {
       name: "Details",
-      selector: (row) => tableAllowanceDetails[row.AllowDedID]?.VName || "N/A",
+      selector: (row) => tableAllowanceDetails.find((item) => item.VID === row.AllowDedID)?.VName || "N/A",
       sortable: true,
     },
     {
@@ -365,7 +317,7 @@ const SalaryAllowanceDeduction = () => {
   const exportToExcel = () => {
     const exportData = (filteredData || []).map((item) => ({
       Employee: employee.find((emp) => String(emp.EmpID) === String(item.EmpID))?.EName || "N/A",
-      Details: tableAllowanceDetails[item.AllowDedID]?.VName || "N/A",
+      Details: tableAllowanceDetails.find((detail) => detail.VID === item.AllowDedID)?.VName || "N/A",
       Amount: item.Amount || "N/A",
       Date: formatDate(item.VDate),
       Bank: salaryBank.find((bank) => bank.VID === item.AccountID)?.VName || "N/A",
@@ -391,7 +343,7 @@ const SalaryAllowanceDeduction = () => {
     const headers = [["Employee", "Details", "Amount", "Date", "Bank", "Cheque No", "Cheque Date"]];
     const data = (filteredData || []).map((item) => [
       employee.find((emp) => String(emp.EmpID) === String(item.EmpID))?.EName || "N/A",
-      tableAllowanceDetails[item.AllowDedID]?.VName || "N/A",
+      tableAllowanceDetails.find((detail) => detail.VID === item.AllowDedID)?.VName || "N/A",
       item.Amount || "N/A",
       formatDate(item.VDate),
       salaryBank.find((bank) => bank.VID === item.AccountID)?.VName || "N/A",
@@ -442,7 +394,7 @@ const SalaryAllowanceDeduction = () => {
     data.forEach((item) => {
       const rowCells = [
         employee.find((emp) => String(emp.EmpID) === String(item.EmpID))?.EName || "N/A",
-        tableAllowanceDetails[item.AllowDedID]?.VName || "N/A",
+        tableAllowanceDetails.find((detail) => detail.VID === item.AllowDedID)?.VName || "N/A",
         item.Amount || "N/A",
         formatDate(item.VDate),
         salaryBank.find((bank) => bank.VID === item.AccountID)?.VName || "N/A",
@@ -496,18 +448,11 @@ const SalaryAllowanceDeduction = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
-                    title="Salary Allowance Deduction"
-                    onCancel={() => {
-                      formik.resetForm();
-                      setDropdownAllowanceDetails([]);
-                    }}
-                    isEditMode={!!editingGroup}
-                  />
+                  <PreviewCardHeader title="Salary Allowance Deduction" onCancel={() => formik.resetForm()} isEditMode={!!editingGroup} />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={2}>
+                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="ETypeID" className="form-label">
                               E-Type
@@ -528,7 +473,9 @@ const SalaryAllowanceDeduction = () => {
                               ))}
                             </select>
                             {formik.touched.ETypeID && formik.errors.ETypeID ? (
-                              <div className="text-danger">{formik.errors.ETypeID}</div>
+                              <div className="text-danger">
+                                {formik.errors.ETypeID}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -548,7 +495,11 @@ const SalaryAllowanceDeduction = () => {
                             >
                               <option value="">---Select---</option>
                               {employee
-                                .filter((emp) => emp.ETypeID === parseInt(formik.values.ETypeID))
+                                .filter(
+                                  (emp) =>
+                                    emp.ETypeID ===
+                                    parseInt(formik.values.ETypeID)
+                                )
                                 .map((item) => (
                                   <option key={item.EmpID} value={item.EmpID}>
                                     {item.EName}
@@ -556,7 +507,9 @@ const SalaryAllowanceDeduction = () => {
                                 ))}
                             </select>
                             {formik.touched.EmpID && formik.errors.EmpID ? (
-                              <div className="text-danger">{formik.errors.EmpID}</div>
+                              <div className="text-danger">
+                                {formik.errors.EmpID}
+                              </div>
                             ) : null}
                           </div>
                         </Col>
@@ -623,7 +576,7 @@ const SalaryAllowanceDeduction = () => {
                               disabled={!formik.values.GroupID || detailsLoading}
                             >
                               <option value="">---Select---</option>
-                              {dropdownAllowanceDetails.map((item) => (
+                              {allowanceDeductionDetails.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
@@ -750,7 +703,7 @@ const SalaryAllowanceDeduction = () => {
                     <CSVLink
                       data={filteredData.map((item) => ({
                         Employee: employee.find((emp) => String(emp.EmpID) === String(item.EmpID))?.EName || "N/A",
-                        Details: tableAllowanceDetails[item.AllowDedID]?.VName || "N/A",
+                        Details: tableAllowanceDetails.find((detail) => detail.VID === item.AllowDedID)?.VName || "N/A",
                         Amount: item.Amount || "N/A",
                         Date: formatDate(item.VDate),
                         Bank: salaryBank.find((bank) => bank.VID === item.AccountID)?.VName || "N/A",

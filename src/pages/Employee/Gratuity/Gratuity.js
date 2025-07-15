@@ -38,6 +38,7 @@ import config from "../../../config";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PreviewCardHeaderUpload from "../../../Components/Common/PreviewCardHeaderUpload";
 
 const Gratuity = () => {
   const dispatch = useDispatch();
@@ -503,7 +504,7 @@ const Gratuity = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader title="Gratuity" onCancel={formik.resetForm} />
+                  <PreviewCardHeaderUpload title="Gratuity" onCancel={formik.resetForm} />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
