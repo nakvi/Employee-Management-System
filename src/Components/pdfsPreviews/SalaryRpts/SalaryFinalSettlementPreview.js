@@ -36,11 +36,11 @@ const SalaryFinalSettlementPreview = ({ allEmployees = [], reportHeading, dateFr
       body: [
         [
           { content: "No.", styles: { fontStyle: 'bold' } },
-          { content: "-" },
+          { content: "      -" },
           { content: "Code", styles: { fontStyle: 'bold' } },
-          { content: data.EmpCode },
+          { content:    data.EmpCode },
           { content: "Date", styles: { fontStyle: 'bold' } },
-          { content: `-${new Date(data.VDate).toLocaleString('en-US', { month: 'short', year: 'numeric' })}` }
+          { content: `        -${new Date(data.VDate).toLocaleString('en-US', { month: 'short', year: 'numeric' })}` }
         ],
         [
           { content: "Mr. (Name of Employee):", styles: { fontStyle: 'bold' } },
@@ -79,51 +79,65 @@ const SalaryFinalSettlementPreview = ({ allEmployees = [], reportHeading, dateFr
           // Draw underline (bottom border only)
           cell.styles.lineWidth = { top: 0, right: 0, bottom: 0.5, left: 0 };
           cell.styles.lineColor = [0, 0, 0];
-          cell.styles.cellPadding = { top: 4, right: 0, bottom: 4, left: 0 };
+          cell.styles.cellPadding = { top: 4, right: 0, bottom: 3, left: 0 };
         } else {
           // No border for labels
           cell.styles.lineWidth = 0;
-          cell.styles.cellPadding = { top: 4, right: 0, bottom: 4, left: 0 };
+          cell.styles.cellPadding = { top: 4, right: 0, bottom: 3, left: 0 };
         }
       }
     });
 
 
      // ----- TABLE HEADINGS -----
-  const paymentRows = [
-    ["Salary M/O", fmt(data.BasicSalary)],
-    ["Days", `${data.SalaryDays}  Rs. ${fmt(data.EarnedSalary)}`],
-    ["Over Time", `-  Rs. -`],
-    ["Gratuity / PF", fmt(data.Gratuity)],
-    ["Leave Encashment", fmt(data.LeaveEncashment)]
-  ];
+    const paymentRows = [
+      ["Salary M/O", "", `Rs. ${fmt(data.BasicSalary)}`],
+      ["Days", `${data.SalaryDays} Days`, `Rs. ${fmt(data.EarnedSalary)}`],
+      ["Over Time", `${data.OverTime} Hours`, `Rs. ${fmt(data.OverTimeRs)}`],
+      ["Gratuity / PF", "", `Rs. ${fmt(data.Gratuity)}`],
+      ["Leave Encashment", "", `Rs. ${fmt(data.LeaveEncashment)}`]
+    ];
 
-  const deductionRows = [
-    ["Others", "Rs. -"],
-    ["Loan Advance", `Rs. ${fmt(data.LoanBalance)}`],
-    ["Notice Pay", "Rs. -"]
-  ];
+    const deductionRows = [
+      ["Others", "Rs. -"],
+      ["Loan Advance", `Rs. ${fmt(data.LoanBalance)}`],
+      ["Notice Pay", "Rs. -"]
+    ];
 
-  // ----- AUTO TABLE LAYOUT -----
-  autoTable(doc, {
-    startY: 190,
-    theme: 'grid',
-    head: [['Payments', 'Amount', 'Deductions', 'Amount']],
-    body: Array.from({ length: 5 }, (_, i) => [
-      paymentRows[i]?.[0] || '',
-      paymentRows[i]?.[1] || '',
-      deductionRows[i]?.[0] || '',
-      deductionRows[i]?.[1] || ''
-    ]),
-    styles: { fontSize: 8, cellPadding: 5 },
-    headStyles: { fillColor: '#e1f5fe', textColor: 20, fontStyle: 'bold' , halign: 'center' , lineWidth: 1, lineColor: [230, 230, 230]},
-    columnStyles: {
-      1: { halign: 'right' },
-      3: { halign: 'right' }
-    },
-    tableWidth: 'auto',
-    margin: { left: marginLeft, right: marginLeft }
-  });
+    // Normalize to 5 rows
+    const maxLength = 5;
+    while (paymentRows.length < maxLength) paymentRows.push(["", "", ""]);
+    while (deductionRows.length < maxLength) deductionRows.push(["", ""]);
+
+    // 1. Add a custom header with merged columns using `head`:
+    autoTable(doc, {
+      startY: 190,
+      head: [
+        [
+          { content: "Payments", colSpan: 2, styles: { halign: 'center', fillColor: '#e1f5fe', textColor: '#000', fontStyle: 'bold' } },
+          { content: "Amount (Rs.)", styles: { halign: 'center', fillColor: '#e1f5fe', textColor: '#000', fontStyle: 'bold' } },
+          { content: "Deductions", styles: { halign: 'center', fillColor: '#e1f5fe', textColor: '#000', fontStyle: 'bold' } },
+          { content: "Amount (Rs.)", styles: { halign: 'center', fillColor: '#e1f5fe', textColor: '#000', fontStyle: 'bold' } }
+        ]
+      ],
+      body: Array.from({ length: maxLength }, (_, i) => [
+        paymentRows[i][0] || '',
+        paymentRows[i][1] || '',
+        paymentRows[i][2] || '',
+        deductionRows[i][0] || '',
+        deductionRows[i][1] || ''
+      ]),
+      styles: { fontSize: 8, cellPadding: 5 , lineColor: [230, 230, 230], lineWidth: 1, textColor: '#222', },
+      columnStyles: {
+        1: { halign: 'right' }, // Count (Days/Hours)
+        2: { halign: 'right' }, // Amount (Payments)
+        4: { halign: 'right' }  // Amount (Deductions)
+      },
+      margin: { left: marginLeft, right: marginLeft },
+      theme: 'grid'
+    });
+
+
 
   const afterTableY = doc.lastAutoTable.finalY;
   doc.setFontSize(9);

@@ -3,15 +3,16 @@ import {
   Card, CardBody, Col, Container, Row, Input, Label, Form,
 } from "reactstrap";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
-import MonthlyAttSalarySheetPreview from "../../../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
-import SalaryReportPreview from "../../../Components/pdfsPreviews/SalaryReportPreview";
-import SalaryHistoryPreview from "../../../Components/pdfsPreviews/SalaryHistoryPreview";
-import SalaryReportTwoPreview from "../../../Components/pdfsPreviews/SalaryReportTwoPreview";
-import SalarySummaryReportPreview from "../../../Components/pdfsPreviews/SalarySummaryReportPreview";
-import SalarySlipPreview from "../../../Components/pdfsPreviews/SalarySlipPreview";
-import SalaryOverTimeSheetPreview from "../../../Components/pdfsPreviews/SalaryOverTimeSheetPreview";
-import SalaryOverTimeSummaryReportPreview from "../../../Components/pdfsPreviews/SalaryOverTimeSummaryReportPreview";
-import SalaryFinalSettlementPreview from "../../../Components/pdfsPreviews/SalaryFinalSettlementPreview";
+import MonthlyAttSalarySheetPreview from "../../../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttSalarySheetPreview";
+import SalaryReportPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalaryReportPreview";
+import SalaryHistoryPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalaryHistoryPreview";
+import SalaryReportTwoPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalaryReportTwoPreview";
+import SalarySummaryReportPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalarySummaryReportPreview";
+import SalarySlipPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalarySlipPreview";
+import SalaryOverTimeSheetPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalaryOverTimeSheetPreview";
+import SalaryOverTimeSummaryReportPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalaryOverTimeSummaryReportPreview";
+import SalaryFinalSettlementPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalaryFinalSettlementPreview";
+import SalaryAllwDedPreview from "../../../Components/pdfsPreviews/SalaryRpts/SalaryAllwDedPreview";
 
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
@@ -222,6 +223,9 @@ useEffect(() => {
         break;
       case "EmpFinalSettlement":
         apiUrl = `${config.api.API_URL}rptFinalSettlement?${params}`;
+        break;
+      case "AllowsDeductionList":
+        apiUrl = `${config.api.API_URL}rptMonthSalarySummary?${params}`;
         break;
       default:
           console.log("Unknown VType:", filters.VType); // <-- Add this
@@ -754,7 +758,7 @@ const employeeCards = groupByEmployee(tableData);
                               onChange={formik.handleChange}
                             />
                             <Label className="form-check-label" htmlFor="OTSheetAL">
-                              OT Sheet AL
+                              OT Sheet ALL
                             </Label>
                           </div>
                         </Col>
@@ -1089,9 +1093,21 @@ const employeeCards = groupByEmployee(tableData);
                         <div className="text-center text-muted">No data found.</div>
                     )
                 )}
-              {showTable && filters.VType === "EmpFinalSettlement" && (
+               {showTable && filters.VType === "EmpFinalSettlement" && (
                     Array.isArray(tableData) && tableData.length > 0 ? (
                         <SalaryFinalSettlementPreview
+                            allEmployees={tableData} 
+                            reportHeading={filters.ReportHeading}
+                            dateFrom={filters.DateFrom}
+                            dateTo={filters.DateTo}
+                        />
+                    ) : (
+                        <div className="text-center text-muted">No data found.</div>
+                    )
+                )}
+                {showTable && filters.VType === "AllowsDeductionList" && (
+                    Array.isArray(tableData) && tableData.length > 0 ? (
+                        <SalaryAllwDedPreview
                             allEmployees={tableData} 
                             reportHeading={filters.ReportHeading}
                             dateFrom={filters.DateFrom}
