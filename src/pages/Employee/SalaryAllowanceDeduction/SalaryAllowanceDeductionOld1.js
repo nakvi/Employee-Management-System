@@ -16,13 +16,24 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { format } from "date-fns";
 import DeleteModal from "../../../Components/Common/DeleteModal";
+// import {
+//   getEmployeeType,
+//   getEmployee,
+//   getSalaryBank,
+//   deleteSalaryAllowanceDeduction,
+//   getSalaryAllowanceDeduction,
+//   submitSalaryAllowanceDeduction,
+//   updateSalaryAllowanceDeduction,
+//   getAllowanceDeductionDetails,
+//   getAllowanceDeductionGroup,
+// } from "../../../slices";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
 import { getSalaryBank } from "../../../slices/setup/salaryBank/thunk";
-import { deleteSalaryAllowanceDeduction, getSalaryAllowanceDeduction, submitSalaryAllowanceDeduction,updateSalaryAllowanceDeduction } from "../../../slices/employee/salaryAllowanceDeduction/thunk";
+import { deleteSalaryAllowanceDeduction, getSalaryAllowanceDeduction, submitSalaryAllowanceDeduction, updateSalaryAllowanceDeduction } from "../../../slices/employee/salaryAllowanceDeduction/thunk";
 import { getAllowanceDeductionDetails } from "../../../slices/employee/allowanceDeductionDetails/thunk";
-import { getAllowanceDeductionGroup } from "../../../slices/setup/allowanceDeductionGroup/thunk";
-import config from "../../../config"; // ✅ correct
+import { getAllowanceDeductionGroup } from "../../../slices/setup/allowanceDeductionGroup/thunk"
+import config from "../../../config";
 
 const SalaryAllowanceDeduction = () => {
   const [selectedDate, setSelectedDate] = useState("");
@@ -30,7 +41,8 @@ const SalaryAllowanceDeduction = () => {
   const [editingGroup, setEditingGroup] = useState(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
-  const [tableAllowanceDetails, setTableAllowanceDetails] = useState([]);
+  const [tableAllowanceDetails, setTableAllowanceDetails] = useState({});
+  const [dropdownAllowanceDetails, setDropdownAllowanceDetails] = useState([]);
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
@@ -51,9 +63,6 @@ const SalaryAllowanceDeduction = () => {
   const { allowanceDeductionGroup } = useSelector(
     (state) => state.AllowanceDeductionGroup
   );
-  const { allowanceDeductionDetails, loading: detailsLoading } = useSelector(
-    (state) => state.AllowanceDeductionDetails
-  );
 
   useEffect(() => {
     dispatch(getSalaryBank());
@@ -63,9 +72,44 @@ const SalaryAllowanceDeduction = () => {
     dispatch(getAllowanceDeductionGroup());
   }, [dispatch]);
 
+  // Fetch allowance details for each salaryAllowanceDeduction row
   useEffect(() => {
-    setTableAllowanceDetails(allowanceDeductionDetails);
-  }, [salaryAllowanceDeduction]);
+    const fetchDetailsForTable = async () => {
+      const detailsMap = {};
+      for (const group of salaryAllowanceDeduction) {
+        if (group.AllowDedID && !detailsMap[group.AllowDedID]) {
+          try {
+            const response = await fetch(
+              `${config.api.API_URL}getTypeByAllowDedId/?allowDedID=${group.AllowDedID}`
+            );
+            const data = await response.json();
+            if (data && data.length > 0) {
+              const { VType, EffectID } = data[0];
+              const detailsResponse = await dispatch(
+                getAllowanceDeductionDetails({
+                  VType,
+                  GroupID: EffectID.toString(),
+                })
+              ).unwrap();
+              detailsMap[group.AllowDedID] =
+                detailsResponse.find((item) => item.VID === group.AllowDedID) ||
+                {};
+            }
+          } catch (error) {
+            console.error(
+              `Error fetching details for AllowDedID ${group.AllowDedID}:`,
+              error
+            );
+          }
+        }
+      }
+      setTableAllowanceDetails(detailsMap);
+    };
+
+    if (salaryAllowanceDeduction?.length > 0) {
+      fetchDetailsForTable();
+    }
+  }, [salaryAllowanceDeduction, dispatch]);
 
   // Formik setup
   const formik = useFormik({
@@ -87,17 +131,13 @@ const SalaryAllowanceDeduction = () => {
       Tranzdatetime: "2024-02-02T12:30:00Z",
     },
     validationSchema: Yup.object({
-      ETypeID: Yup.number()
-        .min(1, "Employee Type is required")
-        .required("Required"),
+      ETypeID: Yup.number().min(1, "Employee Type is required").required("Required"),
       EmpID: Yup.string().required("Employee is required"),
       VType: Yup.string().required("Type is required"),
       GroupID: Yup.string().required("Effect is required"),
       AllowDedID: Yup.string().required("Details is required"),
       Amount: Yup.number().required("Amount is required"),
-      AccountID: Yup.number()
-        .min(1, "Bank Type is required")
-        .required("Required"),
+      AccountID: Yup.number().min(1, "Bank Type is required").required("Required"),
       VDate: Yup.date().required("Date is required"),
       ChequeNo: Yup.string().required("Cheque No is required"),
       ChequeDate: Yup.date().required("Cheque Date is required"),
@@ -125,7 +165,7 @@ const SalaryAllowanceDeduction = () => {
     },
   });
 
-  // Fetch allowanceDeductionDetails when GroupID changes
+  // Fetch allowanceDeductionDetails for dropdown when VType or GroupID changes
   useEffect(() => {
     if (formik.values.VType && formik.values.GroupID && !editingGroup) {
       dispatch(
@@ -133,7 +173,9 @@ const SalaryAllowanceDeduction = () => {
           VType: formik.values.VType,
           GroupID: formik.values.GroupID,
         })
-      );
+      ).then((response) => {
+        setDropdownAllowanceDetails(response.payload || []);
+      });
       formik.setFieldValue("AllowDedID", "");
     }
   }, [formik.values.VType, formik.values.GroupID, dispatch, editingGroup]);
@@ -173,17 +215,17 @@ const SalaryAllowanceDeduction = () => {
     const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
     const { VType, GroupID } = await fetchTypeAndEffectDetails(group.AllowDedID);
 
-    // Fetch allowanceDeductionDetails for the selected VType and GroupID
+    // Fetch allowanceDeductionDetails for dropdown
     if (VType && GroupID) {
-      await dispatch(
+      const response = await dispatch(
         getAllowanceDeductionDetails({
           VType,
           GroupID,
         })
-      );
+      ).unwrap();
+      setDropdownAllowanceDetails(response || []);
     }
 
-    // Set form values after fetching details
     setEditingGroup(group);
     formik.setValues({
       VName: group.VName || "",
@@ -234,6 +276,7 @@ const SalaryAllowanceDeduction = () => {
                     title="Salary Allowance Deduction"
                     onCancel={() => {
                       formik.resetForm();
+                      setDropdownAllowanceDetails([]);
                     }}
                     isEditMode={!!editingGroup}
                   />
@@ -261,9 +304,7 @@ const SalaryAllowanceDeduction = () => {
                               ))}
                             </select>
                             {formik.touched.ETypeID && formik.errors.ETypeID ? (
-                              <div className="text-danger">
-                                {formik.errors.ETypeID}
-                              </div>
+                              <div className="text-danger">{formik.errors.ETypeID}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -283,9 +324,7 @@ const SalaryAllowanceDeduction = () => {
                               <option value="">---Select---</option>
                               {employee
                                 .filter(
-                                  (emp) =>
-                                    emp.ETypeID ===
-                                    parseInt(formik.values.ETypeID)
+                                  (emp) => emp.ETypeID === parseInt(formik.values.ETypeID)
                                 )
                                 .map((item) => (
                                   <option key={item.EmpID} value={item.EmpID}>
@@ -294,9 +333,7 @@ const SalaryAllowanceDeduction = () => {
                                 ))}
                             </select>
                             {formik.touched.EmpID && formik.errors.EmpID ? (
-                              <div className="text-danger">
-                                {formik.errors.EmpID}
-                              </div>
+                              <div className="text-danger">{formik.errors.EmpID}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -318,9 +355,7 @@ const SalaryAllowanceDeduction = () => {
                               <option value="Deduction">Deduction</option>
                             </select>
                             {formik.touched.VType && formik.errors.VType ? (
-                              <div className="text-danger">
-                                {formik.errors.VType}
-                              </div>
+                              <div className="text-danger">{formik.errors.VType}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -346,9 +381,7 @@ const SalaryAllowanceDeduction = () => {
                               ))}
                             </select>
                             {formik.touched.GroupID && formik.errors.GroupID ? (
-                              <div className="text-danger">
-                                {formik.errors.GroupID}
-                              </div>
+                              <div className="text-danger">{formik.errors.GroupID}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -364,22 +397,17 @@ const SalaryAllowanceDeduction = () => {
                               value={formik.values.AllowDedID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
-                              disabled={
-                                !formik.values.GroupID || detailsLoading
-                              }
+                              disabled={!formik.values.GroupID}
                             >
                               <option value="">---Select---</option>
-                              {allowanceDeductionDetails.map((item) => (
+                              {dropdownAllowanceDetails.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
-                            {formik.touched.AllowDedID &&
-                            formik.errors.AllowDedID ? (
-                              <div className="text-danger">
-                                {formik.errors.AllowDedID}
-                              </div>
+                            {formik.touched.AllowDedID && formik.errors.AllowDedID ? (
+                              <div className="text-danger">{formik.errors.AllowDedID}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -397,9 +425,7 @@ const SalaryAllowanceDeduction = () => {
                               {...formik.getFieldProps("Amount")}
                             />
                             {formik.touched.Amount && formik.errors.Amount ? (
-                              <div className="text-danger">
-                                {formik.errors.Amount}
-                              </div>
+                              <div className="text-danger">{formik.errors.Amount}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -417,9 +443,7 @@ const SalaryAllowanceDeduction = () => {
                               {...formik.getFieldProps("VDate")}
                             />
                             {formik.touched.VDate && formik.errors.VDate ? (
-                              <div className="text-danger">
-                                {formik.errors.VDate}
-                              </div>
+                              <div className="text-danger">{formik.errors.VDate}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -441,11 +465,8 @@ const SalaryAllowanceDeduction = () => {
                                 </option>
                               ))}
                             </select>
-                            {formik.touched.AccountID &&
-                            formik.errors.AccountID ? (
-                              <div className="text-danger">
-                                {formik.errors.AccountID}
-                              </div>
+                            {formik.touched.AccountID && formik.errors.AccountID ? (
+                              <div className="text-danger">{formik.errors.AccountID}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -462,11 +483,8 @@ const SalaryAllowanceDeduction = () => {
                               placeholder="Cheque No"
                               {...formik.getFieldProps("ChequeNo")}
                             />
-                            {formik.touched.ChequeNo &&
-                            formik.errors.ChequeNo ? (
-                              <div className="text-danger">
-                                {formik.errors.ChequeNo}
-                              </div>
+                            {formik.touched.ChequeNo && formik.errors.ChequeNo ? (
+                              <div className="text-danger">{formik.errors.ChequeNo}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -482,11 +500,8 @@ const SalaryAllowanceDeduction = () => {
                               name="ChequeDate"
                               {...formik.getFieldProps("ChequeDate")}
                             />
-                            {formik.touched.ChequeDate &&
-                            formik.errors.ChequeDate ? (
-                              <div className="text-danger">
-                                {formik.errors.ChequeDate}
-                              </div>
+                            {formik.touched.ChequeDate && formik.errors.ChequeDate ? (
+                              <div className="text-danger">{formik.errors.ChequeDate}</div>
                             ) : null}
                           </div>
                         </Col>
@@ -541,9 +556,7 @@ const SalaryAllowanceDeduction = () => {
                                   )?.EName || "N/A"}
                                 </td>
                                 <td>
-                                  {tableAllowanceDetails.find(
-                                    (item) => item.VID === group.AllowDedID
-                                  )?.VName || "N/A"}
+                                  {tableAllowanceDetails[group.AllowDedID]?.VName || "N/A"}
                                 </td>
                                 <td>{group.Amount || "N/A"}</td>
                                 <td>{formatDate(group.VDate)}</td>
