@@ -13,10 +13,10 @@ import {
 } from "reactstrap";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
 import ReportsPreview from "../../../Components/pdfsPreviews/reports"; 
-import UnpostedPreview from "../../../Components/pdfsPreviews/UnpostedPreview";
-import PostedPreview from "../../../Components/pdfsPreviews/PostedPreview";
-import LatecomerPreview from "../../../Components/pdfsPreviews/LatecomerPreview";
-import AbsenteesPreview from "../../../Components/pdfsPreviews/AbsenteesPreview";
+import UnpostedPreview from "../../../Components/pdfsPreviews/DailyAttRpts/UnpostedPreview";
+import PostedPreview from "../../../Components/pdfsPreviews/DailyAttRpts/PostedPreview";
+import LatecomerPreview from "../../../Components/pdfsPreviews/DailyAttRpts/LatecomerPreview";
+import AbsenteesPreview from "../../../Components/pdfsPreviews/DailyAttRpts/AbsenteesPreview";
 import RenderTable from "./RenderTable";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
