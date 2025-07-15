@@ -14,6 +14,7 @@ import {
   AccordionItem,
   Collapse,
 } from "reactstrap";
+import Invoice from "../../../Components/pdfsPreviews/invoice"; 
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import DataTable from "react-data-table-component";
@@ -439,94 +440,76 @@ const EmployeeList = () => {
     XLSX.writeFile(workbook, "Employee-List.xlsx");
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Employee List", 105, 15, { align: "center" });
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
+const exportToPDF = () => {
+  // Use landscape orientation for more width
+  const doc = new jsPDF({ orientation: "landscape" });
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("Employee List", doc.internal.pageSize.getWidth() / 2, 15, { align: "center" });
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.text(`Generated on: ${new Date().toLocaleDateString()}`, doc.internal.pageSize.getWidth() / 2, 22, { align: "center" });
 
-    // Define your employee columns
-    const headers = [[
-      "Emp Code",
-      "Employee Name",
-      "Father Name",
-      "Designation",
-      "Birth Date",
-      "Joining Date",
-      "Probation Date",
-      "CNIC No",
-      "Mobile No",
-      "Email",
-      "Head Name",
-      "Company Code",
-      "Company Name",
-      "Is Active",
-      "Machine Card No",
-      "Basic Salary"
-    ]];
+  const headers = [[
+    "Emp Code",
+    "Employee Name",
+    "Father Name",
+    "Designation",
+    "Birth Date",
+    "Joining Date",
+    "Probation Date",
+    "CNIC No",
+    "Mobile No",
+    "Email",
+    "Head Name",
+    "Company Code",
+    "Company Name",
+    "Is Active",
+    "Machine Card No",
+    "Basic Salary"
+  ]];
 
-    // Use all employee records for export
-    const data = (employee || []).map(emp => [
-      emp.EmpCode,
-      emp.EName,
-      emp.FName,
-      emp.DesignationTitle,
-      emp.DOB,
-      emp.DOJ,
-      emp.ProbitionDate,
-      emp.NIC,
-      emp.CellPhone,
-      emp.Email,
-      emp.HODName,
-      emp.CompanyCode,
-      emp.CompanyName,
-      emp.IsActive,
-      emp.MachineCardNo,
-      emp.BasicSalary
-    ]);
+  const data = (employee || []).map(emp => [
+    emp.EmpCode,
+    emp.EName,
+    emp.FName,
+    emp.DesignationTitle,
+    emp.DOB,
+    emp.DOJ,
+    emp.ProbitionDate,
+    emp.NIC,
+    emp.CellPhone,
+    emp.Email,
+    emp.HODName,
+    emp.CompanyCode,
+    emp.CompanyName,
+    emp.IsActive,
+    emp.MachineCardNo,
+    emp.BasicSalary
+  ]);
 
-    autoTable(doc, {
-      head: headers,
-      body: data,
-      startY: 30,
-      margin: { top: 30 },
-      styles: { cellPadding: 4, fontSize: 8, valign: "middle", halign: "left" },
-      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 9, fontStyle: "bold", halign: "center" },
-      columnStyles: {
-        0: { cellWidth: 18, halign: "center" },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 20 },
-        5: { cellWidth: 20 },
-        6: { cellWidth: 20 },
-        7: { cellWidth: 28 },
-        8: { cellWidth: 22 },
-        9: { cellWidth: 35 },
-        10: { cellWidth: 25 },
-        11: { cellWidth: 20 },
-        12: { cellWidth: 30 },
-        13: { cellWidth: 15 },
-        14: { cellWidth: 22 },
-        15: { cellWidth: 22 }
-      },
-      didDrawPage: (data) => {
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(
-          `Page ${data.pageCount}`,
-          doc.internal.pageSize.width / 2,
-          doc.internal.pageSize.height - 10,
-          { align: "center" }
-        );
-      }
-    });
+  autoTable(doc, {
+    head: headers,
+    body: data,
+    startY: 30,
+    tableWidth: "auto", // Use full width in landscape
+    margin: { left: 14, right: 14, top: 30 },
+    styles: { cellPadding: 2, fontSize: 8, valign: "middle", halign: "left", overflow: 'linebreak' },
+    headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 9, fontStyle: "bold", halign: "center" },
+    didDrawPage: (data) => {
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(
+        `Page ${data.pageCount}`,
+        doc.internal.pageSize.width / 2,
+        doc.internal.pageSize.height - 10,
+        { align: "center" }
+      );
+    }
+  });
 
-    doc.save(`Employee_List_${new Date().toISOString().slice(0, 10)}.pdf`);
-  };
+  doc.save(`Employee_List_${new Date().toISOString().slice(0, 10)}.pdf`);
+};
 
 
   // Export to Word
@@ -659,6 +642,7 @@ const EmployeeList = () => {
                     Employee Filter
                   </h4>
                   <div className="flex-shrink-0">
+
                     <Button
                       type="submit"
                       color="success"
@@ -1474,7 +1458,12 @@ const EmployeeList = () => {
                     responsive
                     customStyles={customStyles}
                   />
-
+                    {/* {filteredData && filteredData.length > 0 && (
+                      <div className="mt-4">
+                        <h5>Invoice Preview</h5>
+                        <Invoice employee={filteredData[0]} />
+                      </div>
+                    )} */}
                 </CardBody>
               </Card>
             </Col>

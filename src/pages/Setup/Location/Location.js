@@ -20,7 +20,17 @@ import { CSVLink } from "react-csv"; // For CSV export
 import * as XLSX from "xlsx"; // For Excel export
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, TextRun, AlignmentType } from "docx";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  TextRun,
+  AlignmentType,
+} from "docx";
 import { saveAs } from "file-saver";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 // Import Images
@@ -31,7 +41,7 @@ import {
   updateLocation,
   deleteLocation,
 } from "../../../slices/setup/location/thunk";
-
+import config from "../../../config"; // ✅ correct
 const Location = () => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
@@ -71,6 +81,7 @@ const Location = () => {
       Address: "",
       AddressUrdu: "",
       Logo: null,
+      ExistingLogo: null,
       CompanyID: "1",
       UID: "1",
       IsActive: false,
@@ -95,18 +106,27 @@ const Location = () => {
     }),
     onSubmit: (values) => {
       // Add your form submission logic here
-      const transformedValues = {
-        ...values,
-        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
-      };
+      const formData = new FormData();
+      formData.append("VCode", values.VCode);
+      formData.append("VName", values.VName);
+      formData.append("VNameUrdu", values.VNameUrdu);
+      formData.append("SortOrder", values.SortOrder);
+      formData.append("Address", values.Address);
+      formData.append("AddressUrdu", values.AddressUrdu);
+      formData.append("CompanyID", values.CompanyID);
+      formData.append("UID", values.UID);
+      formData.append("IsActive", values.IsActive ? 1 : 0);
+      // Handle image
+      if (values.Logo instanceof File) {
+        formData.append("Logo", values.Logo);
+      } else if (values.ExistingLogo) {
+        formData.append("ExistingLogo", values.ExistingLogo); // Send existing logo URL if no new file
+      }
       if (editingGroup) {
-        console.log("Editing Group", transformedValues);
-        dispatch(
-          updateLocation({ ...transformedValues, VID: editingGroup.VID })
-        );
+        dispatch(updateLocation({ ...values, VID: editingGroup.VID }));
         setEditingGroup(null); // Reset after submission
       } else {
-        dispatch(submitLocation(transformedValues));
+        dispatch(submitLocation(values));
       }
       formik.resetForm();
       setImagePreview(null); // Reset image preview
@@ -117,6 +137,7 @@ const Location = () => {
     const file = event.target.files[0];
     if (file) {
       formik.setFieldValue("Logo", file); // Set file in Formik
+      formik.setFieldValue("ExistingLogo", null); // Clear existing logo if new file is selected
       setImagePreview(URL.createObjectURL(file)); // Create preview URL
     }
   };
@@ -132,12 +153,16 @@ const Location = () => {
     setDeleteModal(false);
   };
   const handleEditClick = (group) => {
+    const existingLogoUrl = group.Logo
+      ? `${config.media.IMAGE_URL}${group.Logo}`
+      : null;
     setEditingGroup(group);
     console.log(group);
     formik.setValues({
       Address: group.Address,
       AddressUrdu: group.AddressUrdu,
-      Logo: null,
+      Logo: null, // Reset to null to allow new file upload
+      ExistingLogo: existingLogoUrl, // Store existing logo URL
       VCode: group.VCode,
       VName: group.VName,
       VNameUrdu: group.VNameUrdu,
@@ -146,61 +171,88 @@ const Location = () => {
       CompanyID: group.CompanyID,
       IsActive: group.IsActive == true,
     });
-    setImagePreview(group.Logo || null); // Show existing image if available
+    setImagePreview(existingLogoUrl);
   };
   document.title = "Location | EMS";
 
   // ...existing code...
 
-// Export to Excel
-const exportToExcel = () => {
-  const worksheet = XLSX.utils.json_to_sheet(location || []);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Locations");
-  XLSX.writeFile(workbook, "Locations.xlsx");
-};
+  // Export to Excel
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(location || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Locations");
+    XLSX.writeFile(workbook, "Locations.xlsx");
+  };
 
-// Export to PDF
-const exportToPDF = () => {
-  try {
-    const doc = new jsPDF();
+  // Export to PDF
+  const exportToPDF = () => {
+    try {
+      const doc = new jsPDF();
 
-    // Add title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.text("Locations Report", 105, 15, { align: "center" });
+      // Add title
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("Locations Report", doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
 
+      // Add date
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, {
+        align: "center",
+      });
     // Add date
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
+    doc.text(
+      `Generated on: ${new Date().toLocaleDateString()}`,
+      doc.internal.pageSize.getWidth() / 2,
+      28,
+      { align: "center" }
+    );
 
-    // Prepare data for the table
-    const headers = [
-      ["Code", "Title", "Title Urdu", "Address", "Address Urdu", "Sort Order", "Status"]
-    ];
+      // Prepare data for the table
+      const headers = [
+        [
+          "Code",
+          "Title",
+          "Title Urdu",
+          "Address",
+          "Address Urdu",
+          "Sort Order",
+          "Status",
+        ],
+      ];
 
-    const data = location.map(loc => [
-      loc.VCode,
-      loc.VName,
-      loc.VNameUrdu,
-      loc.Address,
-      loc.AddressUrdu,
-      loc.SortOrder,
-      loc.IsActive === 1 || loc.IsActive === true ? "Active" : "Inactive"
-    ]);
+      const data = location.map((loc) => [
+        loc.VCode,
+        loc.VName,
+        loc.VNameUrdu,
+        loc.Address,
+        loc.AddressUrdu,
+        loc.SortOrder,
+        loc.IsActive === 1 || loc.IsActive === true ? "Active" : "Inactive",
+      ]);
 
-    // Add table
+    // Calculate total table width
+    const colWidths = [18, 28, 28, 32, 32, 14, 18];
+    const tableWidth = colWidths.reduce((a, b) => a + b, 0);
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const leftMargin = (pageWidth - tableWidth) / 2;
+
+    // Add table centered
     autoTable(doc, {
       head: headers,
       body: data,
-      startY: 30,
-      margin: { top: 30 },
+      startY: 38,
+      tableWidth: "auto",
+      margin: { left: leftMargin, right: leftMargin, top: 30 },
       styles: {
-        cellPadding: 4,
+        cellPadding: 3,
         fontSize: 10,
         valign: "middle",
         halign: "left",
+        overflow: 'linebreak',
       },
       headStyles: {
         fillColor: [41, 128, 185],
@@ -210,16 +262,15 @@ const exportToPDF = () => {
         halign: "center"
       },
       columnStyles: {
-        0: { cellWidth: 20, halign: "center" },
-        1: { cellWidth: 35 },
-        2: { cellWidth: 35 },
-        3: { cellWidth: 40 },
-        4: { cellWidth: 40 },
-        5: { cellWidth: 20, halign: "center" },
-        6: { cellWidth: 20, halign: "center" }
+        0: { cellWidth: 18, halign: "center" },   // Code
+        1: { cellWidth: 28 },                     // Title
+        2: { cellWidth: 28 },                     // Title Urdu
+        3: { cellWidth: 32 },                     // Address
+        4: { cellWidth: 32 },                     // Address Urdu
+        5: { cellWidth: 14, halign: "center" },   // Sort Order
+        6: { cellWidth: 18, halign: "center" }    // Status
       },
       didDrawPage: (data) => {
-        // Footer
         doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(
@@ -231,200 +282,209 @@ const exportToPDF = () => {
       }
     });
 
-    // Save the PDF
-    doc.save(`Locations_${new Date().toISOString().slice(0, 10)}.pdf`);
-  } catch (error) {
-    console.error("Error generating PDF:", error);
-    alert("Failed to generate PDF. Please try again.");
-  }
-};
+      // Save the PDF
+      doc.save(`Locations_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Failed to generate PDF. Please try again.");
+    }
+  };
 
-// Export to Word
-const exportToWord = () => {
-  const data = location || [];
+  // Export to Word
+  const exportToWord = () => {
+    const data = location || [];
 
-  const tableRows = [];
+    const tableRows = [];
 
-  // Add header row
-  if (data.length > 0) {
-    const headerCells = [
-      "Code", "Title", "Title Urdu", "Address", "Address Urdu", "Sort Order", "Status"
-    ].map(key =>
-      new TableCell({
-        children: [
-          new Paragraph({
+    // Add header row
+    if (data.length > 0) {
+      const headerCells = [
+        "Code",
+        "Title",
+        "Title Urdu",
+        "Address",
+        "Address Urdu",
+        "Sort Order",
+        "Status",
+      ].map(
+        (key) =>
+          new TableCell({
             children: [
-              new TextRun({
-                text: key,
-                bold: true,
-                size: 20, // 12pt font
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: key,
+                    bold: true,
+                    size: 20, // 12pt font
+                  }),
+                ],
+                alignment: AlignmentType.CENTER,
               }),
             ],
-            alignment: AlignmentType.CENTER,
-          }),
-        ],
-        width: {
-          size: 100 / 7,
-          type: WidthType.PERCENTAGE,
-        },
-      })
-    );
-    tableRows.push(new TableRow({ children: headerCells }));
-  }
-
-  // Add data rows
-  data.forEach(item => {
-    const rowCells = [
-      item.VCode,
-      item.VName,
-      item.VNameUrdu,
-      item.Address,
-      item.AddressUrdu,
-      item.SortOrder,
-      item.IsActive === 1 || item.IsActive === true ? "Active" : "Inactive"
-    ].map(value =>
-      new TableCell({
-        children: [
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: String(value ?? ""),
-                size: 18, // 11pt font
-              }),
-            ],
-            alignment: AlignmentType.LEFT,
-          }),
-        ],
-        width: {
-          size: 100 / 7,
-          type: WidthType.PERCENTAGE,
-        },
-      })
-    );
-    tableRows.push(new TableRow({ children: rowCells }));
-  });
-
-  const doc = new Document({
-    sections: [
-      {
-        children: [
-          new Paragraph({
-            text: "Locations",
-            heading: "Heading1", // Bigger title
-          }),
-          new Table({
-            rows: tableRows,
             width: {
-              size: 100,
+              size: 100 / 7,
               type: WidthType.PERCENTAGE,
             },
-          }),
-        ],
-      },
-    ],
-  });
+          })
+      );
+      tableRows.push(new TableRow({ children: headerCells }));
+    }
 
-  Packer.toBlob(doc).then(blob => {
-    saveAs(blob, "Locations.docx");
-  });
-};
+    // Add data rows
+    data.forEach((item) => {
+      const rowCells = [
+        item.VCode,
+        item.VName,
+        item.VNameUrdu,
+        item.Address,
+        item.AddressUrdu,
+        item.SortOrder,
+        item.IsActive === 1 || item.IsActive === true ? "Active" : "Inactive",
+      ].map(
+        (value) =>
+          new TableCell({
+            children: [
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: String(value ?? ""),
+                    size: 18, // 11pt font
+                  }),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+            ],
+            width: {
+              size: 100 / 7,
+              type: WidthType.PERCENTAGE,
+            },
+          })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
 
-// ...existing code...
-    const columns = [
-  {
-    name: "Code",
-    selector: (row) => row.VCode,
-    sortable: true,
-  },
-  {
-    name: "Title",
-    selector: (row) => row.VName,
-    sortable: true,
-  },
-  {
-    name: "Title Urdu",
-    selector: (row) => row.VNameUrdu,
-    sortable: true,
-  },
-  {
-    name: "Address",
-    selector: (row) => row.Address,
-    sortable: true,
-  },
-  {
-    name: "Address Urdu",
-    selector: (row) => row.AddressUrdu,
-    sortable: true,
-  },
-  {
-    name: "Logo",
-    cell: (row) => (
-      <img
-        src={row.Logo || avtarImage3}
-        alt="Logo"
-        className="avatar-xs rounded-circle"
-      />
-    ),
-    ignoreRowClick: true,
-    allowOverflow: true,
-    button: true,
-  },
-  {
-    name: "Action",
-    cell: (row) => (
-      <div className="d-flex gap-2">
-        <Button
-          className="btn btn-soft-info btn-sm"
-          onClick={() => handleEditClick(row)}
-        >
-          <i className="bx bx-edit"></i>
-        </Button>
-        <Button
-          className="btn btn-soft-danger btn-sm"
-          onClick={() => handleDeleteClick(row.VID)}
-        >
-          <i className="ri-delete-bin-2-line"></i>
-        </Button>
-      </div>
-    ),
-    ignoreRowClick: true,
-    allowOverflow: true,
-    button: true,
-  },
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Locations",
+              heading: "Heading1", // Bigger title
+            }),
+            new Table({
+              rows: tableRows,
+              width: {
+                size: 100,
+                type: WidthType.PERCENTAGE,
+              },
+            }),
+          ],
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then((blob) => {
+      saveAs(blob, "Locations.docx");
+    });
+  };
+
+  // ...existing code...
+  const columns = [
+    {
+      name: "Code",
+      selector: (row) => row.VCode,
+      sortable: true,
+    },
+    {
+      name: "Title",
+      selector: (row) => row.VName,
+      sortable: true,
+    },
+    {
+      name: "Title Urdu",
+      selector: (row) => row.VNameUrdu,
+      sortable: true,
+    },
+    {
+      name: "Address",
+      selector: (row) => row.Address,
+      sortable: true,
+    },
+    {
+      name: "Address Urdu",
+      selector: (row) => row.AddressUrdu,
+      sortable: true,
+    },
+    {
+      name: "Logo",
+      cell: (row) => (
+        <img
+          // src={row.Logo || avtarImage3}
+          src={row.Logo ? `${config.media.IMAGE_URL}${row.Logo}` : avtarImage3}
+          alt="Logo"
+          className="avatar-xs rounded-circle"
+        />
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.VID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
   ];
 
-    const customStyles = {
-      table: {
-        style: {
-          border: '1px solid #dee2e6',
-        },
+  const customStyles = {
+    table: {
+      style: {
+        border: "1px solid #dee2e6",
       },
-      headRow: {
-        style: {
-          backgroundColor: '#f8f9fa',
-          borderBottom: '1px solid #dee2e6',
-          fontWeight: '600',
-        },
+    },
+    headRow: {
+      style: {
+        backgroundColor: "#f8f9fa",
+        borderBottom: "1px solid #dee2e6",
+        fontWeight: "600",
       },
-      rows: {
-        style: {
-          minHeight: '48px',
-          borderBottom: '1px solid #dee2e6',
-        },
+    },
+    rows: {
+      style: {
+        minHeight: "48px",
+        borderBottom: "1px solid #dee2e6",
       },
-      cells: {
-        style: {
-          paddingLeft: '16px',
-          paddingRight: '16px',
-          borderRight: '1px solid #dee2e6',
-        },
+    },
+    cells: {
+      style: {
+        paddingLeft: "16px",
+        paddingRight: "16px",
+        borderRight: "1px solid #dee2e6",
       },
-    };
-      const isEditMode = editingGroup !== null;
-      const handleCancel = () => {
-      formik.resetForm();
-      setEditingGroup(null); // This resets the title to "Add Department Group"
-    };
+    },
+  };
+  const isEditMode = editingGroup !== null;
+  const handleCancel = () => {
+    formik.resetForm();
+    setEditingGroup(null); // This resets the title to "Add Department Group"
+  };
   return (
     <React.Fragment>
       <div className="page-content">
@@ -611,38 +671,56 @@ const exportToWord = () => {
             </Col>
             <Col lg={12}>
               <Card>
-                 <CardBody>
-                <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                  <div className="d-flex flex-wrap gap-2 mb-2">
-                    <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
-                    <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
-                    <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
-                    <CSVLink
-                      data={location || []}
-                      filename="location.csv"
-                      className="btn btn-sm btn-secondary"
-                    >
-                      Export to CSV
-                    </CSVLink>
+                <CardBody>
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div className="d-flex flex-wrap gap-2 mb-2">
+                      <Button
+                        className="btn-sm"
+                        color="success"
+                        onClick={exportToExcel}
+                      >
+                        Export to Excel
+                      </Button>
+                      <Button
+                        className="btn-sm"
+                        color="primary"
+                        onClick={exportToWord}
+                      >
+                        Export to Word
+                      </Button>
+                      <Button
+                        className="btn-sm"
+                        color="danger"
+                        onClick={exportToPDF}
+                      >
+                        Export to PDF
+                      </Button>
+                      <CSVLink
+                        data={location || []}
+                        filename="location.csv"
+                        className="btn btn-sm btn-secondary"
+                      >
+                        Export to CSV
+                      </CSVLink>
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className="form-control form-control-sm"
+                        style={{ width: "200px" }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Search"
-                      className="form-control form-control-sm"
-                      style={{ width: '200px' }}
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                    />
-                  </div>
-                </div>
                   <DataTable
                     title="locations"
                     columns={columns}
                     data={filteredData}
                     pagination
-                    paginationPerPage={100} 
-                    paginationRowsPerPageOptions={[100, 200, 500]} 
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 500]}
                     highlightOnHover
                     responsive
                     customStyles={customStyles}

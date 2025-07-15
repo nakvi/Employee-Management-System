@@ -9,6 +9,7 @@ import {
   Input,
   Label,
   Form,
+  CardHeader
 } from "reactstrap";
 import { format } from "date-fns";
 import { Link } from "react-router-dom";
@@ -54,7 +55,7 @@ const LeaveBalance = () => {
     dispatch(getAttendanceGroup());
     dispatch(getLocation());
   }, [dispatch]);
-    // Filtered DataTable data
+  // Filtered DataTable data
   useEffect(() => {
     if (leaveBalance) {
       const filtered = leaveBalance.filter((item) =>
@@ -91,7 +92,7 @@ const LeaveBalance = () => {
       VName: Yup.string()
         .required("Title is required.")
         .min(3, "Title at least must be 3 characters "),
-        DateFrom: Yup.date()
+      DateFrom: Yup.date()
         .required("Start date is required."),
       DateTo: Yup.date()
         .required("End date is required.")
@@ -101,7 +102,7 @@ const LeaveBalance = () => {
         .required("Leave limit is required."),
       // AttGroupID: Yup.number().required("Attendance Group is required."),
       AttGroupID: Yup.string()
-      .test("is-valid-leave-type", "Attendance Group is required.", (value) => value !== "-1"),
+        .test("is-valid-leave-type", "Attendance Group is required.", (value) => value !== "-1"),
       IsActive: Yup.boolean(),
     }),
     onSubmit: (values) => {
@@ -110,10 +111,10 @@ const LeaveBalance = () => {
         ...values,
         IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
       };
-          // Remove LocationID if it's "-1" (default/unselected)
-    if (transformedValues.LocationID === -1) {
-      transformedValues.LocationID === "";
-    }
+      // Remove LocationID if it's "-1" (default/unselected)
+      if (transformedValues.LocationID === -1) {
+        transformedValues.LocationID === "";
+      }
       if (editingGroup) {
         console.log("Editing Group", transformedValues);
         dispatch(
@@ -141,8 +142,8 @@ const LeaveBalance = () => {
     setEditingGroup(group);
     const formatDateForInput = (dateString) => {
       return dateString ? dateString.split("T")[0] : ""; // Extract YYYY-MM-DD part
-    };   
-     formik.setValues({
+    };
+    formik.setValues({
       VName: group.VName,
       AttGroupID: group.AttGroupID,
       DateFrom: formatDateForInput(group.DateFrom),
@@ -157,210 +158,210 @@ const LeaveBalance = () => {
   const formatDate = (dateString) => {
     return dateString ? format(new Date(dateString), "dd/MM/yyyy") : "";
   };
- 
+
   document.title = "Leave Balance | EMS";
 
-    const isEditMode = editingGroup !== null;
-    const handleCancel = () => {
-      formik.resetForm();
-      setEditingGroup(null);
-    };
-    // Export functions
-    const exportToExcel = () => {
-      const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "LeaveBalance");
-      XLSX.writeFile(workbook, "LeaveBalance.xlsx");
-    };
+  const isEditMode = editingGroup !== null;
+  const handleCancel = () => {
+    formik.resetForm();
+    setEditingGroup(null);
+  };
+  // Export functions
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "LeaveBalance");
+    XLSX.writeFile(workbook, "LeaveBalance.xlsx");
+  };
 
-    const exportToPDF = () => {
-      const doc = new jsPDF();
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(16);
-      doc.text("Leave Balance Report", 105, 15, { align: "center" });
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("Leave Balance Report", 105, 15, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, { align: "center" });
 
-      const headers = [["Attendance Group", "Leave Limit", "Title", "Location", "Date From", "Date To"]];
-      const data = (filteredData || []).map(row => [
+    const headers = [["Attendance Group", "Leave Limit", "Title", "Location", "Date From", "Date To"]];
+    const data = (filteredData || []).map(row => [
+      attendanceGroup?.data?.find((g) => g.VID === row.AttGroupID)?.VName || "",
+      row.LeaveLimit,
+      row.VName,
+      location?.find((g) => g.VID === row.LocationID)?.VName || "",
+      formatDate(row.DateFrom),
+      formatDate(row.DateTo),
+    ]);
+
+    autoTable(doc, {
+      head: headers,
+      body: data,
+      startY: 30,
+      margin: { top: 30 },
+      styles: { cellPadding: 4, fontSize: 10, valign: "middle", halign: "left" },
+      headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 10, fontStyle: "bold", halign: "center" },
+      didDrawPage: (data) => {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text(
+          `Page ${data.pageCount}`,
+          doc.internal.pageSize.width / 2,
+          doc.internal.pageSize.height - 10,
+          { align: "center" }
+        );
+      }
+    });
+
+    doc.save(`LeaveBalance_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
+  const exportToWord = () => {
+    const data = filteredData || [];
+    const tableRows = [];
+
+    // Add header row
+    if (data.length > 0) {
+      const headerCells = [
+        "Attendance Group", "Leave Limit", "Title", "Location", "Date From", "Date To"
+      ].map(key =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: key,
+                  bold: true,
+                  size: 20,
+                }),
+              ],
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+          width: { size: 100 / 6, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: headerCells }));
+    }
+
+    // Add data rows
+    data.forEach(row => {
+      const rowCells = [
         attendanceGroup?.data?.find((g) => g.VID === row.AttGroupID)?.VName || "",
         row.LeaveLimit,
         row.VName,
         location?.find((g) => g.VID === row.LocationID)?.VName || "",
         formatDate(row.DateFrom),
         formatDate(row.DateTo),
-      ]);
+      ].map(value =>
+        new TableCell({
+          children: [
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: String(value ?? ""),
+                  size: 18,
+                }),
+              ],
+              alignment: AlignmentType.LEFT,
+            }),
+          ],
+          width: { size: 100 / 6, type: WidthType.PERCENTAGE },
+        })
+      );
+      tableRows.push(new TableRow({ children: rowCells }));
+    });
 
-      autoTable(doc, {
-        head: headers,
-        body: data,
-        startY: 30,
-        margin: { top: 30 },
-        styles: { cellPadding: 4, fontSize: 10, valign: "middle", halign: "left" },
-        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontSize: 10, fontStyle: "bold", halign: "center" },
-        didDrawPage: (data) => {
-          doc.setFontSize(10);
-          doc.setTextColor(100);
-          doc.text(
-            `Page ${data.pageCount}`,
-            doc.internal.pageSize.width / 2,
-            doc.internal.pageSize.height - 10,
-            { align: "center" }
-          );
-        }
-      });
-
-      doc.save(`LeaveBalance_${new Date().toISOString().slice(0, 10)}.pdf`);
-    };
-
-    const exportToWord = () => {
-      const data = filteredData || [];
-      const tableRows = [];
-
-      // Add header row
-      if (data.length > 0) {
-        const headerCells = [
-          "Attendance Group", "Leave Limit", "Title", "Location", "Date From", "Date To"
-        ].map(key =>
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: key,
-                    bold: true,
-                    size: 20,
-                  }),
-                ],
-                alignment: AlignmentType.CENTER,
-              }),
-            ],
-            width: { size: 100 / 6, type: WidthType.PERCENTAGE },
-          })
-        );
-        tableRows.push(new TableRow({ children: headerCells }));
-      }
-
-      // Add data rows
-      data.forEach(row => {
-        const rowCells = [
-          attendanceGroup?.data?.find((g) => g.VID === row.AttGroupID)?.VName || "",
-          row.LeaveLimit,
-          row.VName,
-          location?.find((g) => g.VID === row.LocationID)?.VName || "",
-          formatDate(row.DateFrom),
-          formatDate(row.DateTo),
-        ].map(value =>
-          new TableCell({
-            children: [
-              new Paragraph({
-                children: [
-                  new TextRun({
-                    text: String(value ?? ""),
-                    size: 18,
-                  }),
-                ],
-                alignment: AlignmentType.LEFT,
-              }),
-            ],
-            width: { size: 100 / 6, type: WidthType.PERCENTAGE },
-          })
-        );
-        tableRows.push(new TableRow({ children: rowCells }));
-      });
-
-      const doc = new Document({
-        sections: [
-          {
-            children: [
-              new Paragraph({
-                text: "Leave Balance",
-                heading: "Heading1",
-              }),
-              new Table({
-                rows: tableRows,
-                width: { size: 100, type: WidthType.PERCENTAGE },
-              }),
-            ],
-          },
-        ],
-      });
-
-      Packer.toBlob(doc).then(blob => {
-        saveAs(blob, "LeaveBalance.docx");
-      });
-    };
-
-    // DataTable columns
-    const columns = [
-      {
-        name: "Attendance Group",
-        selector: (row) =>
-          attendanceGroup?.data?.find((g) => g.VID === row.AttGroupID)?.VName || "",
-        sortable: true,
-      },
-      { name: "Leave Limit", selector: (row) => row.LeaveLimit, sortable: true },
-      { name: "Title", selector: (row) => row.VName, sortable: true },
-      {
-        name: "Location",
-        selector: (row) =>
-          location?.find((g) => g.VID === row.LocationID)?.VName || "",
-        sortable: true,
-      },
-      { name: "Date From", selector: (row) => formatDate(row.DateFrom), sortable: true },
-      { name: "Date To", selector: (row) => formatDate(row.DateTo), sortable: true },
-      {
-        name: "Action",
-        cell: (row) => (
-          <div className="d-flex gap-2">
-            <Button
-              className="btn btn-soft-info btn-sm"
-              onClick={() => handleEditClick(row)}
-            >
-              <i className="bx bx-edit"></i>
-            </Button>
-            <Button
-              className="btn btn-soft-danger btn-sm"
-              onClick={() => handleDeleteClick(row.VID)}
-            >
-              <i className="ri-delete-bin-2-line"></i>
-            </Button>
-          </div>
-        ),
-        ignoreRowClick: true,
-        allowOverflow: true,
-        button: true,
-      },
-    ];
-
-    const customStyles = {
-      table: {
-        style: {
-          border: '1px solid #dee2e6',
+    const doc = new Document({
+      sections: [
+        {
+          children: [
+            new Paragraph({
+              text: "Leave Balance",
+              heading: "Heading1",
+            }),
+            new Table({
+              rows: tableRows,
+              width: { size: 100, type: WidthType.PERCENTAGE },
+            }),
+          ],
         },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      saveAs(blob, "LeaveBalance.docx");
+    });
+  };
+
+  // DataTable columns
+  const columns = [
+    {
+      name: "Attendance Group",
+      selector: (row) =>
+        attendanceGroup?.data?.find((g) => g.VID === row.AttGroupID)?.VName || "",
+      sortable: true,
+    },
+    { name: "Leave Limit", selector: (row) => row.LeaveLimit, sortable: true },
+    { name: "Title", selector: (row) => row.VName, sortable: true },
+    {
+      name: "Location",
+      selector: (row) =>
+        location?.find((g) => g.VID === row.LocationID)?.VName || "",
+      sortable: true,
+    },
+    { name: "Date From", selector: (row) => formatDate(row.DateFrom), sortable: true },
+    { name: "Date To", selector: (row) => formatDate(row.DateTo), sortable: true },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.VID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+
+  const customStyles = {
+    table: {
+      style: {
+        border: '1px solid #dee2e6',
       },
-      headRow: {
-        style: {
-          backgroundColor: '#f8f9fa',
-          borderBottom: '1px solid #dee2e6',
-          fontWeight: '600',
-        },
+    },
+    headRow: {
+      style: {
+        backgroundColor: '#f8f9fa',
+        borderBottom: '1px solid #dee2e6',
+        fontWeight: '600',
       },
-      rows: {
-        style: {
-          minHeight: '48px',
-          borderBottom: '1px solid #dee2e6',
-        },
+    },
+    rows: {
+      style: {
+        minHeight: '48px',
+        borderBottom: '1px solid #dee2e6',
       },
-      cells: {
-        style: {
-          paddingLeft: '16px',
-          paddingRight: '16px',
-          borderRight: '1px solid #dee2e6',
-        },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        borderRight: '1px solid #dee2e6',
       },
-    };
+    },
+  };
 
   return (
     <React.Fragment>
@@ -372,15 +373,72 @@ const LeaveBalance = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
+                  {/* <PreviewCardHeader
                     title={isEditMode ? "Edit Leave Balance" : "Add Leave Balance"}
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
-                  />
+                  /> */}
+                  <CardHeader className="align-items-center d-flex py-2">
+                    <h4 className="card-title mb-0 flex-grow-1">
+                      Leave Balance
+                    </h4>
+                    <div className="flex-shrink-0">
+                      <Button
+                        type="submit"
+                        color="success"
+                        className="add-btn me-1 py-1"
+                        id="create-btn"
+                      >
+                        <i className="align-bottom me-1"></i>Save
+                      </Button>
+                      <Button color="dark" className="add-btn me-1 py-1"
+                        onCancel={handleCancel}>
+                        <i className="align-bottom me-1"></i> Cancel
+                      </Button>
+                    </div>
+                    <div className="d-inline-block position-relative">
+                      <Button
+                        tag="label"
+                        type="button" // <-- Fix here
+                        color="primary"
+                        className="add-btn me-1 py-1 mb-0"
+                        htmlFor="file-upload"
+                        title="Employee Leave"
+                      >
+                        <i className="align-bottom me-1"></i>Upload
+                      </Button>
+                      <Input
+                        type="file"
+                        id="file-upload"
+                        accept=".xlsx, .xls"
+                        // onChange={handleFileUpload}
+                        style={{ display: "none" }}
+                      />
+                    </div>
+                    <div className="d-inline-block position-relative">
+                      <Button
+                        tag="label"
+                        type="button" // <-- Fix here
+                        color="primary"
+                        className="add-btn me-1 py-1 mb-0"
+                        htmlFor="file-upload"
+                        title="Leave Balanace"
+                      >
+                        <i className="align-bottom me-1"></i>Upload
+                      </Button>
+                      <Input
+                        type="file"
+                        id="file-upload"
+                        accept=".xlsx, .xls"
+                        // onChange={handleFileUpload}
+                        style={{ display: "none" }}
+                      />
+                    </div>
+                  </CardHeader>
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        
+
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label
@@ -411,7 +469,7 @@ const LeaveBalance = () => {
                               )}
                             </select>
                             {formik.touched.AttGroupID &&
-                            formik.errors.AttGroupID ? (
+                              formik.errors.AttGroupID ? (
                               <div className="text-danger">
                                 {formik.errors.AttGroupID}
                               </div>
@@ -431,7 +489,7 @@ const LeaveBalance = () => {
                               {...formik.getFieldProps("LeaveLimit")}
                             />
                             {formik.touched.LeaveLimit &&
-                            formik.errors.LeaveLimit ? (
+                              formik.errors.LeaveLimit ? (
                               <div className="text-danger">
                                 {formik.errors.LeaveLimit}
                               </div>
@@ -456,11 +514,11 @@ const LeaveBalance = () => {
                               </div>
                             ) : null}
                           </div>
-                        </Col> 
+                        </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
                             <Label htmlFor="LocationID" className="form-label">
-                            Location
+                              Location
                             </Label>
                             <select
                               name="LocationID"
@@ -504,7 +562,7 @@ const LeaveBalance = () => {
                               {...formik.getFieldProps("DateFrom")}
                             />
                             {formik.touched.DateFrom &&
-                            formik.errors.DateFrom ? (
+                              formik.errors.DateFrom ? (
                               <div className="text-danger">
                                 {formik.errors.DateFrom}
                               </div>
@@ -521,7 +579,7 @@ const LeaveBalance = () => {
                               className="form-control-sm"
                               id="DateTo"
                               {...formik.getFieldProps("DateTo")}
-                             
+
 
                             />
                             {formik.touched.DateTo && formik.errors.DateTo ? (
@@ -557,7 +615,7 @@ const LeaveBalance = () => {
             </Col>
             <Col lg={12}>
               <Card>
-               <CardBody>
+                <CardBody>
                   <div className="d-flex flex-wrap gap-2 mb-2">
                     <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
                     <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>

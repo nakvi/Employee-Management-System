@@ -350,7 +350,7 @@ const Advance = () => {
     });
   };
 
-  document.title = "Advance| EMS";
+  document.title = "Advance | EMS";
   return (
     <React.Fragment>
       <div className="page-content">
@@ -368,7 +368,7 @@ const Advance = () => {
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
-                        <Col xxl={2} md={2}>
+                         <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label htmlFor="ETypeID" className="form-label">
                               E-Type
@@ -407,6 +407,7 @@ const Advance = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee

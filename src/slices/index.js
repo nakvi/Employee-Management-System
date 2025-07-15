@@ -5,66 +5,14 @@ import LayoutReducer from "./layouts/reducer";
 
 // Authentication
 import LoginReducer from "./auth/login/reducer";
-import AccountReducer from "./auth/register/reducer";
 import ForgetPasswordReducer from "./auth/forgetpwd/reducer";
 import ProfileReducer from "./auth/profile/reducer";
 
-//Calendar
-import CalendarReducer from "./calendar/reducer";
-//Chat
-import chatReducer from "./chat/reducer";
-//Ecommerce
-import EcommerceReducer from "./ecommerce/reducer";
 
-//Project
-import ProjectsReducer from "./projects/reducer";
 
-// Tasks
-import TasksReducer from "./tasks/reducer";
 
-//Crypto
-import CryptoReducer from "./crypto/reducer";
 
-//TicketsList
-import TicketsReducer from "./tickets/reducer";
-//Crm
-import CrmReducer from "./crm/reducer";
 
-//Invoice
-import InvoiceReducer from "./invoice/reducer";
-
-//Mailbox
-import MailboxReducer from "./mailbox/reducer";
-
-// Dashboard Analytics
-import DashboardAnalyticsReducer from "./dashboardAnalytics/reducer";
-
-// Dashboard CRM
-import DashboardCRMReducer from "./dashboardCRM/reducer";
-
-// Dashboard Ecommerce
-import DashboardEcommerceReducer from "./dashboardEcommerce/reducer";
-
-// Dashboard Cryto
-import DashboardCryptoReducer from "./dashboardCrypto/reducer";
-
-// Dashboard Cryto
-import DashboardProjectReducer from "./dashboardProject/reducer";
-
-// Dashboard NFT
-import DashboardNFTReducer from "./dashboardNFT/reducer";
-
-// Pages > Team
-import TeamDataReducer from "./team/reducer";
-
-// File Manager
-import FileManagerReducer from "./fileManager/reducer";
-
-// To do
-import TodosReducer from "./todos/reducer";
-
-// Job
-import JobReducer from "./jobs/reducer";
 
 // API Key
 import APIKeyReducer from "./apiKey/reducer";
@@ -100,6 +48,9 @@ import ReligionReducer from "./employee/religion/reducer";
 import GenderReducer from "./employee/gender/reducer";
 import AdvanceReducer from "./employee/advance/reducer"
 import LocalSaleReducer from "./employee/localSales/reducer"
+import EmployeeTrialReducer from "./employee/employeeTrial/reducer"
+import GratuityReducer from "./employee/gratuity/reducer"
+import PaymentPlanReducer from "./employee/paymentPlan/reducer"
 
 // Administration
 import RolesReducer from "./administration/roles/reducer";
@@ -112,36 +63,28 @@ import SecUserRoleReducer from "./administration/secUserRole/reducer";
 // Attendance
 import AttendanceEntryReducer from "./Attendance/AttendanceEntry/reducer"; // Correct import
 import AttendanceChangeReducer from "./Attendance/AttendanceChange/reducer";
-
+import AttendanceEmployeeReducer from "./Attendance/AttendanceEmployee/reducer";
+import LeaveTypeReducer from "./Attendance/leaveType/reducer";
+import LeaveReducer from "./Attendance/leave/reducer";
+import SpecialLeaveEntryReducer from "./Attendance/specialLeaveEntry/reducer";
+import LeaveEntryDepartmentReducer from "./Attendance/leaveEntryDepartment/reducer";
+import LateComingExemptAttendanceReducer from "./Attendance/lateComingExemptAttendance/reducer";
+// OTDaily
+import OTDailyReducer from "./Attendance/OTDaily/reducer"; 
+// OTMonthly
+import OTMonthlyReducer from "./Attendance/OTMonthly/reducer"; 
+// Roaster
+import RosterReducer from "./Attendance/Roster/reducer"; 
+// Posting
+import AttendancePostingReducer from "./posting/attendancePosting/reducer";
 
 
 
 const rootReducer = combineReducers({
     Layout: LayoutReducer,
     Login: LoginReducer,
-    Account: AccountReducer,
     ForgetPassword: ForgetPasswordReducer,
     Profile: ProfileReducer,
-    Calendar: CalendarReducer,
-    Chat: chatReducer,
-    Projects: ProjectsReducer,
-    Ecommerce: EcommerceReducer,
-    Tasks: TasksReducer,
-    Crypto: CryptoReducer,
-    Tickets: TicketsReducer,
-    Crm: CrmReducer,
-    Invoice: InvoiceReducer,
-    Mailbox: MailboxReducer,
-    DashboardAnalytics: DashboardAnalyticsReducer,
-    DashboardCRM: DashboardCRMReducer,
-    DashboardEcommerce: DashboardEcommerceReducer,
-    DashboardCrypto: DashboardCryptoReducer,
-    DashboardProject: DashboardProjectReducer,
-    DashboardNFT: DashboardNFTReducer,
-    Team: TeamDataReducer,
-    FileManager: FileManagerReducer,
-    Todos: TodosReducer,
-    Jobs: JobReducer,
     APIKey: APIKeyReducer,
     Company: CompanyReducer, // Here is my work 01/23/2025
     Location: LocationReducer,
@@ -173,6 +116,9 @@ const rootReducer = combineReducers({
     Advance:AdvanceReducer,
     Gender:GenderReducer,
     LocalSale:LocalSaleReducer,
+    EmployeeTrial:EmployeeTrialReducer,
+    Gratuity:GratuityReducer,
+    PaymentPlan:PaymentPlanReducer,
     // Roles And Permission
     Role: RolesReducer, 
     RoleRight: RolesRightReducer, 
@@ -185,6 +131,17 @@ const rootReducer = combineReducers({
     // Add Attendance Entry Reducer
     AttendanceEntry: AttendanceEntryReducer, // Uncomment this line if you have an AttendanceEntry reducer
     AttendanceChange: AttendanceChangeReducer,
+    AttendanceEmployee : AttendanceEmployeeReducer,
+    LeaveType: LeaveTypeReducer,
+    Leave:LeaveReducer,
+    SpecialLeaveEntry:SpecialLeaveEntryReducer,
+    LeaveEntryDepartment:LeaveEntryDepartmentReducer,
+    LateComingExemptAttendance:LateComingExemptAttendanceReducer,
+    OTDaily: OTDailyReducer, 
+    OTMonthly: OTMonthlyReducer, 
+    Roster: RosterReducer, 
+    // Posting
+    AttendancePosting:AttendancePostingReducer,
 });
 
 export default rootReducer;

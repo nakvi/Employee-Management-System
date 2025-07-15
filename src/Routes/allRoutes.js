@@ -2,9 +2,7 @@ import React from "react";
 import { Navigate } from "react-router-dom";
 
 //Dashboard
-import DashboardCrm from "../pages/DashboardCrm";
-import DashboardEcommerce from "../pages/DashboardEcommerce";
-
+import Dashboard from "../pages/Dashboard/Index";
 //login
 import Login from "../pages/Authentication/Login";
 import ForgetPasswordPage from "../pages/Authentication/ForgetPassword";
@@ -13,7 +11,6 @@ import Register from "../pages/Authentication/Register";
 
 // User Profile
 import UserProfile from "../pages/Authentication/user-profile";
-import DashboardBlog from "../pages/DashboardBlog";
 // My setup form
 import Location from "../pages/Setup/Location/Location";
 import DepartmentGroup from "../pages/Setup/DepartmentGroup/DepartmentGroup";
@@ -42,9 +39,7 @@ import AttendanceEmployee from "../pages/Attendance/AttendanceEmployee/Attendanc
 import OTEntry from "../pages/Attendance/OTEntry/OTEntry";
 import DailyAttendanceReport from "../pages/Reports/DailyAttendanceReport/DailyAttendanceReport";
 import MonthlyAttendanceReport from "../pages/Reports/MonthlyAttendanceReport/MonthlyAttendanceReport";
-import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
 import EmployeeReport from "../pages/Employee/Reports/EmployeeReport";
-import DailyAttendancePosting from "../pages/Posting/DailyAttendance/DailyAttendance";
 import EmployeeLetter from "../pages/Employee/Letters/EmployeeLetter";
 import Roster from "../pages/Attendance/Roster/Roster";
 import SalaryPosting from "../pages/Posting/SalaryPosting/SalaryPosting";
@@ -67,8 +62,64 @@ import Configuration from "../pages/Administration/Configuration/Configuration";
 import EmployeeList from "../pages/Employee/Employee/EmployeeList";
 import EmployeeProfile from "../pages/Employee/Employee/EmployeeProfile";
 import SalaryAllowanceDeduction from "../pages/Employee/SalaryAllowanceDeduction/SalaryAllowanceDeduction";
+
+// daily att reports 
+import Invoice from "../Components/pdfsPreviews/invoice";
+import ReportsPreview from "../Components/pdfsPreviews/reports";
+import UnpostedPreview from "../Components/pdfsPreviews/DailyAttRpts/UnpostedPreview";
+import PostedPreview from "../Components/pdfsPreviews/DailyAttRpts/PostedPreview";
+import LatecomerPreview from "../Components/pdfsPreviews/DailyAttRpts/LatecomerPreview";
+import AbsenteesPreview from "../Components/pdfsPreviews/DailyAttRpts/AbsenteesPreview";
+// Monthly att reports 
+import MonthlyAttCardPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttCardPreview";
+import MonthlyAttSheetPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttSheetPreview";
+import MonthlyAttSummaryPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttSummaryPreview";
+import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttLeaveListPreview";
+// Salary reports 
+// import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
+import SalaryHistoryPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryHistoryPreview";
+import SalaryReportPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryReportPreview";
+import SalaryReportTwoPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryReportTwoPreview";
+import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalaryRpts/SalarySummaryReportPreview";
+import SalarySlipPreview from "../Components/pdfsPreviews/SalaryRpts/SalarySlipPreview";
+import SalaryOverTimeSheetPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryOverTimeSheetPreview";
+import SalaryOverTimeSummaryReportPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryOverTimeSummaryReportPreview";
+import SalaryFinalSettlementPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryFinalSettlementPreview";
+import SalaryAllwDedPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryAllwDedPreview";
+
+import AttendancePosting from "../pages/Posting/AttendancePosting/AttendancePosting";
+import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
+
+import SalarySlipPreview from "../Components/pdfsPreviews/SalarySlipPreview";
+
+
 const authProtectedRoutes = [
   // my routes setup
+  // Monthly att reports
+  { path: "/monthly-attendance-card-preview", component: <MonthlyAttCardPreview /> },
+  { path: "/monthly-attendance-sheet-preview", component: <MonthlyAttSheetPreview /> },
+  { path: "/monthly-attendance-summary-preview", component: <MonthlyAttSummaryPreview /> },
+  { path: "/monthly-attendance-leave-list-preview", component: <MonthlyAttLeaveListPreview /> },
+  // Salary reports
+  // { path: "/monthly-attendance-salary-report-preview", component: <MonthlyAttSalarySheetPreview /> },
+  { path: "/salary-history-preview", component: <SalaryHistoryPreview /> },
+  { path: "/salary-report-preview", component: <SalaryReportPreview /> },
+  { path: "/salary-report-two-preview", component: <SalaryReportTwoPreview /> },
+  { path: "/salary-summary-report-preview", component: <SalarySummaryReportPreview /> },
+  { path: "/salary-slip-preview", component: <SalarySlipPreview /> },
+  { path: "/salary-over-time-sheet-preview", component: <SalaryOverTimeSheetPreview /> },
+  { path: "/salary-over-time-summary-report-preview", component: <SalaryOverTimeSummaryReportPreview /> },
+  { path: "/salary-final-settlement-preview", component: <SalaryFinalSettlementPreview /> },
+  { path: "/salary-allowance-deduction-preview", component: <SalaryAllwDedPreview /> },
+
+
+  // daily att reports 
+  { path: "/report-preview", component: <ReportsPreview /> },
+  { path: "/unposted-preview", component: <UnpostedPreview /> },
+  { path: "/posted-preview", component: <PostedPreview /> },
+  { path: "/latecomer-preview", component: <LatecomerPreview /> },
+  { path: "/absentees-preview", component: <AbsenteesPreview /> },
+  { path: "/invoice-preview", component: <Invoice /> },
   { path: "/company", component: <Company /> },
   { path: "/location", component: <Location /> },
   { path: "/department-group", component: <DepartmentGroup /> },
@@ -112,7 +163,7 @@ const authProtectedRoutes = [
   { path: "/roster", component: <Roster/>},
   { path: "/backdate-entry", component: <BackdateEntry/>},
   // Posting
-  { path: "/daily-attendance-posting", component: <DailyAttendancePosting /> },
+  { path: "/attendance-posting", component: <AttendancePosting /> },
   { path: "/salary-posting", component: <SalaryPosting /> },
 
 
@@ -141,12 +192,9 @@ const authProtectedRoutes = [
 
 
 
-  // Attendance routes setup
+  // My Dashboard
+  { path: "/dashboard",component: <Dashboard/>},
 
-  { path: "/dashboard-crm", component: <DashboardCrm /> },
-  { path: "/dashboard", component: <DashboardEcommerce /> },
-  { path: "/index", component: <DashboardEcommerce /> },
-  { path: "/dashboard-blog", component: <DashboardBlog /> },
 
   //User Profile
   { path: "/profile", component: <UserProfile /> },

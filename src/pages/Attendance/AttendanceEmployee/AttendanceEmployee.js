@@ -10,66 +10,340 @@ import {
   Label,
   Form,
   CardHeader,
+  UncontrolledTooltip,
 } from "reactstrap";
-import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
+import { getAttendanceEmployee, saveAttendanceEmployee, resetAttendanceEmployeeData, removeExtraAttendance } from "../../../slices/Attendance/AttendanceEmployee/thunk";
+import { toast } from "react-toastify";
 
 const AttendanceEmployee = () => {
   const dispatch = useDispatch();
   document.title = "Attendance Employee | EMS";
 
+  // Form state
+  const [formData, setFormData] = useState({
+    etypeid: "",
+    deptids: "",
+    employeeidlist: "",
+    location: "",
+    datefrom: new Date().toISOString().split("T")[0], // Set current date as default
+    dateto: new Date().toISOString().split("T")[0], // Set current date as default
+  });
+
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState({
+    etypeid: "",
+    deptids: "",
+    employeeidlist: "",
+    datefrom: "",
+    dateto: "",
+  });
+
+  // State to manage table data with editable fields and checkbox status
+  const [tableData, setTableData] = useState([]);
+
+  // Selectors for Redux state
   const { department = {} } = useSelector((state) => state.Department || {});
-  const departmentList = department.data || [];
+  const departmentList = Array.isArray(department.data) ? department.data : [];
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
-  const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { employee = [] } = useSelector((state) => state.Employee || {});
+  const { location = [] } = useSelector((state) => state.Location || {});
+  const { attendanceEmployeeData = [], loading, error, saveLoading, saveError } = useSelector(
+    (state) => state.AttendanceEmployee || { attendanceEmployeeData: [], loading: false, error: null, saveLoading: false, saveError: null }
+  );
+
+  // Fetch initial data
   useEffect(() => {
     dispatch(getDepartment());
     dispatch(getEmployeeType());
     dispatch(getEmployee());
+    dispatch(getLocation());
   }, [dispatch]);
+
+  // Update tableData when attendanceEmployeeData changes
+  useEffect(() => {
+    setTableData(
+      attendanceEmployeeData.map((item) => ({
+        ...item,
+        post: item.changed || false,
+      }))
+    );
+  }, [attendanceEmployeeData]);
+
+  // Debug formData changes
+  useEffect(() => {
+    console.log("formData updated:", formData);
+    console.log("isRemoveButtonEnabled:", formData.deptids && formData.employeeidlist && formData.datefrom && formData.dateto);
+  }, [formData]);
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+  };
+
+  // Validate form for Fetch
+  const validateFetchForm = () => {
+    let isValid = true;
+    const errors = { etypeid: "" };
+
+    if (!formData.etypeid) {
+      errors.etypeid = "E-Type is required";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  // Validate form for Remove Extra Attendance
+  const validateRemoveForm = () => {
+    let isValid = true;
+    const errors = {
+      deptids: "",
+      employeeidlist: "",
+      datefrom: "",
+      dateto: "",
+    };
+
+    if (!formData.deptids) {
+      errors.deptids = "Department is required";
+      isValid = false;
+    }
+    if (!formData.employeeidlist) {
+      errors.employeeidlist = "Employee is required";
+      isValid = false;
+    }
+    if (!formData.datefrom) {
+      errors.datefrom = "Date From is required";
+      isValid = false;
+    }
+    if (!formData.dateto) {
+      errors.dateto = "Date To is required";
+      isValid = false;
+    }
+
+    setValidationErrors(errors);
+    return isValid;
+  };
+
+  // Handle Fetch button click
+  const handleFetch = () => {
+    if (!validateFetchForm()) {
+      console.log("Validation failed:", validationErrors);
+      toast.error("Please select an E-Type to fetch attendance data.");
+      return;
+    }
+
+    let datefrom = formData.datefrom || "";
+    let dateto = formData.dateto || "";
+    if (datefrom && !dateto) {
+      try {
+        const dateObj = new Date(datefrom);
+        if (!isNaN(dateObj.getTime())) {
+          dateObj.setDate(dateObj.getDate() + 1);
+          dateto = dateObj.toISOString().split("T")[0];
+        }
+      } catch (error) {
+        console.error("Error calculating dateto:", error);
+      }
+    }
+
+    const params = {
+      etypeid: formData.etypeid || "0",
+      deptids: formData.deptids || "",
+      employeeidlist: formData.employeeidlist || "",
+      locationid: formData.location || "0",
+      vdate: "2025-05-28",
+      datefrom: datefrom,
+      dateto: dateto,
+      orgini: "LTT",
+      companyid: "1",
+      empid: "0",
+      isau: "0",
+      onlyot: "0",
+      isexport: "0",
+      uid: "1",
+      inflage: "0",
+    };
+    console.log("Fetching with params:", params);
+    dispatch(getAttendanceEmployee(params));
+  };
+
+  // Handle Cancel button click
+  const handleCancel = () => {
+    console.log("Cancel button clicked, resetting form and Redux state");
+    setFormData({
+      etypeid: "",
+      deptids: "",
+      employeeidlist: "",
+      location: "",
+      datefrom: new Date().toISOString().split("T")[0],
+      dateto: new Date().toISOString().split("T")[0],
+    });
+    setValidationErrors({ etypeid: "", deptids: "", employeeidlist: "", datefrom: "", dateto: "" });
+    dispatch(resetAttendanceEmployeeData());
+    setTableData([]);
+    console.log("Form data after reset:", formData);
+  };
+
+  // Handle Save button click
+  const handleSave = () => {
+    const changedRows = tableData.filter((row, index) => {
+      const originalRow = attendanceEmployeeData[index];
+      return (
+        row.post &&
+        (row.timeIn !== originalRow.timeIn ||
+         row.timeOut !== originalRow.timeOut ||
+         row.timeIn2 !== originalRow.timeIn2 ||
+         row.timeOut2 !== originalRow.timeOut2 ||
+         row.remarks !== originalRow.remarks)
+      );
+    });
+
+    if (changedRows.length === 0) {
+      toast.info("No changes detected.");
+      return;
+    }
+
+    changedRows.forEach((row) => {
+      const payload = {
+        empid: Number(row.empid) || 1,
+        vdate: formData.datefrom || new Date().toISOString().split("T")[0],
+        vid1: row.vid1 || 0,
+        vid2: row.vid2 || 0,
+        shiftID: row.shiftID || 3,
+        dateIn1: row.timeIn ? `${formData.datefrom} ${row.timeIn}:00` : "1900-01-01",
+        dateOut1: row.timeOut ? `${formData.datefrom} ${row.timeOut}:00` : "1900-01-01",
+        dateIn2: row.timeIn2 ? `${formData.datefrom} ${row.timeIn2}:00` : "1900-01-01",
+        dateOut2: row.timeOut2 ? `${formData.datefrom} ${row.timeOut2}:00` : "1900-01-01",
+        remarks: row.remarks || "",
+        uID: 1,
+        computerName: "HR-PC-001",
+      };
+      dispatch(saveAttendanceEmployee(payload));
+    });
+  };
+
+  // Handle Remove Extra Attendance button click
+  const handleRemoveExtraAttendance = () => {
+    if (!validateRemoveForm()) {
+      console.log("Validation failed for Remove Extra Attendance:", validationErrors);
+      toast.error("Please fill in all required fields: Department, Employee, Date From, and Date To.");
+      return;
+    }
+
+    const payload = {
+      deptID: formData.deptids,
+      empID: formData.employeeidlist,
+      dateFrom: formData.datefrom,
+      dateTo: formData.dateto,
+    };
+
+    console.log("Dispatching removeExtraAttendance with payload:", payload);
+    dispatch(removeExtraAttendance(payload));
+  };
+
+  // Handle form submission to prevent default behavior
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    console.log("Form submission prevented");
+  };
+
+  // Handle changes in table inputs
+  const handleTableInputChange = (index, field, value) => {
+    setTableData((prev) =>
+      prev.map((item, i) =>
+        i === index
+          ? { ...item, [field]: value, post: true } // Auto-check post checkbox
+          : item
+      )
+    );
+  };
+
+  // Handle checkbox toggle
+  const handleCheckboxChange = (index) => {
+    setTableData((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, post: !item.post } : item
+      )
+    );
+  };
+
+  // Check if Remove Extra Attendance button should be enabled
+  const isRemoveButtonEnabled = formData.deptids && formData.employeeidlist && formData.datefrom && formData.dateto;
+
+  // Generate tooltip message for disabled button
+  const getTooltipMessage = () => {
+    const missingFields = [];
+    if (!formData.deptids) missingFields.push("Department");
+    if (!formData.employeeidlist) missingFields.push("Employee");
+    if (!formData.datefrom) missingFields.push("Date From");
+    if (!formData.dateto) missingFields.push("Date To");
+    return missingFields.length > 0
+      ? `Please select: ${missingFields.join(", ")}`
+      : "Remove extra attendance records";
+  };
 
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
+          {saveLoading && <p>Processing...</p>}
+          {saveError && <p className="text-danger">{saveError}</p>}
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
-                  {/* <PreviewCardHeader2 title="Attendance Employee" /> */}
+                <Form onSubmit={handleFormSubmit}>
                   <CardHeader className="align-items-center d-flex py-2">
                     <h4 className="card-title mb-0 flex-grow-1">
                       Attendance Employee
                     </h4>
                     <div className="flex-shrink-0">
                       <Button
-                        type="submit"
+                        type="button"
                         color="success"
                         className="add-btn me-1 py-1"
-                        id="create-btn"
+                        onClick={handleFetch}
                       >
                         <i className="align-bottom me-1"></i>Fetch
                       </Button>
                       <Button
-                        type="submit"
+                        type="button"
                         color="success"
                         className="add-btn me-1 py-1"
-                        id="create-btn"
+                        onClick={handleSave}
                       >
                         <i className="align-bottom me-1"></i>Save
                       </Button>
-                      <Button color="dark" className="add-btn me-1 py-1">
-                        <i className="align-bottom me-1"></i> Cancel
+                      <Button
+                        type="button"
+                        color="dark"
+                        className="add-btn me-1 py-1"
+                        onClick={handleCancel}
+                      >
+                        <i className="align-bottom me-1"></i>Cancel
                       </Button>
-                      <Button color="danger" className="add-btn me-1 py-1">
-                        <i className="align-bottom me-1"></i> Remove Extra
-                        Attendance{" "}
+                      <Button
+                        type="button"
+                        color="danger"
+                        className="add-btn me-1 py-1"
+                        id="remove-extra-attendance-btn"
+                        onClick={handleRemoveExtraAttendance}
+                        
+                      >
+                        <i className="align-bottom me-1"></i>Remove Extra Attendance
                       </Button>
+                      <UncontrolledTooltip placement="top" target="remove-extra-attendance-btn">
+                        {getTooltipMessage()}
+                      </UncontrolledTooltip>
                     </div>
                   </CardHeader>
                   <CardBody className="card-body">
@@ -77,98 +351,136 @@ const AttendanceEmployee = () => {
                       <Row className="gy-4">
                         <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="etypeid" className="form-label">
                               E-Type
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className={`form-select form-select-sm ${validationErrors.etypeid ? "is-invalid" : ""}`}
+                              name="etypeid"
+                              id="etypeid"
+                              value={formData.etypeid}
+                              onChange={handleInputChange}
+                              required
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {employeeType.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
-                              {/* <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option> */}
                             </select>
+                            {validationErrors.etypeid && (
+                              <div className="invalid-feedback">{validationErrors.etypeid}</div>
+                            )}
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="deptids" className="form-label">
                               Department
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className={`form-select form-select-sm ${validationErrors.deptids ? "is-invalid" : ""}`}
+                              name="deptids"
+                              id="deptids"
+                              value={formData.deptids}
+                              onChange={handleInputChange}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {departmentList.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
-                              {/* <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option> */}
+                            </select>
+                            {validationErrors.deptids && (
+                              <div className="invalid-feedback">{validationErrors.deptids}</div>
+                            )}
+                          </div>
+                        </Col>
+                        <Col xxl={2} md={2}>
+                          <div className="mb-3">
+                            <Label htmlFor="locationInput" className="form-label">
+                              Location
+                            </Label>
+                            <select
+                              className="form-select form-select-sm"
+                              name="location"
+                              id="locationInput"
+                              value={formData.location}
+                              onChange={handleInputChange}
+                            >
+                              <option value="">---Select---</option>
+                              {location.length > 0 ? (
+                                location.map((loc) => (
+                                  <option key={loc.VID} value={loc.VID}>
+                                    {loc.VName || loc.LocationName || loc.title}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>No locations available</option>
+                              )}
                             </select>
                           </div>
                         </Col>
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="employeeidlist" className="form-label">
                               Employee
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className={`form-select form-select-sm ${validationErrors.employeeidlist ? "is-invalid" : ""}`}
+                              name="employeeidlist"
+                              id="employeeidlist"
+                              value={formData.employeeidlist}
+                              onChange={handleInputChange}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {employee.map((item) => (
                                 <option key={item.EmpID} value={item.EmpID}>
                                   {item.EName}
                                 </option>
                               ))}
-                              {/* <option value="Choices1">Staf</option>
-                              <option value="Choices2">Worker</option> */}
                             </select>
+                            {validationErrors.employeeidlist && (
+                              <div className="invalid-feedback">{validationErrors.employeeidlist}</div>
+                            )}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="datefrom" className="form-label">
                               Date From
                             </Label>
                             <Input
                               type="date"
-                              className="form-control-sm"
-                              id="VName"
+                              className={`form-control-sm ${validationErrors.datefrom ? "is-invalid" : ""}`}
+                              id="datefrom"
+                              name="datefrom"
+                              value={formData.datefrom}
+                              onChange={handleInputChange}
                             />
+                            {validationErrors.datefrom && (
+                              <div className="invalid-feedback">{validationErrors.datefrom}</div>
+                            )}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="dateto" className="form-label">
                               Date To
                             </Label>
                             <Input
                               type="date"
-                              className="form-control-sm"
-                              id="VName"
+                              className={`form-control-sm ${validationErrors.dateto ? "is-invalid" : ""}`}
+                              id="dateto"
+                              name="dateto"
+                              value={formData.dateto}
+                              onChange={handleInputChange}
                             />
+                            {validationErrors.dateto && (
+                              <div className="invalid-feedback">{validationErrors.dateto}</div>
+                            )}
                           </div>
                         </Col>
                       </Row>
@@ -181,20 +493,6 @@ const AttendanceEmployee = () => {
               <Card>
                 <CardBody>
                   <div className="Location-table" id="customerList">
-                    {/* <Row className="g-4 mb-3">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row> */}
-
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
@@ -206,6 +504,8 @@ const AttendanceEmployee = () => {
                             <th>Date</th>
                             <th>Time In</th>
                             <th>Time Out</th>
+                            <th>Time In 2</th>
+                            <th>Time Out 2</th>
                             <th>Remarks</th>
                             <th>
                               <Input
@@ -217,57 +517,96 @@ const AttendanceEmployee = () => {
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          <tr>
-                            <td>1</td>
-                            <td>02/03/2025</td>
-                            <td>
-                              <Input
-                                type="time"
-                                className="form-control form-control-sm"
-                                id="VIN"
-                                name="VType"
-                              />
-                            </td>
-
-                            <td>
-                              {" "}
-                              <Input
-                                type="time"
-                                className="form-control form-control-sm "
-                                id="VIN"
-                                name="VType"
-                              />
-                            </td>
-                            <td>
-                              <Input
-                                className="form-control-sm w-75"
-                                type="text"
-                              />
-                            </td>
-                            <td>
-                              <Input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
-                            </td>
-                          </tr>
+                          {Array.isArray(tableData) && tableData.length > 0 ? (
+                            tableData.map((item, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{item.date || "N/A"}</td>
+                                <td>
+                                  <Input
+                                    type="time"
+                                    className="form-control form-control-sm"
+                                    value={item.timeIn || ""}
+                                    onChange={(e) =>
+                                      handleTableInputChange(index, "timeIn", e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <Input
+                                    type="time"
+                                    className="form-control form-control-sm"
+                                    value={item.timeOut || ""}
+                                    onChange={(e) =>
+                                      handleTableInputChange(index, "timeOut", e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <Input
+                                    type="time"
+                                    className="form-control form-control-sm"
+                                    value={item.timeIn2 || ""}
+                                    onChange={(e) =>
+                                      handleTableInputChange(index, "timeIn2", e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <Input
+                                    type="time"
+                                    className="form-control form-control-sm"
+                                    value={item.timeOut2 || ""}
+                                    onChange={(e) =>
+                                      handleTableInputChange(index, "timeOut2", e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <Input
+                                    className="form-control-sm w-75"
+                                    type="text"
+                                    value={item.remarks || ""}
+                                    onChange={(e) =>
+                                      handleTableInputChange(index, "remarks", e.target.value)
+                                    }
+                                  />
+                                </td>
+                                <td>
+                                  <Input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    checked={item.post || false}
+                                    onChange={() => handleCheckboxChange(index)}
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              {/* <td colSpan="8" className="text-center">
+                                No attendance data available.
+                              </td> */}
+                            </tr>
+                          )}
                         </tbody>
                       </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
+                      {(!Array.isArray(tableData) || tableData.length === 0) && !loading && (
+                        <div className="noresult">
+                          <div className="text-center">
+                            <lord-icon
+                              src="https://cdn.lordicon.com/msoeawqm.json"
+                              trigger="loop"
+                              colors="primary:#121331,secondary:#08a88a"
+                              style={{ width: "75px", height: "75px" }}
+                            ></lord-icon>
+                            <h5 className="mt-2">Sorry! No Result Found</h5>
+                            {/* <p className="text-muted mb-0">
+                              Please select an E-Type and click Fetch to view attendance data.
+                            </p> */}
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </CardBody>

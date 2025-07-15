@@ -9,120 +9,246 @@ import {
   Input,
   Label,
   Form,
-  CardHeader,
 } from "reactstrap";
-import { Link } from "react-router-dom";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getDepartment } from "../../../slices/setup/department/thunk";
+import { getPaymentPlan, resetPaymentPlan } from "../../../slices/employee/paymentPlan/thunk";
+import PreviewCardHeader2 from "../../../Components/Common/PreviewCardHeader2";
 
 const PaymentPlan = () => {
-  document.title = "Payment Plan | EMS";
   const dispatch = useDispatch();
-
-  const { employeeType } = useSelector((state) => state.EmployeeType);
+  const [tableData, setTableData] = useState([]);
+  const { paymentPlan, loading, error,postLoading } = useSelector((state) => state.PaymentPlan || {});
+  const { employeeType } = useSelector((state) => state.EmployeeType || {});
   const { department = {} } = useSelector((state) => state.Department || {});
   const departmentList = department.data || [];
 
+  // Fetch employee types and departments on mount
   useEffect(() => {
     dispatch(getEmployeeType());
     dispatch(getDepartment());
   }, [dispatch]);
 
+  // Update tableData when paymentPlan changes
+  useEffect(() => {
+    if (Array.isArray(paymentPlan)) {
+      setTableData(
+        paymentPlan.map((item) => ({
+          ...item,
+          DedAmount: item.DedAmount || 0, // Initialize DedAmount
+          post: item.post || false, // Initialize post (finalized checkbox)
+          dedAmountError: null, // Track validation errors
+        }))
+      );
+    }
+  }, [paymentPlan]);
+
+  // Formik setup
+  const formik = useFormik({
+    initialValues: {
+      ETypeID: "",
+      DeptID: "",
+      VDate: "",
+      UID: "",
+      CompanyID: "",
+    },
+    validationSchema: Yup.object({
+      // ETypeID: Yup.string().required("Employee Type is required"),
+      // DeptID: Yup.string().required("Department is required"),
+      VDate: Yup.string().required("Month is required"),
+    }),
+    onSubmit: () => {
+      handleFetch();
+    },
+  });
+
+  // Construct employeeIdList string
+  const buildEmployeeIdList = () => {
+    const conditions = [];
+
+    if (formik.values.ETypeID) {
+      conditions.push(`E."ETypeID" = ${formik.values.ETypeID}`);
+    }
+
+    if (formik.values.DeptID) {
+      conditions.push(`E."DeptID"  = ${formik.values.DeptID}`);
+    }
+
+    const EmployeeIDList = conditions.length > 0 ? `AND ${conditions.join(" AND ")}` : "";
+    console.log("Generated EmployeeIDList:", EmployeeIDList);
+    return EmployeeIDList;
+  };
+
+  // Fetch data
+  const handleFetch = () => {
+    formik.validateForm().then((errors) => {
+      if (Object.keys(errors).length === 0) {
+        const EmployeeIDList = buildEmployeeIdList();
+        const formattedVDate = formik.values.VDate ? `${formik.values.VDate}-01` : "";
+        const params = {
+          Orgini: "LTT",
+          VDate: formattedVDate || "",
+          EmployeeIDList: EmployeeIDList || "",
+          CompanyID: "1",
+          LocationID: "0",
+          ETypeID: formik.values.ETypeID || "0",
+          EmpID: "0",
+          IsAu: "0",
+          UID: "0",
+          IsExport: "0",
+        };
+        console.log("Fetching with params:", params);
+        dispatch(getPaymentPlan(params));
+      } else {
+        formik.setTouched({
+          EType : true,
+          DeptID: true,
+          VDate: true,
+        });
+        console.log("Form validation errors:", errors);
+      }
+    });
+  };
+
+  // Handle Ded Amount change
+  const handleDedAmountChange = (index, value) => {
+    const newTableData = [...tableData];
+    const balance = parseFloat(newTableData[index].Balance) || 0;
+    const dedAmount = parseFloat(value) || 0;
+
+    // Validate DedAmount <= Balance
+    if (dedAmount > balance) {
+      newTableData[index] = {
+        ...newTableData[index],
+        DedAmount: value,
+        dedAmountError: "Ded Amount cannot be greater than Balance",
+        post: false,
+      };
+    } else {
+      newTableData[index] = {
+        ...newTableData[index],
+        DedAmount: value,
+        dedAmountError: null,
+        post: dedAmount > 0,
+      };
+    }
+
+    setTableData(newTableData);
+  };
+
+  // Handle Finalized checkbox change
+  const handlePostChange = (index, checked) => {
+    const newTableData = [...tableData];
+    newTableData[index] = {
+      ...newTableData[index],
+      post: checked,
+    };
+    setTableData(newTableData);
+  };
+// Handle Cancel button click
+  const handleCancel = () => {
+    formik.resetForm({
+      values: {
+        ETypeID: "",
+        DeptID: "",
+        VDate: "",
+        UID: "",
+        CompanyID: "",
+      },
+    });
+    dispatch(resetPaymentPlan());
+    setTableData([]);
+  };
+
+  document.title = "Payment Plan | EMS";
+
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-          {/* {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>} */}
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
-                <Form>
-                  <CardHeader className="align-items-center d-flex py-2">
-                    <h4 className="card-title mb-0 flex-grow-1">
-                      Payment Plan
-                    </h4>
-                    <div className="flex-shrink-0">
-                      <Button
-                        type="submit"
-                        color="success"
-                        className="add-btn me-1 py-1"
-                        id="create-btn"
-                      >
-                        <i className="align-bottom me-1"></i>Fetch
-                      </Button>
-                      <Button
-                        type="submit"
-                        color="success"
-                        className="add-btn me-1 py-1"
-                        id="create-btn"
-                      >
-                        <i className="align-bottom me-1"></i>Save
-                      </Button>
-                      <Button color="dark" className="add-btn me-1 py-1">
-                        <i className="align-bottom me-1"></i> Cancel
-                      </Button>
-                    </div>
-                  </CardHeader>
+                <Form onSubmit={formik.handleSubmit}>
+                  <PreviewCardHeader2
+                    title="Payment Plan"
+                    onFetch={handleFetch}
+                     onCancel={handleCancel}
+                    disabled={loading || postLoading}
+                  />
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="ETypeID" className="form-label">
                               E-Type
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="ETypeID"
+                              id="ETypeID"
+                              value={formik.values.ETypeID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {employeeType.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.ETypeID && formik.errors.ETypeID ? (
+                              <div className="text-danger">{formik.errors.ETypeID}</div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
+                            <Label htmlFor="DeptID" className="form-label">
                               Department
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="DeptID"
+                              id="DeptID"
+                              value={formik.values.DeptID}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
                             >
-                              <option value="">---Select--- </option>
+                              <option value="">---Select---</option>
                               {departmentList.map((item) => (
                                 <option key={item.VID} value={item.VID}>
                                   {item.VName}
                                 </option>
                               ))}
                             </select>
+                            {formik.touched.DeptID && formik.errors.DeptID ? (
+                              <div className="text-danger">{formik.errors.DeptID}</div>
+                            ) : null}
                           </div>
                         </Col>
-
                         <Col xxl={2} md={3}>
                           <div>
-                            <Label htmlFor="VName" className="form-label">
+                            <Label htmlFor="VDate" className="form-label">
                               Month
                             </Label>
                             <Input
-                              type="date"
+                              type="month"
                               className="form-control-sm"
-                              id="VName"
+                              name="VDate"
+                              id="VDate"
+                              {...formik.getFieldProps("VDate")}
                             />
+                            {formik.touched.VDate && formik.errors.VDate ? (
+                              <div className="text-danger">{formik.errors.VDate}</div>
+                            ) : null}
                           </div>
                         </Col>
                       </Row>
@@ -135,20 +261,6 @@ const PaymentPlan = () => {
               <Card>
                 <CardBody>
                   <div className="Location-table" id="customerList">
-                    <Row className="g-4 mb-3">
-                      <Col className="col-sm">
-                        <div className="d-flex justify-content-sm-end">
-                          <div className="search-box ms-2">
-                            <input
-                              type="text"
-                              className="form-control-sm search"
-                            />
-                            <i className="ri-search-line search-icon"></i>
-                          </div>
-                        </div>
-                      </Col>
-                    </Row>
-
                     <div className="table-responsive table-card mt-3 mb-1">
                       <table
                         className="table align-middle table-nowrap table-sm"
@@ -156,6 +268,7 @@ const PaymentPlan = () => {
                       >
                         <thead className="table-light">
                           <tr>
+                            <th>#</th>
                             <th>Employee</th>
                             <th>Loan Date</th>
                             <th>Loan Amount</th>
@@ -163,67 +276,69 @@ const PaymentPlan = () => {
                             <th>Balance</th>
                             <th>Ded Amount</th>
                             <th>
-                              <Input
-                                className="form-check-input me-1"
-                                type="checkbox"
-                              />
+                              {/* <Input className="form-check-input me-1" type="checkbox" /> */}
                               Finalized
                             </th>
                           </tr>
                         </thead>
                         <tbody className="list form-check-all">
-                          <tr>
-                            <td>001:Sir Amir:Hr</td>
-                            <td>02/02/2025</td>
-                            <td>3000</td>
-                            <td>1000</td>
-                            <td>100</td>
-                            <td>
-                              <Input
-                                className="form-control-sm w-75"
-                                type="number"
-                                placeholder="1000"
-                              />
-                            </td>
-                            <td>
-                              <Input
-                                className="form-check-input"
-                                type="checkbox"
-                              />
-                            </td>
-                          </tr>
+                          {Array.isArray(tableData) && tableData.length > 0 ? (
+                            tableData.map((item, index) => (
+                              <tr key={index}>
+                                <td>{index + 1}</td>
+                                <td>{item.EName || "N/A"}</td>
+                                <td>{item.LoanDate || "N/A"}</td>
+                                <td>{item.LoanAmount || "N/A"}</td>
+                                <td>{item.Installment || "N/A"}</td>
+                                <td>{item.Balance || "N/A"}</td>
+                                <td>
+                                  <Input
+                                    className="form-control-sm w-75"
+                                    type="number"
+                                    value={item.DedAmount || ""}
+                                    onChange={(e) =>
+                                      handleDedAmountChange(index, e.target.value)
+                                    }
+                                    placeholder="0"
+                                  />
+                                  {item.dedAmountError && (
+                                    <div className="text-danger small">
+                                      {item.dedAmountError}
+                                    </div>
+                                  )}
+                                </td>
+                                <td>
+                                  <Input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    checked={item.post || false}
+                                    onChange={(e) =>
+                                      handlePostChange(index, e.target.checked)
+                                    }
+                                  />
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="8">No data available</td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
-                      <div className="noresult" style={{ display: "none" }}>
-                        <div className="text-center">
-                          <lord-icon
-                            src="https://cdn.lordicon.com/msoeawqm.json"
-                            trigger="loop"
-                            colors="primary:#121331,secondary:#08a88a"
-                            style={{ width: "75px", height: "75px" }}
-                          ></lord-icon>
-                          <h5 className="mt-2">Sorry! No Result Found</h5>
-                          <p className="text-muted mb-0">
-                            We've searched more than 150+ Orders We did not find
-                            any orders for you search.
-                          </p>
+                      {(!Array.isArray(tableData) || tableData.length === 0) && !loading && (
+                        <div className="noresult">
+                          <div className="text-center">
+                            <lord-icon
+                              src="https://cdn.lordicon.com/msoeawqm.json"
+                              trigger="loop"
+                              colors="primary:#121331,secondary:#08a88a"
+                              style={{ width: "75px", height: "75px" }}
+                            ></lord-icon>
+                            <h5 className="mt-2">Sorry! No Result Found</h5>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-
-                    <div className="d-flex justify-content-end">
-                      <div className="pagination-wrap hstack gap-2">
-                        <Link
-                          className="page-item pagination-prev disabled"
-                          to="#"
-                        >
-                          Previous
-                        </Link>
-                        <ul className="pagination Location-pagination mb-0"></ul>
-                        <Link className="page-item pagination-next" to="#">
-                          Next
-                        </Link>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </CardBody>

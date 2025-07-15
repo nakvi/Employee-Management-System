@@ -9,6 +9,7 @@ import {
   Input,
   Label,
   Form,
+  CardHeader
 } from "reactstrap";
 import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
@@ -42,6 +43,7 @@ import {
   AlignmentType,
 } from "docx";
 import { saveAs } from "file-saver";
+import PreviewCardHeaderUpload from "../../../Components/Common/PreviewCardHeaderUpload";
 
 const Increment = () => {
   const dispatch = useDispatch();
@@ -126,32 +128,32 @@ const Increment = () => {
   });
 
   // Set default ETypeID and reset EmpID when employeeType loads or ETypeID changes
-  useEffect(() => {
-    if (employeeType.length > 0 && !formik.values.ETypeID) {
-      formik.setFieldValue("ETypeID", employeeType[0].VID);
-    }
-    formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
-  }, [employeeType, formik.values.ETypeID]);
+  // useEffect(() => {
+  //   if (employeeType.length > 0 && !formik.values.ETypeID) {
+  //     formik.setFieldValue("ETypeID", employeeType[0].VID);
+  //   }
+  //   formik.setFieldValue("EmpID", ""); // Reset EmpID when ETypeID changes
+  // }, [employeeType, formik.values.ETypeID]);
 
   const handleEditClick = (group) => {
     setEditingGroup(group);
     const formatDateForInput = (dateString) => {
       return dateString ? dateString.split("T")[0] : "";
     };
-     const selectedEmployee = employee.find(
-    (emp) => String(emp.EmpID) === String(group.EmpID)
-  );
-  const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
+    const selectedEmployee = employee.find(
+      (emp) => String(emp.EmpID) === String(group.EmpID)
+    );
+    const employeeTypeId = selectedEmployee ? selectedEmployee.ETypeID : "";
     formik.setValues({
       EmpID: group.EmpID,
       DateFrom: formatDateForInput(group.DateFrom),
-      DateTo: formatDateForInput(group.DateTo),
+      VDate: formatDateForInput(group.VDate),
       CurrentSalary: group.CurrentSalary,
       IncrementAmount: group.IncrementAmount,
       IncrementSpecial: group.IncrementSpecial,
       IncrementPromotional: group.IncrementPromotional,
       FirstAmount: group.FirstAmount,
-       ETypeID: employeeTypeId,
+      ETypeID: employeeTypeId,
       CompanyID: group.CompanyID,
       UID: group.UID,
       IsActive: group.IsActive === 1,
@@ -307,7 +309,7 @@ const Increment = () => {
     // Add data rows
     data.forEach((item) => {
       const rowCells = [
-        item.EmpID,
+        employee.find(emp => String(emp.EmpID) === String(item.EmpID))?.EName || "",
         formatDate(item.VDate),
         formatDate(item.DateFrom),
         item.CurrentSalary,
@@ -362,7 +364,8 @@ const Increment = () => {
   const columns = [
     {
       name: "Employee",
-      selector: (row) => row.EmpID,
+      selector: (row) => employee.find(emp => String(emp.EmpID) === String(row.EmpID))?.EName || "",
+
       sortable: true,
       width: "150px",
     },
@@ -477,15 +480,66 @@ const Increment = () => {
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
-                  <PreviewCardHeader
+                  <PreviewCardHeaderUpload
                     title="Increment"
-                    onCancel={() => {
-                      formik.resetForm();
-                      setEditingGroup(null);
-                    }}
+                    // onCancel={() => {
+                    //   formik.resetForm();
+                    //   setEditingGroup(null);
+                    // }}
                     editing={!!editingGroup}
                     isEditMode={!!editingGroup}
                   />
+                  {/* <CardHeader className="align-items-center d-flex py-2">
+                    <h4 className="card-title mb-0 flex-grow-1">
+                      {editingGroup ? "Edit Increment" : "Add Increment"}
+                    </h4>
+                    <div className="flex-shrink-0">
+                      <Button
+                        type="submit"
+                        color="success"
+                        className="add-btn me-1 py-1"
+                        id="create-btn"
+                      >
+                        <i className="align-bottom me-1"></i>
+                        {editingGroup ? "Update" : "Save"}
+                      </Button>
+                      <Button
+                        color="dark"
+                        className="add-btn me-1 py-1"
+                        onCancel={() => {
+                          formik.resetForm();
+                          setEditingGroup(null);
+                        }}
+                      >
+                        <i className="align-bottom me-1"></i> Cancel
+                      </Button>
+                      <div className="d-inline-block position-relative">
+                        <Button
+                          tag="label"
+                          type="button" // <-- Fix here
+                          color="primary"
+                          className="add-btn me-1 py-1 mb-0"
+                          htmlFor="file-upload"
+                        >
+                          <i className="align-bottom me-1"></i>Upload
+                        </Button>
+                        <Input
+                          type="file"
+                          id="file-upload"
+                          accept=".xlsx, .xls"
+                          // onChange={handleFileUpload}
+                          style={{ display: "none" }}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-soft-danger btn-sm"
+                      // onClick={handleExportSample}
+                      >
+                        Download Sample
+                      </button>
+                    </div>
+                  </CardHeader> */}
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4">
@@ -529,6 +583,7 @@ const Increment = () => {
                               value={formik.values.EmpID}
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
+                              disabled={!formik.values.ETypeID}
                             >
                               <option value="">---Select---</option>
                               {employee
@@ -563,6 +618,12 @@ const Increment = () => {
                               value={selectedDate}
                               {...formik.getFieldProps("VDate")}
                             />
+                            {formik.touched.VDate &&
+                              formik.errors.VDate ? (
+                              <div className="text-danger">
+                                {formik.errors.VDate}
+                              </div>
+                            ) : null}
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
@@ -578,7 +639,7 @@ const Increment = () => {
                               {...formik.getFieldProps("DateFrom")}
                             />
                             {formik.touched.DateFrom &&
-                            formik.errors.DateFrom ? (
+                              formik.errors.DateFrom ? (
                               <div className="text-danger">
                                 {formik.errors.DateFrom}
                               </div>
@@ -601,7 +662,7 @@ const Increment = () => {
                               {...formik.getFieldProps("CurrentSalary")}
                             />
                             {formik.touched.CurrentSalary &&
-                            formik.errors.CurrentSalary ? (
+                              formik.errors.CurrentSalary ? (
                               <div className="text-danger">
                                 {formik.errors.CurrentSalary}
                               </div>
@@ -624,7 +685,7 @@ const Increment = () => {
                               {...formik.getFieldProps("IncrementAmount")}
                             />
                             {formik.touched.IncrementAmount &&
-                            formik.errors.IncrementAmount ? (
+                              formik.errors.IncrementAmount ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementAmount}
                               </div>
@@ -647,7 +708,7 @@ const Increment = () => {
                               {...formik.getFieldProps("IncrementSpecial")}
                             />
                             {formik.touched.IncrementSpecial &&
-                            formik.errors.IncrementSpecial ? (
+                              formik.errors.IncrementSpecial ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementSpecial}
                               </div>
@@ -670,7 +731,7 @@ const Increment = () => {
                               {...formik.getFieldProps("IncrementPromotional")}
                             />
                             {formik.touched.IncrementPromotional &&
-                            formik.errors.IncrementPromotional ? (
+                              formik.errors.IncrementPromotional ? (
                               <div className="text-danger">
                                 {formik.errors.IncrementPromotional}
                               </div>
@@ -690,14 +751,14 @@ const Increment = () => {
                               {...formik.getFieldProps("FirstAmount")}
                             />
                             {formik.touched.FirstAmount &&
-                            formik.errors.FirstAmount ? (
+                              formik.errors.FirstAmount ? (
                               <div className="text-danger">
                                 {formik.errors.FirstAmount}
                               </div>
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        {/* <Col xxl={2} md={2}>
                           <div className="mt-4 pt-2">
                             <div className="form-check form-switch form-switch-md">
                               <Input
@@ -716,7 +777,7 @@ const Increment = () => {
                               </Label>
                             </div>
                           </div>
-                        </Col>
+                        </Col> */}
                       </Row>
                     </div>
                   </CardBody>
