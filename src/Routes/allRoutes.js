@@ -90,7 +90,6 @@ import SalaryAllwDedPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryAl
 import AttendancePosting from "../pages/Posting/AttendancePosting/AttendancePosting";
 import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
 
-import SalarySlipPreview from "../Components/pdfsPreviews/SalarySlipPreview";
 
 
 const authProtectedRoutes = [
