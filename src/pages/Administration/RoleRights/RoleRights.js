@@ -149,7 +149,8 @@ const RoleRights = forwardRef((props, ref) => {
             )
           : null;
         return {
-          id: existingPerm?.VID || 0, // Rename VID to id to match backend expectation
+          // id: existingPerm?.VID || 0, 
+          VID: existingPerm?.VID || 0,
           RoleID: parseInt(selectedRoleId),
           PageID: parseInt(pageId),
           IsView: perm.view ? 1 : 0,
@@ -168,10 +169,10 @@ const RoleRights = forwardRef((props, ref) => {
 
       const savePromises = permissionsToSave.map(async (perm) => {
         try {
-          const action = perm.id === 0 ? createPagePermission : updatePagePermission;
+          const action = perm.VID === 0 ? createPagePermission : updatePagePermission;
           const payload = { ...perm };
-          if (perm.id === 0) {
-            delete payload.id;
+          if (perm.VID === 0) {
+            delete payload.VID;
           }
           const result = await dispatch(action(payload)).unwrap();
           return { success: true, pageId: perm.PageID, result };

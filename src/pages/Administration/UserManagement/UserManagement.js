@@ -79,14 +79,14 @@ const UserManagement = () => {
 
   const formik = useFormik({
     initialValues: {
-      employeeType: "",
-      employee: "",
+      // employeeType: "",
+      // employee: "",
       fullName: "",
       login: "",
       password: "",
       roles: [],
       locations: [],
-      company: [],
+      // company: [],
       loginExpiry: "18/06/2025",
       isActive: false,
       allowAudit: false,
@@ -96,18 +96,19 @@ const UserManagement = () => {
       isManager: false,
     },
     validationSchema: Yup.object({
-      employee: Yup.string().required("Employee is required"),
+      // employee: Yup.string().required("Employee is required"),
       fullName: Yup.string().required("Full Name is required"),
       login: Yup.string().required("User Login is required"),
       password: Yup.string().required("Password is required"),
       roles: Yup.array().min(1, "At least one role is required"),
       locations: Yup.array().min(1, "At least one location is required"),
-      company: Yup.array().min(1, "At least one company is required"),
+      // company: Yup.array().min(1, "At least one company is required"),
     }),
     onSubmit: async (values, { setSubmitting }) => {
-      const companyIds = Array.isArray(values.company)
-        ? values.company.map((comp) => comp.VID).filter((id) => id)
-        : [];
+      // const companyIds = Array.isArray(values.company)
+      //   ? values.company.map((comp) => comp.VID).filter((id) => id)
+      //   : [];
+      const companyIds = [1];
       const roleIds = Array.isArray(values.roles)
         ? values.roles.map((roleName) => {
             const roleOption = roleOptions.find((r) => r.value === roleName);
@@ -125,7 +126,8 @@ const UserManagement = () => {
         Userfullname: values.fullName,
         Userlogin: values.login,
         Userpassword: values.password,
-        EmployeeID: values.employee.split(":")[0],
+        // EmployeeID: values.employee.split(":")[0],
+        EmployeeID: 1,
         AllowAudit: values.allowAudit ? 1 : 0,
         AllowActual: values.allowActual ? 1 : 0,
         IsManager: values.isManager ? 1 : 0,
@@ -133,7 +135,7 @@ const UserManagement = () => {
         IsSystemAdmin: values.adminReportRights ? 1 : 0,
         IsActive: values.isActive ? 1 : 0,
         UID: 1,
-        CompanyID: companyIds[0] || 1,
+        CompanyID: companyIds[0] || null,
         roles: values.roles,
         locations: values.locations,
       };
@@ -336,13 +338,13 @@ const UserManagement = () => {
 
     formik.setValues({
       employeeType: user.EmployeeType || "",
-      employee: user.EmployeeID ? `${user.EmployeeID}:${user.Userfullname || ''}:Hr` : "",
+      // employee: user.EmployeeID ? `${user.EmployeeID}:${user.Userfullname || ''}:Hr` : "",
       fullName: user.Userfullname || "",
       login: user.Userlogin || "",
       password: user.Userpassword || "",
       roles: userRoles.map((r) => r.value),
       locations: userLocations.map((l) => l.value),
-      company: userCompanies.map((c) => c.value),
+      // company: userCompanies.map((c) => c.value),
       loginExpiry: user.LoginExpiry || "18/06/2025",
       isActive: user.IsActive === 1,
       allowAudit: user.AllowAudit === 1,
@@ -376,7 +378,7 @@ const UserManagement = () => {
                 <CardBody className="card-body">
                   <div className="live-preview">
                     <Row className="gy-4">
-                      <Col xxl={3} md={3}>
+                      {/* <Col xxl={3} md={3}>
                         <div className="mb-3">
                           <Label htmlFor="employeeInput" className="form-label">
                             Employee
@@ -396,7 +398,7 @@ const UserManagement = () => {
                             <div className="text-danger">{formik.errors.employee}</div>
                           ) : null}
                         </div>
-                      </Col>
+                      </Col> */}
                       <Col xxl={3} md={3}>
                         <div className="mb-3">
                           <Label htmlFor="fullNameInput" className="form-label">
@@ -498,7 +500,7 @@ const UserManagement = () => {
                           ) : null}
                         </div>
                       </Col>
-                      <Col xxl={4} md={4}>
+                      {/* <Col xxl={4} md={4}>
                         <div className="mb-3">
                           <Label htmlFor="companyInput" className="form-label">
                             Company
@@ -521,7 +523,7 @@ const UserManagement = () => {
                             <div className="text-danger">{formik.errors.company}</div>
                           ) : null}
                         </div>
-                      </Col>
+                      </Col> */}
                     </Row>
                     <Row className="gy-4">
                       <Col xxl={2} md={2}>
@@ -658,7 +660,7 @@ const UserManagement = () => {
                           <th data-sort="login">User Login</th>
                           <th data-sort="roles">Roles</th>
                           <th data-sort="locations">Locations</th>
-                          <th data-sort="company">Company</th>
+                          {/* <th data-sort="company">Company</th> */}
                           <th data-sort="status">Status</th>
                           <th data-sort="action">Action</th>
                         </tr>
@@ -689,16 +691,16 @@ const UserManagement = () => {
                                 .join(", ") || "No Locations";
 
                               // Map companies for display
-                              const userCompanies = Array.isArray(secUserCompany)
-                                ? secUserCompany
-                                    .filter((suc) => suc.UserID === user.UserID && suc.IsActive === 1)
-                                    .map((suc) => {
-                                      const comp = Array.isArray(company.data) ? company.data.find((c) => c.VID === suc.CompanyID) : null;
-                                      return comp ? comp.VName : null;
-                                    })
-                                    .filter((name) => name)
-                                    .join(", ") || "No Companies"
-                                : "No Companies";
+                              // const userCompanies = Array.isArray(secUserCompany)
+                              //   ? secUserCompany
+                              //       .filter((suc) => suc.UserID === user.UserID && suc.IsActive === 1)
+                              //       .map((suc) => {
+                              //         const comp = Array.isArray(company.data) ? company.data.find((c) => c.VID === suc.CompanyID) : null;
+                              //         return comp ? comp.VName : null;
+                              //       })
+                              //       .filter((name) => name)
+                              //       .join(", ") || "No Companies"
+                              //   : "No Companies";
 
                               return (
                                 <tr key={user.UserID}>
@@ -706,7 +708,7 @@ const UserManagement = () => {
                                   <td>{user.Userlogin || "N/A"}</td>
                                   <td>{userRoles}</td>
                                   <td>{userLocations}</td>
-                                  <td>{userCompanies}</td>
+                                  {/* <td>{userCompanies}</td> */}
                                   <td>{user.IsActive === 1 ? "Active" : "Inactive"}</td>
                                   <td>
                                     <div className="d-flex gap-2">

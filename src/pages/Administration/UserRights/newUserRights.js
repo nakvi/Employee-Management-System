@@ -300,7 +300,7 @@ const UserRights = forwardRef((props, ref) => {
 
                 {/* First Table: Permissions for Selected User */}
                 <Card>
-                  <CardBody>
+                  {/* <CardBody>
                     <div className="table-responsive table-card mb-1">
                       <table className="table align-middle table-nowrap table-striped table-sm">
                         <thead className="table-light">
@@ -341,12 +341,12 @@ const UserRights = forwardRef((props, ref) => {
                         </tbody>
                       </table>
                     </div>
-                  </CardBody>
+                  </CardBody> */}
                 </Card>
 
                 {/* Second Table: Filtered Permissions */}
                 <Card>
-                  <CardBody>
+                  {/* <CardBody>
                     <div className="table-responsive table-card mb-1">
                       <table className="table align-middle table-nowrap table-sm">
                         <thead className="table-light">
@@ -387,7 +387,7 @@ const UserRights = forwardRef((props, ref) => {
                         </tbody>
                       </table>
                     </div>
-                  </CardBody>
+                  </CardBody> */}
                 </Card>
               </Col>
             </Row>
