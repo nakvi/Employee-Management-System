@@ -17,7 +17,7 @@ export const getUser = createAsyncThunk(
       const data = await response.json();
 
       if (data.status === "0") {
-        console.log("Fetched users:", data.data);
+        // console.log("Fetched users:", data.data);
         return data.data;
       } else if (data.status === "1") {
         toast.error("An error occurred while fetching data.");
@@ -54,10 +54,11 @@ export const submitUser = createAsyncThunk(
       console.log("API response:", data);
 
       if (data.status === "0") {
-        toast.success(data.message || "User added successfully!");
+        // toast.success(data.message || "User added successfully!");
         return data.data; // Return the newly created user
       } else {
-        throw new Error(data.message || "Failed to add user.");
+        // throw new Error(data.message || "Failed to add user.");
+        throw new Error("Failed to add user.");
       }
     } catch (error) {
       toast.error(`Failed to add user: ${error.message}`);
@@ -83,11 +84,14 @@ export const updateUser = createAsyncThunk(
       }
 
       const data = await response.json();
+      console.log("API response:", data);
       if (data.status === "0") {
-        toast.success(data.message || "User updated successfully!");
+        // toast.success(data.message || "User updated successfully!");
+        // toast.success("User updated successfully!");
         return data.data;
       } else {
-        throw new Error(data.message || "Failed to update user.");
+        // throw new Error(data.message || "Failed to update user.");
+        throw new Error("Failed to update user.");
       }
     } catch (error) {
       toast.error(`Failed to update user: ${error.message}`);
@@ -114,7 +118,7 @@ export const deleteUser = createAsyncThunk(
 
       const data = await response.json();
       if (data.status === "0") {
-        toast.success(data.message || "User deleted successfully!");
+        // toast.success(data.message || "User deleted successfully!");
         return id;
       } else {
         throw new Error(data.message || "Failed to delete user.");

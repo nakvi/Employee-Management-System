@@ -5,6 +5,8 @@ import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import {
   getUser,
@@ -45,7 +47,7 @@ const UserManagement = () => {
 
   const { loading = false, error = null, users = [] } = useSelector((state) => state.User || {});
   const { role = [] } = useSelector((state) => {
-    console.log('Redux state:', state); // Debug state
+    // console.log('Redux state:', state); // Debug state
     return state.Role || {};
   });
   const { company = { data: [] } } = useSelector((state) => state.Company || {});
@@ -79,16 +81,16 @@ const UserManagement = () => {
 
   const formik = useFormik({
     initialValues: {
-      employeeType: "",
-      employee: "",
+      // employeeType: "",
+      // employee: "",
       fullName: "",
       login: "",
       password: "",
       roles: [],
       locations: [],
-      company: [],
+      // company: [],
       loginExpiry: "18/06/2025",
-      isActive: false,
+      isActive: true,
       allowAudit: false,
       allowActual: false,
       isAdmin: false,
@@ -96,36 +98,45 @@ const UserManagement = () => {
       isManager: false,
     },
     validationSchema: Yup.object({
-      employee: Yup.string().required("Employee is required"),
+      // employee: Yup.string().required("Employee is required"),
       fullName: Yup.string().required("Full Name is required"),
       login: Yup.string().required("User Login is required"),
       password: Yup.string().required("Password is required"),
       roles: Yup.array().min(1, "At least one role is required"),
       locations: Yup.array().min(1, "At least one location is required"),
-      company: Yup.array().min(1, "At least one company is required"),
+      // company: Yup.array().min(1, "At least one company is required"),
     }),
     onSubmit: async (values, { setSubmitting }) => {
-      const companyIds = Array.isArray(values.company)
-        ? values.company.map((comp) => comp.VID).filter((id) => id)
-        : [];
+      const companyIds = [1];
       const roleIds = Array.isArray(values.roles)
         ? values.roles.map((roleName) => {
-            const roleOption = roleOptions.find((r) => r.value === roleName);
-            return roleOption ? roleOption.VID : null;
-          }).filter((id) => id)
+          const roleOption = roleOptions.find((r) => r.value === roleName);
+          return roleOption ? roleOption.VID : null;
+        }).filter((id) => id)
         : [];
       const locationIds = Array.isArray(values.locations)
         ? values.locations.map((locName) => {
-            const loc = locationOptions.find((l) => l.value === locName);
-            return loc ? loc.VID : null;
-          }).filter((id) => id)
+          const loc = locationOptions.find((l) => l.value === locName);
+          return loc ? loc.VID : null;
+        }).filter((id) => id)
         : [];
+
+      const existingLogin = users.find(
+        (u) =>
+          u.Userlogin === values.login &&
+          (!editingUser || u.UserID !== editingUser.UserID)
+      );
+      if (existingLogin) {
+        toast.error("This user login already exists.");
+        setSubmitting(false);
+        return;
+      }
 
       const userPayload = {
         Userfullname: values.fullName,
         Userlogin: values.login,
         Userpassword: values.password,
-        EmployeeID: values.employee.split(":")[0],
+        EmployeeID: 1,
         AllowAudit: values.allowAudit ? 1 : 0,
         AllowActual: values.allowActual ? 1 : 0,
         IsManager: values.isManager ? 1 : 0,
@@ -133,7 +144,7 @@ const UserManagement = () => {
         IsSystemAdmin: values.adminReportRights ? 1 : 0,
         IsActive: values.isActive ? 1 : 0,
         UID: 1,
-        CompanyID: companyIds[0] || 1,
+        CompanyID: companyIds[0] || null,
         roles: values.roles,
         locations: values.locations,
       };
@@ -145,22 +156,8 @@ const UserManagement = () => {
           const updateResponse = await dispatch(updateUser({ ...userPayload, UserID: editingUser.UserID }));
           if (updateResponse.error) throw new Error(updateResponse.payload?.message || "Failed to update user");
           userId = editingUser.UserID;
-
-          // Handle secUserCompany updates
-          const existingCompanies = secUserCompany.filter((suc) => suc.UserID === userId);
-          for (const existing of existingCompanies) {
-            if (!companyIds.includes(existing.CompanyID)) {
-              await dispatch(deleteSecUserCompany(existing.ID));
-            }
-          }
-          for (const companyId of companyIds) {
-            const existingRecord = existingCompanies.find((ec) => ec.CompanyID === companyId);
-            if (!existingRecord) {
-              await dispatch(submitSecUserCompany({ UserID: userId, CompanyID: companyId, UID: 1, IsActive: 1 }));
-            } else if (existingRecord.IsActive !== 1) {
-              await dispatch(updateSecUserCompany({ ID: existingRecord.ID, UserID: userId, CompanyID: companyId, UID: 1, IsActive: 1 }));
-            }
-          }
+          toast.success("User updated successfully!"); // <-- Yahan success toast lagayen
+          // ...rest of your update code
 
           // Handle secUserRole updates
           const existingRoles = secUserRole.filter((sur) => sur.UserID === userId);
@@ -172,25 +169,24 @@ const UserManagement = () => {
           for (const roleId of roleIds) {
             const existingRecord = existingRoles.find((er) => er.RoleID === roleId);
             if (!existingRecord) {
-              await dispatch(submitSecUserRole({ 
-                UserID: userId, 
-                RoleID: roleId, 
-                UID: 1, 
-                IsActive: 1, 
-                CompanyID: companyIds[0] || null 
+              await dispatch(submitSecUserRole({
+                UserID: userId,
+                RoleID: roleId,
+                UID: 1,
+                IsActive: 1,
+                CompanyID: companyIds[0] || null
               }));
             } else if (existingRecord.IsActive !== 1) {
-              await dispatch(updateSecUserRole({ 
-                ID: existingRecord.ID, 
-                UserID: userId, 
-                RoleID: roleId, 
-                UID: 1, 
-                IsActive: 1, 
-                CompanyID: companyIds[0] || null 
+              await dispatch(updateSecUserRole({
+                ID: existingRecord.ID,
+                UserID: userId,
+                RoleID: roleId,
+                UID: 1,
+                IsActive: 1,
+                CompanyID: companyIds[0] || null
               }));
             }
           }
-
           // Handle secUserLocation updates
           const existingLocations = secUserLocation.filter((sul) => sul.UserID === userId);
           for (const existing of existingLocations) {
@@ -201,21 +197,21 @@ const UserManagement = () => {
           for (const locationId of locationIds) {
             const existingRecord = existingLocations.find((el) => el.LocationID === locationId);
             if (!existingRecord) {
-              await dispatch(submitSecUserLocation({ 
-                UserID: userId, 
-                LocationID: locationId, 
-                UID: 1, 
-                IsActive: 1, 
-                CompanyID: companyIds[0] || null 
+              await dispatch(submitSecUserLocation({
+                UserID: userId,
+                LocationID: locationId,
+                UID: 1,
+                IsActive: 1,
+                CompanyID: companyIds[0] || null
               }));
             } else if (existingRecord.IsActive !== 1) {
-              await dispatch(updateSecUserLocation({ 
-                ID: existingRecord.ID, 
-                UserID: userId, 
-                LocationID: locationId, 
-                UID: 1, 
-                IsActive: 1, 
-                CompanyID: companyIds[0] || null 
+              await dispatch(updateSecUserLocation({
+                ID: existingRecord.ID,
+                UserID: userId,
+                LocationID: locationId,
+                UID: 1,
+                IsActive: 1,
+                CompanyID: companyIds[0] || null
               }));
             }
           }
@@ -223,6 +219,8 @@ const UserManagement = () => {
           const submitResponse = await dispatch(submitUser(userPayload));
           if (submitResponse.error) throw new Error(submitResponse.payload?.message || "Failed to create user");
           userId = submitResponse.payload?.UserID;
+          toast.success("User created successfully!"); // <-- Yahan success toast lagayen
+          // ...rest of your create code
           if (userId) {
             // Create secUserCompany records
             for (const companyId of companyIds) {
@@ -230,22 +228,22 @@ const UserManagement = () => {
             }
             // Create secUserRole records
             for (const roleId of roleIds) {
-              await dispatch(submitSecUserRole({ 
-                UserID: userId, 
-                RoleID: roleId, 
-                UID: 1, 
-                IsActive: 1, 
-                CompanyID: companyIds[0] || null 
+              await dispatch(submitSecUserRole({
+                UserID: userId,
+                RoleID: roleId,
+                UID: 1,
+                IsActive: 1,
+                CompanyID: companyIds[0] || null
               }));
             }
             // Create secUserLocation records
             for (const locationId of locationIds) {
-              await dispatch(submitSecUserLocation({ 
-                UserID: userId, 
-                LocationID: locationId, 
-                UID: 1, 
-                IsActive: 1, 
-                CompanyID: companyIds[0] || null 
+              await dispatch(submitSecUserLocation({
+                UserID: userId,
+                LocationID: locationId,
+                UID: 1,
+                IsActive: 1,
+                CompanyID: companyIds[0] || null
               }));
             }
           } else {
@@ -263,17 +261,17 @@ const UserManagement = () => {
         setEditingUser(null);
       } catch (error) {
         setSubmissionError(error.message || "Failed to save user data");
+        toast.error(error.message || "Data not saved"); // <-- Sirf catch mein error toast lagayen
       } finally {
         setSubmitting(false);
       }
-    },
+    }
   });
 
   const handleDeleteClick = (id) => {
     setDeleteId(id);
     setDeleteModal(true);
   };
-
   const handleDeleteConfirm = async () => {
     if (deleteId) {
       try {
@@ -336,13 +334,13 @@ const UserManagement = () => {
 
     formik.setValues({
       employeeType: user.EmployeeType || "",
-      employee: user.EmployeeID ? `${user.EmployeeID}:${user.Userfullname || ''}:Hr` : "",
+      // employee: user.EmployeeID ? `${user.EmployeeID}:${user.Userfullname || ''}:Hr` : "",
       fullName: user.Userfullname || "",
       login: user.Userlogin || "",
       password: user.Userpassword || "",
       roles: userRoles.map((r) => r.value),
       locations: userLocations.map((l) => l.value),
-      company: userCompanies.map((c) => c.value),
+      // company: userCompanies.map((c) => c.value),
       loginExpiry: user.LoginExpiry || "18/06/2025",
       isActive: user.IsActive === 1,
       allowAudit: user.AllowAudit === 1,
@@ -376,7 +374,7 @@ const UserManagement = () => {
                 <CardBody className="card-body">
                   <div className="live-preview">
                     <Row className="gy-4">
-                      <Col xxl={3} md={3}>
+                      {/* <Col xxl={3} md={3}>
                         <div className="mb-3">
                           <Label htmlFor="employeeInput" className="form-label">
                             Employee
@@ -396,7 +394,7 @@ const UserManagement = () => {
                             <div className="text-danger">{formik.errors.employee}</div>
                           ) : null}
                         </div>
-                      </Col>
+                      </Col> */}
                       <Col xxl={3} md={3}>
                         <div className="mb-3">
                           <Label htmlFor="fullNameInput" className="form-label">
@@ -451,9 +449,9 @@ const UserManagement = () => {
                           ) : null}
                         </div>
                       </Col>
-                    </Row>
-                    <Row className="gy-4">
-                      <Col xxl={4} md={4}>
+                      {/* </Row> */}
+                      {/* <Row className="gy-4"> */}
+                      <Col xxl={3} md={3}>
                         <div className="mb-3">
                           <Label htmlFor="rolesInput" className="form-label">
                             User Role
@@ -476,7 +474,7 @@ const UserManagement = () => {
                           ) : null}
                         </div>
                       </Col>
-                      <Col xxl={4} md={4}>
+                      <Col xxl={3} md={3}>
                         <div className="mb-3">
                           <Label htmlFor="locationsInput" className="form-label">
                             User Location
@@ -498,7 +496,23 @@ const UserManagement = () => {
                           ) : null}
                         </div>
                       </Col>
-                      <Col xxl={4} md={4}>
+                      <Col xxl={3} md={3}>
+                        <div className="mb-3">
+                          <Label htmlFor="loginExpiryInput" className="form-label">
+                            Login Expiry
+                          </Label>
+                          <Input
+                            type="text"
+                            className="form-control form-control-sm"
+                            name="loginExpiry"
+                            id="loginExpiryInput"
+                            onChange={formik.handleChange}
+                            value={formik.values.loginExpiry}
+                            disabled
+                          />
+                        </div>
+                      </Col>
+                      {/* <Col xxl={4} md={4}>
                         <div className="mb-3">
                           <Label htmlFor="companyInput" className="form-label">
                             Company
@@ -521,25 +535,9 @@ const UserManagement = () => {
                             <div className="text-danger">{formik.errors.company}</div>
                           ) : null}
                         </div>
-                      </Col>
+                      </Col> */}
                     </Row>
                     <Row className="gy-4">
-                      <Col xxl={2} md={2}>
-                        <div className="mb-3">
-                          <Label htmlFor="loginExpiryInput" className="form-label">
-                            Login Expiry
-                          </Label>
-                          <Input
-                            type="text"
-                            className="form-control form-control-sm"
-                            name="loginExpiry"
-                            id="loginExpiryInput"
-                            onChange={formik.handleChange}
-                            value={formik.values.loginExpiry}
-                            disabled
-                          />
-                        </div>
-                      </Col>
                       <Col xxl={2} md={2}>
                         <div className="form-check form-switch mt-4">
                           <Input
@@ -658,7 +656,7 @@ const UserManagement = () => {
                           <th data-sort="login">User Login</th>
                           <th data-sort="roles">Roles</th>
                           <th data-sort="locations">Locations</th>
-                          <th data-sort="company">Company</th>
+                          {/* <th data-sort="company">Company</th> */}
                           <th data-sort="status">Status</th>
                           <th data-sort="action">Action</th>
                         </tr>
@@ -689,16 +687,16 @@ const UserManagement = () => {
                                 .join(", ") || "No Locations";
 
                               // Map companies for display
-                              const userCompanies = Array.isArray(secUserCompany)
-                                ? secUserCompany
-                                    .filter((suc) => suc.UserID === user.UserID && suc.IsActive === 1)
-                                    .map((suc) => {
-                                      const comp = Array.isArray(company.data) ? company.data.find((c) => c.VID === suc.CompanyID) : null;
-                                      return comp ? comp.VName : null;
-                                    })
-                                    .filter((name) => name)
-                                    .join(", ") || "No Companies"
-                                : "No Companies";
+                              // const userCompanies = Array.isArray(secUserCompany)
+                              //   ? secUserCompany
+                              //       .filter((suc) => suc.UserID === user.UserID && suc.IsActive === 1)
+                              //       .map((suc) => {
+                              //         const comp = Array.isArray(company.data) ? company.data.find((c) => c.VID === suc.CompanyID) : null;
+                              //         return comp ? comp.VName : null;
+                              //       })
+                              //       .filter((name) => name)
+                              //       .join(", ") || "No Companies"
+                              //   : "No Companies";
 
                               return (
                                 <tr key={user.UserID}>
@@ -706,7 +704,7 @@ const UserManagement = () => {
                                   <td>{user.Userlogin || "N/A"}</td>
                                   <td>{userRoles}</td>
                                   <td>{userLocations}</td>
-                                  <td>{userCompanies}</td>
+                                  {/* <td>{userCompanies}</td> */}
                                   <td>{user.IsActive === 1 ? "Active" : "Inactive"}</td>
                                   <td>
                                     <div className="d-flex gap-2">

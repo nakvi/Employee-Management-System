@@ -55,7 +55,8 @@ export const submitRole = createAsyncThunk(
       }
 
       const data = await response.json();
-      toast.success(data.message || "Role added successfully!");
+      // toast.success(data.message || "Role added successfully!");
+      toast.success("Role added successfully!");
       return data.data; // Return the newly created Designation
     } catch (error) {
       toast.error("Failed to add Role. Please try again!");
@@ -81,6 +82,7 @@ export const updateRole = createAsyncThunk(
       }
       const responseData = await response.json();
       toast.success("Role updated successfully!");
+      console.log("Updated Role Data:", responseData);
       return responseData.data; // Assuming the updated data is in 'data'
     } catch (error) {
       toast.error("Failed to update Role. Please try again!");
