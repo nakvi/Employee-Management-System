@@ -16,6 +16,8 @@ import { useFormik } from "formik";
 import * as Yup from "yup";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DataTable from "react-data-table-component";
+
 import { useDispatch, useSelector } from "react-redux";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import {
@@ -39,6 +41,13 @@ const RoleManagement = () => {
   useEffect(() => {
     dispatch(getRole());
   }, [dispatch]);
+
+  const [filterText, setFilterText] = useState("");
+  const filteredItems = role?.filter(
+    (item) =>
+      item.VName && item.VName.toLowerCase().includes(filterText.toLowerCase())
+  );
+
 
   // Formik form setup
   const formik = useFormik({
@@ -90,6 +99,68 @@ const RoleManagement = () => {
       IsActive: group.IsActive === 1,
     });
   };
+  const columns = [
+    {
+      name: "Role Name",
+      selector: (row) => row.VName,
+      sortable: true,
+    },
+    {
+      name: "Status",
+      selector: (row) => (row.IsActive === 1 ? "Active" : "Inactive"),
+      sortable: true,
+    },
+    {
+      name: "Action",
+      cell: (row) => (
+        <div className="d-flex gap-2">
+          <Button
+            className="btn btn-soft-info btn-sm"
+            onClick={() => handleEditClick(row)}
+          >
+            <i className="bx bx-edit"></i>
+          </Button>
+          <Button
+            className="btn btn-soft-danger btn-sm"
+            onClick={() => handleDeleteClick(row.VID)}
+          >
+            <i className="ri-delete-bin-2-line"></i>
+          </Button>
+        </div>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+    },
+  ];
+  const customStyles = {
+    table: {
+      style: {
+        border: '1px solid #dee2e6',
+      },
+    },
+    headRow: {
+      style: {
+        backgroundColor: '#f8f9fa',
+        borderBottom: '1px solid #dee2e6',
+        fontWeight: '600',
+      },
+    },
+    rows: {
+      style: {
+        minHeight: '48px',
+        borderBottom: '1px solid #dee2e6',
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        borderRight: '1px solid #dee2e6',
+      },
+    },
+  };
+
 
   document.title = "Role Management | EMS";
 
@@ -156,7 +227,36 @@ const RoleManagement = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                  <div className="Location-table" id="customerList">
+                  {/* <div className="d-flex flex-wrap gap-2 mb-2">
+
+                  </div> */}
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div></div>
+                    <div>
+                     <Input
+                        type="text"
+                        className="form-control-sm"
+                        placeholder="Search roles..."
+                        value={filterText}
+                        style={{ width: '200px' }}
+                        onChange={(e) => setFilterText(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <DataTable
+                    title="Roles"
+                    columns={columns}
+                    data={filteredItems}
+                    customStyles={customStyles}
+                    pagination
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 500]}
+                    highlightOnHover
+                    responsive
+                  />
+
+                  {/* <div className="Location-table" id="customerList">
                     <Row className="g-4 mb-4">
                       <Col className="col-sm">
                         <div className="d-flex justify-content-sm-end">
@@ -237,7 +337,7 @@ const RoleManagement = () => {
                         </Link>
                       </div>
                     </div>
-                  </div>
+                  </div> */}
                 </CardBody>
               </Card>
             </Col>
@@ -248,7 +348,7 @@ const RoleManagement = () => {
         show={deleteModal}
         onCloseClick={() => setDeleteModal(false)}
         onDeleteClick={handleDeleteConfirm}
-        
+
       />
     </React.Fragment>
   );

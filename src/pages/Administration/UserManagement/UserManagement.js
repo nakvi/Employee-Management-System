@@ -7,6 +7,8 @@ import * as Yup from "yup";
 import { useDispatch, useSelector } from "react-redux";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import DataTable from "react-data-table-component";
+
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import {
   getUser,
@@ -55,7 +57,7 @@ const UserManagement = () => {
   const { secUserCompany = [] } = useSelector((state) => state.SecUserCompany || {});
   const { secUserLocation = [] } = useSelector((state) => state.SecUserLocation || {});
   const { secUserRole = [] } = useSelector((state) => state.SecUserRole || {});
-
+const [filterText, setFilterText] = useState("");
   const customStyles = {
     multiValueLabel: (provided) => ({
       ...provided,
@@ -78,6 +80,11 @@ const UserManagement = () => {
     dispatch(getSecUserLocation());
     dispatch(getSecUserRole());
   }, [dispatch]);
+  const filteredUsers = users.filter(
+    (user) =>
+      user.Userfullname?.toLowerCase().includes(filterText.toLowerCase()) ||
+      user.Userlogin?.toLowerCase().includes(filterText.toLowerCase())
+  );
 
   const formik = useFormik({
     initialValues: {
@@ -349,6 +356,97 @@ const UserManagement = () => {
       adminReportRights: user.IsSystemAdmin === 1,
       isManager: user.IsManager === 1,
     });
+  };
+
+  const columns = [
+  {
+    name: "Full Name",
+    selector: (row) => row.Userfullname || "N/A",
+    sortable: true,
+  },
+  {
+    name: "User Login",
+    selector: (row) => row.Userlogin || "N/A",
+    sortable: true,
+  },
+  {
+    name: "Roles",
+    selector: (row) => {
+      const userRoles = secUserRole
+        .filter((sur) => sur.UserID === row.UserID && sur.IsActive === 1)
+        .map((sur) => {
+          const roleItem = role.find((r) => r.VID === sur.RoleID);
+          return roleItem ? roleItem.VName : null;
+        })
+        .filter(Boolean)
+        .join(", ");
+      return userRoles || "No Roles";
+    },
+    sortable: false,
+  },
+  {
+    name: "Locations",
+    selector: (row) => {
+      const userLocations = secUserLocation
+        .filter((sul) => sul.UserID === row.UserID && sul.IsActive === 1)
+        .map((sul) => {
+          const loc = location.find((l) => l.VID === sul.LocationID);
+          return loc ? loc.VName : null;
+        })
+        .filter(Boolean)
+        .join(", ");
+      return userLocations || "No Locations";
+    },
+    sortable: false,
+  },
+  {
+    name: "Status",
+    selector: (row) => (row.IsActive === 1 ? "Active" : "Inactive"),
+    sortable: true,
+  },
+  {
+    name: "Actions",
+    cell: (row) => (
+      <div className="d-flex gap-2">
+        <Button className="btn btn-soft-info btn-sm" onClick={() => handleEditClick(row)}>
+          <i className="bx bx-edit"></i>
+        </Button>
+        <Button className="btn btn-soft-danger btn-sm" onClick={() => handleDeleteClick(row.UserID)}>
+          <i className="ri-delete-bin-2-line"></i>
+        </Button>
+      </div>
+    ),
+    ignoreRowClick: true,
+    allowOverflow: true,
+    button: true,
+  },
+];
+  const customDesign = {
+    table: {
+      style: {
+        border: '1px solid #dee2e6',
+      },
+    },
+    headRow: {
+      style: {
+        backgroundColor: '#f8f9fa',
+        borderBottom: '1px solid #dee2e6',
+        fontWeight: '600',
+      },
+    },
+    rows: {
+      style: {
+        minHeight: '48px',
+        borderBottom: '1px solid #dee2e6',
+      },
+    },
+    cells: {
+      style: {
+        paddingLeft: '16px',
+        paddingRight: '16px',
+        borderRight: '1px solid #dee2e6',
+      },
+    },
   };
 
   document.title = "User Management | EMS";
@@ -637,7 +735,30 @@ const UserManagement = () => {
           <Col lg={12}>
             <Card>
               <CardBody>
-                <div className="Location-table" id="customerList">
+               <div className="mb-3 d-flex justify-content-end">
+                  <Input
+                    type="text"
+                    placeholder="Search by name or login..."
+                    className="form-control-sm w-25"
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                  />
+                </div>
+
+                <DataTable
+                  title="User Management"
+                  columns={columns}
+                  data={filteredUsers}
+                  customStyles={customDesign}
+                  pagination
+                  paginationPerPage={100}
+                  paginationRowsPerPageOptions={[100, 200, 500]}
+                  highlightOnHover
+                  responsive
+                />
+
+
+                {/* <div className="Location-table" id="customerList">
                   <Row className="g-4 mb-4">
                     <Col className="col-sm">
                       <div className="d-flex justify-content-sm-end">
@@ -656,7 +777,7 @@ const UserManagement = () => {
                           <th data-sort="login">User Login</th>
                           <th data-sort="roles">Roles</th>
                           <th data-sort="locations">Locations</th>
-                          {/* <th data-sort="company">Company</th> */}
+                          <th data-sort="company">Company</th>
                           <th data-sort="status">Status</th>
                           <th data-sort="action">Action</th>
                         </tr>
@@ -704,7 +825,7 @@ const UserManagement = () => {
                                   <td>{user.Userlogin || "N/A"}</td>
                                   <td>{userRoles}</td>
                                   <td>{userLocations}</td>
-                                  {/* <td>{userCompanies}</td> */}
+                                  <td>{userCompanies}</td>
                                   <td>{user.IsActive === 1 ? "Active" : "Inactive"}</td>
                                   <td>
                                     <div className="d-flex gap-2">
@@ -740,7 +861,7 @@ const UserManagement = () => {
                       </Link>
                     </div>
                   </div>
-                </div>
+                </div> */}
               </CardBody>
             </Card>
           </Col>
