@@ -8,6 +8,7 @@ import * as Yup from "yup";
 import { loginUser, resetLoginFlag } from "../../slices/auth/login/thunk";
 import logoLight from "../../assets/images/zeta-logosvg.svg";
 import { createSelector } from "reselect";
+import { fetchUserLocations } from "../../helpers/api_helper";
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -25,26 +26,56 @@ const Login = () => {
 
   const { error, loading, errorMsg } = useSelector(selectLoginData);
   const [passwordShow, setPasswordShow] = useState(false);
-  const [userLogin, setUserLogin] = useState([]);
+  // const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [userLocations, setUserLocations] = useState([]);
+  const [locationError, setLocationError] = useState(null);
 
   const validation = useFormik({
     enableReinitialize: true,
-    // initialValues: {
-    //   email: "",
-    //   password: "",
-    // },
     initialValues: {
-      email: userLogin.email || "admin@themesbrand.com" || '',
-      password: userLogin.password || "123456" || '',
+      userLogin: "",
+      password: "",
+      LocationId: "",
     },
     validationSchema: Yup.object({
-      email: Yup.string().email("Invalid email format").required("Please Enter Your Email"),
-      password: Yup.string().required("Please Enter Your Password"),
+      userLogin: Yup.string().required("Please enter your login"),
+      password: Yup.string().required("Please enter your password"),
+      LocationId: Yup.string().required("Please select a location"),
     }),
     onSubmit: (values) => {
-      dispatch(loginUser(values, navigate));
+      dispatch(loginUser(values, navigate)); // Pass navigate instead of history
     },
   });
+
+  const handleUserLoginBlur = async () => {
+    const input = validation.values.userLogin?.trim();
+
+    if (!input) {
+      setUserLocations([]);
+      // setShowLocationDropdown(false);
+      setLocationError(null);
+      return;
+    }
+
+    try {
+      setLocationError(null);
+      const locations = await fetchUserLocations(input);
+      console.log("Fetched locations:", locations); // Debug log
+      setUserLocations(locations);
+      // setShowLocationDropdown(locations.length > 0);
+
+      if (locations.length > 0) {
+        validation.setFieldValue("LocationId", locations[0].id);
+      } else {
+        setLocationError("No locations found for this user.");
+      }
+    } catch (error) {
+      console.error("Error fetching user locations:", error);
+      setUserLocations([]);
+      // setShowLocationDropdown(false);
+      setLocationError("Failed to fetch locations. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (errorMsg) {
@@ -79,6 +110,7 @@ const Login = () => {
                       <p className="text-muted">Sign in to continue to EMS.</p>
                     </div>
                     {error && <Alert color="danger">{error}</Alert>}
+                    {locationError && <Alert color="warning">{locationError}</Alert>}
                     <div className="p-2 mt-4">
                       <Form
                         onSubmit={(e) => {
@@ -89,29 +121,26 @@ const Login = () => {
                         action="#"
                       >
                         <div className="mb-3">
-                          <Label htmlFor="email" className="form-label">
-                            Email
-                          </Label>
+                          <Label htmlFor="userLogin" className="form-label">User Login</Label>
                           <Input
-                            name="email"
+                            name="userLogin"
                             className="form-control"
-                            placeholder="Enter email"
-                            type="email"
+                            placeholder="Enter Email, Username or ID"
+                            type="text"
                             onChange={validation.handleChange}
-                            onBlur={validation.handleBlur}
-                            value={validation.values.email}
-                            invalid={validation.touched.email && validation.errors.email}
+                            onBlur={(e) => {
+                              validation.handleBlur(e);
+                              handleUserLoginBlur();
+                            }}
+                            value={validation.values.userLogin}
+                            invalid={validation.touched.userLogin && validation.errors.userLogin}
                           />
-                          {validation.touched.email && validation.errors.email && (
-                            <FormFeedback>{validation.errors.email}</FormFeedback>
+                          {validation.touched.userLogin && validation.errors.userLogin && (
+                            <FormFeedback>{validation.errors.userLogin}</FormFeedback>
                           )}
                         </div>
+
                         <div className="mb-3">
-                          <div className="float-end">
-                            <Link to="/forgot-password" className="text-muted">
-                              Forgot password?
-                            </Link>
-                          </div>
                           <Label className="form-label" htmlFor="password-input">
                             Password
                           </Label>
@@ -138,17 +167,33 @@ const Login = () => {
                             </button>
                           </div>
                         </div>
-                        {/* <div className="form-check">
-                          <Input
-                            className="form-check-input"
-                            type="checkbox"
-                            value=""
-                            id="auth-remember-check"
-                          />
-                          <Label className="form-check-label" htmlFor="auth-remember-check">
-                            Remember me
-                          </Label>
-                        </div> */}
+
+                        {/* {showLocationDropdown && userLocations.length > 0 && ( */}
+                          <div className="mb-3">
+                            <Label htmlFor="LocationId" className="form-label">Location</Label>
+                            <Input
+                              type="select"
+                              name="LocationId"
+                              id="LocationId"
+                              className="form-select"
+                              onChange={validation.handleChange}
+                              onBlur={validation.handleBlur}
+                              value={validation.values.LocationId}
+                              invalid={validation.touched.LocationId && validation.errors.LocationId}
+                            >
+                              <option value="">Select a location</option>
+                              {userLocations.map((loc) => (
+                                <option key={loc.id} value={loc.id}>
+                                  {loc.name}
+                                </option>
+                              ))}
+                            </Input>
+                            {validation.touched.LocationId && validation.errors.LocationId && (
+                              <FormFeedback>{validation.errors.LocationId}</FormFeedback>
+                            )}
+                          </div>
+                        {/* )} */}
+
                         <div className="mt-4">
                           <Button
                             color="success"
