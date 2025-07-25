@@ -3,10 +3,10 @@ import {
   Card, CardBody, Col, Container, Row, Input, Label, Form
 } from "reactstrap";
 import PreviewCardHeaderReport from "../../../Components/Common/PreviewCardHeaderReport";
-import MonthlyAttCardPreview from "../../../Components/pdfsPreviews/MonthlyAttCardPreview";
-import MonthlyAttSheetPreview from "../../../Components/pdfsPreviews/MonthlyAttSheetPreview";
-import MonthlyAttSummaryPreview from "../../../Components/pdfsPreviews/MonthlyAttSummaryPreview";
-import MonthlyAttLeaveListPreview from "../../../Components/pdfsPreviews/MonthlyAttLeaveListPreview";
+import MonthlyAttCardPreview from "../../../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttCardPreview";
+import MonthlyAttSheetPreview from "../../../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttSheetPreview";
+import MonthlyAttSummaryPreview from "../../../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttSummaryPreview";
+import MonthlyAttLeaveListPreview from "../../../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttLeaveListPreview";
 import Select from "react-select";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";

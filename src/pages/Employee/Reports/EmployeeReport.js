@@ -27,6 +27,7 @@ import { Document, Packer, Paragraph, Table, TableRow, TableCell, WidthType, Tex
 import { saveAs } from "file-saver"; import DeleteModal from "../../../Components/Common/DeleteModal";
 import config from "../../../config"; // ✅ correct
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
+import Uinestable5 from '../../../Components/Common/uinestable5';
 
 import avatar1 from "../../../assets/images/users/avatar-11.png";
 import { useFormik } from "formik";
@@ -1457,6 +1458,11 @@ const EmployeeList = () => {
                     )
                   ) : (
                     null
+                  )}
+                  {formik.values.ReportType === "EmpHierarchy" && (
+                    <div className="mt-4">
+                      <Uinestable5 />
+                    </div>
                   )}
                 </CardBody>
               </Card>

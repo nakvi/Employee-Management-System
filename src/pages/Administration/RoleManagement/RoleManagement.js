@@ -1,4 +1,4 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Card,
@@ -14,6 +14,8 @@ import { Link } from "react-router-dom";
 import PreviewCardHeader from "../../../Components/Common/PreviewCardHeader";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import DeleteModal from "../../../Components/Common/DeleteModal";
 import {
@@ -42,7 +44,7 @@ const RoleManagement = () => {
   const formik = useFormik({
     initialValues: {
       VName: "",
-      IsActive: false,
+      IsActive: true,
       UID: "1",
       CompanyID: "1",
     },
@@ -95,8 +97,9 @@ const RoleManagement = () => {
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
-        {loading && <p>Loading...</p>}
-        {error && <p className="text-danger">{error}</p>}
+          {/* <ToastContainer position="top-right" autoClose={3000} hideProgressBar /> */}
+          {loading && <p>Loading...</p>}
+          {error && <p className="text-danger">{error}</p>}
           <Row>
             <Col lg={12}>
               <Card>
@@ -130,7 +133,7 @@ const RoleManagement = () => {
                             ) : null}
                           </div>
                         </Col>
-                        <Col xxl={2} md={2}>
+                        <Col xxl={2} md={2} className="mt-3">
                           <div className="form-check form-switch mt-4" dir="ltr">
                             <Input
                               type="checkbox"
@@ -183,30 +186,32 @@ const RoleManagement = () => {
                         </thead>
                         <tbody className="list form-check-all">
                           {role.length > 0 ? (
-                            role.map((group) => (
-                              <tr key={group.VID}>
-                                <td>{group.VName}</td>
-                                <td>
-                                  {group.IsActive === 1 ? "Active" : "Inactive"}
-                                </td>
-                                <td>
-                                  <div className="d-flex gap-2">
-                                    <Button
-                                      className="btn btn-soft-info btn-sm"
-                                      onClick={() => handleEditClick(group)}
-                                    >
-                                      <i className="bx bx-edit"></i>
-                                    </Button>
-                                    <Button
-                                      className="btn btn-soft-danger btn-sm"
-                                      onClick={() => handleDeleteClick(group.VID)}
-                                    >
-                                      <i className="ri-delete-bin-2-line"></i>
-                                    </Button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
+                            [...role]
+                              .sort((a, b) => a.VName.localeCompare(b.VName))
+                              .map((group) => (
+                                <tr key={group.VID}>
+                                  <td>{group.VName}</td>
+                                  <td>
+                                    {group.IsActive === 1 ? "Active" : "Inactive"}
+                                  </td>
+                                  <td>
+                                    <div className="d-flex gap-2">
+                                      <Button
+                                        className="btn btn-soft-info btn-sm"
+                                        onClick={() => handleEditClick(group)}
+                                      >
+                                        <i className="bx bx-edit"></i>
+                                      </Button>
+                                      <Button
+                                        className="btn btn-soft-danger btn-sm"
+                                        onClick={() => handleDeleteClick(group.VID)}
+                                      >
+                                        <i className="ri-delete-bin-2-line"></i>
+                                      </Button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))
                           ) : (
                             <tr>
                               <td colSpan="4" className="text-center">
@@ -243,6 +248,7 @@ const RoleManagement = () => {
         show={deleteModal}
         onCloseClick={() => setDeleteModal(false)}
         onDeleteClick={handleDeleteConfirm}
+        
       />
     </React.Fragment>
   );
