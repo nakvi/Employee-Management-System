@@ -348,7 +348,7 @@ const UserRights = forwardRef((props, ref) => {
             </Row>
 
             <Row>
-              <Col md={4} lg={3}>
+              <Col md={8} lg={8}>
                 <Card>
                   <CardBody>
                     <div className="table-responsive">
@@ -397,7 +397,7 @@ const UserRights = forwardRef((props, ref) => {
                 </Card>
               </Col>
 
-              <Col md={8} lg={9}>
+              {/* <Col md={8} lg={9}>
                 <Card>
                   <PreviewCardHeader
                     title="User Rights"
@@ -406,7 +406,7 @@ const UserRights = forwardRef((props, ref) => {
                 </Card>
 
                 <Card>
-                  {/* <CardBody>
+                  <CardBody>
                     <div className="table-responsive table-card mb-1">
                       <table className="table align-middle table-nowrap table-striped table-sm">
                         <thead className="table-light">
@@ -444,11 +444,11 @@ const UserRights = forwardRef((props, ref) => {
                         </tbody>
                       </table>
                     </div>
-                  </CardBody> */}
+                  </CardBody>
                 </Card>
 
                 <Card>
-                  {/* <CardBody>
+                  <CardBody>
                     <div className="table-responsive table-card mb-1">
                       <table className="table align-middle table-nowrap table-sm">
                         <thead className="table-light">
@@ -486,10 +486,10 @@ const UserRights = forwardRef((props, ref) => {
                         </tbody>
                       </table>
                     </div>
-                  </CardBody> */}
+                  </CardBody>
                 </Card>
 
-                {/* <div className="text-end mb-3">
+                <div className="text-end mb-3">
                   <Button 
                     type="submit" 
                     color="primary" 
@@ -504,8 +504,8 @@ const UserRights = forwardRef((props, ref) => {
                       "Save Permissions"
                     )}
                   </Button>
-                </div> */}
-              </Col>
+                </div>
+              </Col> */}
             </Row>
           </form>
         </Container>
