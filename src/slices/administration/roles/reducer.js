@@ -64,7 +64,7 @@ const RoleSlice = createSlice({
       })
       .addCase(deleteRole.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "Failed to delete department group.";
+        state.error = action.payload || "Failed to delete Role.";
       });
   },
 });

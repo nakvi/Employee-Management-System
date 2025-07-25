@@ -57,6 +57,7 @@ const UserManagement = () => {
   const { secUserCompany = [] } = useSelector((state) => state.SecUserCompany || {});
   const { secUserLocation = [] } = useSelector((state) => state.SecUserLocation || {});
   const { secUserRole = [] } = useSelector((state) => state.SecUserRole || {});
+
 const [filterText, setFilterText] = useState("");
   const customStyles = {
     multiValueLabel: (provided) => ({
@@ -284,15 +285,18 @@ const [filterText, setFilterText] = useState("");
       try {
         const userCompanies = secUserCompany.filter((suc) => suc.UserID === deleteId);
         for (const uc of userCompanies) {
-          await dispatch(deleteSecUserCompany(uc.ID));
+          await dispatch(deleteSecUserCompany(uc.VID));
+           // change here ID to VID
         }
         const userRoles = secUserRole.filter((sur) => sur.UserID === deleteId);
         for (const ur of userRoles) {
-          await dispatch(deleteSecUserRole(ur.ID));
+          await dispatch(deleteSecUserRole(ur.VID));
+          // change here ID to VID
         }
         const userLocations = secUserLocation.filter((sul) => sul.UserID === deleteId);
         for (const ul of userLocations) {
-          await dispatch(deleteSecUserLocation(ul.ID));
+          await dispatch(deleteSecUserLocation(ul.VID));
+           // change here ID to VID
         }
         await dispatch(deleteUser(deleteId));
         await Promise.all([

@@ -100,7 +100,7 @@ export const deleteRole = createAsyncThunk(
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ VID: id }), // Ensure 'VID' matches the key expected by your API
+        body: JSON.stringify({ VID: id }),
       });
 
       if (!response.ok) {
