@@ -55,7 +55,7 @@ export const submitSecUserCompany = createAsyncThunk(
       }
 
       const data = await response.json();
-      toast.success(data.message || "User company added successfully!");
+      // toast.success(data.message || "User company added successfully!");
       return data.data;
     } catch (error) {
       toast.error("Failed to add user company. Please try again!");
@@ -84,7 +84,7 @@ export const updateSecUserCompany = createAsyncThunk(
         throw new Error("Failed to update user company");
       }
       const responseData = await response.json();
-      toast.success("User company updated successfully!");
+      // toast.success("User company updated successfully!");
       return responseData.data;
     } catch (error) {
       toast.error("Failed to update user company. Please try again!");
@@ -112,7 +112,7 @@ export const deleteSecUserCompany = createAsyncThunk(
 
       const responseData = await response.json();
       if (responseData.status === "0") {
-        toast.success("User company deleted successfully!");
+        // toast.success("User company deleted successfully!");
         return id;
       } else {
         throw new Error(responseData.message || "Failed to delete data.");
