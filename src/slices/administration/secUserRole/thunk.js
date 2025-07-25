@@ -117,7 +117,7 @@ export const deleteSecUserRole = createAsyncThunk(
 
       const responseData = await response.json();
       if (responseData.status === "0") {
-        // toast.success("User Role deleted successfully!");
+        toast.success("User Role deleted successfully!");
         return id;
       } else {
         throw new Error(responseData.message || "Failed to delete data.");
