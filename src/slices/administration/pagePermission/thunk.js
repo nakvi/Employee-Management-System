@@ -52,7 +52,6 @@ export const getPagePermission = createAsyncThunk(
 export const createPagePermission = createAsyncThunk(
   "pagePermission/createPagePermission",
   async (groupData, { rejectWithValue }) => {
-    console.log("Creating page permission with payload:", groupData);
     try {
       const response = await fetch(API_ENDPOINT, {
         method: "POST",

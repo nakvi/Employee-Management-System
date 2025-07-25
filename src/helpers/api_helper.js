@@ -1,16 +1,15 @@
+// api_helper.js
 import axios from "axios";
 import config from "../config";
 
 axios.defaults.baseURL = config.api.API_URL;
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
-// Set authorization token if available
 const token = JSON.parse(sessionStorage.getItem("authUser"))?.token;
 if (token) {
   axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 }
 
-// Intercept responses to handle errors
 axios.interceptors.response.use(
   (response) => response.data || response,
   (error) => {
@@ -68,6 +67,32 @@ class APIClient {
 const getLoggedinUser = () => {
   const user = sessionStorage.getItem("authUser");
   return user ? JSON.parse(user) : null;
+};
+
+export const fetchUserLocations = async (userLogin) => {
+  const appName = "ems";
+  try {
+    const response = await axios.get(
+      `https://192.168.1.47:8001/ems/getddlLocation/`,
+      {
+        params: {
+          p_userlogin: userLogin,
+          p_appname: appName,
+        },
+      }
+    );
+
+    console.log("fetchUserLocations response:", response);
+    const locations = Array.isArray(response) ? response : response.data || [];
+    
+    return locations.map((item) => ({
+      id: item.VID,
+      name: item.VName,
+    }));
+  } catch (error) {
+    console.error("Error in fetchUserLocations:", error);
+    return [];
+  }
 };
 
 export { APIClient, setAuthorization, getLoggedinUser };
