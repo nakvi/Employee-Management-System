@@ -75,7 +75,7 @@ const Designation = () => {
       LocationID: "-1",
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VCode: Yup.string()
@@ -96,26 +96,41 @@ const Designation = () => {
         .required("Default Salary  is required."),
       IsActive: Yup.boolean(),
     }),
-    onSubmit: (values) => {
-      
+    onSubmit:async (values,{ setSubmitting }) => {
       // Add your form submission logic here
       const transformedValues = {
         ...values,
         IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
       };
-      // Remove LocationID if it's "-1" (default/unselected)
-      if (transformedValues.LocationID === "-1") {
-        transformedValues.LocationID = "-1"; // Fix incorrect assignment
-      }
-      if (editingGroup) {
-        dispatch(
-          updateDesignation({ ...transformedValues, VID: editingGroup.VID })
-        );
-        setEditingGroup(null); // Reset after submission
-      } else {
-        dispatch(submitDesignation(transformedValues));
-      }
-      formik.resetForm();
+         try {
+              let result;
+              if (editingGroup) {
+                // Update existing attendance code
+                result = await dispatch(
+                  updateDesignation({ ...transformedValues, VID: editingGroup.VID })
+                ).unwrap();
+              } else {
+                // Create new attendance code
+                result = await dispatch(submitDesignation(transformedValues)).unwrap();
+              }
+              // Only reset the form and clear editing state on success
+              formik.resetForm();
+              setEditingGroup(null);
+            } catch (error) {
+              // Error is handled in the thunk with toast notifications
+              console.error("Submission error:", error);
+            } finally {
+              setSubmitting(false); // Ensure form is not stuck in submitting state
+            }
+      // if (editingGroup) {
+      //   dispatch(
+      //     updateDesignation({ ...transformedValues, VID: editingGroup.VID })
+      //   );
+      //   setEditingGroup(null); // Reset after submission
+      // } else {
+      //   dispatch(submitDesignation(transformedValues));
+      // }
+      // formik.resetForm();
     },
   });
 
@@ -126,6 +141,10 @@ const Designation = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+        if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteDesignation(deleteId));
     }
     setDeleteModal(false);
@@ -437,7 +456,7 @@ const Designation = () => {
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>

@@ -66,7 +66,7 @@ const AllowanceDeductionTypes = () => {
           item.VName,
           item.VType,
           allowanceDeductionCategory?.data?.find((cat) => cat.CatID === item.CatID)?.VName || "",
-          allowanceDeductionGroup?.data?.find((grp) => grp.VID === item.GroupID)?.VName || "",
+          allowanceDeductionGroup?.find((grp) => grp.VID === item.GroupID)?.VName || "",
         ]
           .join(" ")
           .toLowerCase()
@@ -88,7 +88,7 @@ const AllowanceDeductionTypes = () => {
       SortOrder: 0,
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VType: Yup.string().required("Type is required."),
@@ -106,23 +106,44 @@ const AllowanceDeductionTypes = () => {
         .required("Sort Order is required."),
       IsActive: Yup.boolean(),
     }),
-    onSubmit: (values) => {
+    onSubmit:async (values, { setSubmitting }) => {
       const transformedValues = {
         ...values,
         IsActive: values.IsActive ? 1 : 0,
       };
-      if (editingGroup) {
-        dispatch(
-          updateAllowanceDeductionType({
-            ...transformedValues,
-            VID: editingGroup.VID,
-          })
-        );
-        setEditingGroup(null);
-      } else {
-        dispatch(submitAllowanceDeductionType(transformedValues));
-      }
-      formik.resetForm();
+        try {
+              let result;
+              if (editingGroup) {
+                // Update existing attendance code
+                result = await dispatch(
+                  updateAllowanceDeductionType({ ...transformedValues, VID: editingGroup.VID })
+                ).unwrap();
+              } else {
+                // Create new attendance code
+                result = await dispatch(submitAllowanceDeductionType(transformedValues)).unwrap();
+              }
+              // Only reset the form and clear editing state on success
+              formik.resetForm();
+              setEditingGroup(null);
+            } catch (error) {
+              // Error is handled in the thunk with toast notifications
+              console.error("Submission error:", error);
+              
+            } finally {
+              setSubmitting(false); // Ensure form is not stuck in submitting state
+            }
+      // if (editingGroup) {
+      //   dispatch(
+      //     updateAllowanceDeductionType({
+      //       ...transformedValues,
+      //       VID: editingGroup.VID,
+      //     })
+      //   );
+      //   setEditingGroup(null);
+      // } else {
+      //   dispatch(submitAllowanceDeductionType(transformedValues));
+      // }
+      // formik.resetForm();
     },
   });
 
@@ -133,6 +154,10 @@ const AllowanceDeductionTypes = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteAllowanceDeductionType(deleteId));
     }
     setDeleteModal(false);
@@ -150,7 +175,7 @@ const AllowanceDeductionTypes = () => {
       SortOrder: group.SortOrder,
       UID: group.UID,
       CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
+      IsActive: group.IsActive === 1 || group.IsActive === true,
     });
   };
   const isEditMode = editingGroup !== null;
@@ -192,7 +217,7 @@ const AllowanceDeductionTypes = () => {
       row.VName,
       row.VType,
       allowanceDeductionCategory?.data?.find((cat) => cat.CatID === row.CatID)?.VName || "",
-      allowanceDeductionGroup?.data?.find((grp) => grp.VID === row.GroupID)?.VName || "",
+      allowanceDeductionGroup?.find((grp) => grp.VID === row.GroupID)?.VName || "",
       row.IsActive ? "Yes" : "No"
     ]);
 
@@ -253,7 +278,7 @@ const AllowanceDeductionTypes = () => {
         row.VName,
         row.VType,
         allowanceDeductionCategory?.data?.find((cat) => cat.CatID === row.CatID)?.VName || "",
-        allowanceDeductionGroup?.data?.find((grp) => grp.VID === row.GroupID)?.VName || "",
+        allowanceDeductionGroup?.find((grp) => grp.VID === row.GroupID)?.VName || "",
         row.IsActive ? "Yes" : "No"
       ].map(value =>
         new TableCell({
@@ -310,7 +335,7 @@ const AllowanceDeductionTypes = () => {
     {
       name: "Group",
       selector: (row) =>
-        allowanceDeductionGroup?.data?.find((grp) => grp.VID === row.GroupID)?.VName || "",
+        allowanceDeductionGroup?.find((grp) => grp.VID === row.GroupID)?.VName || "",
       sortable: true,
     },
     { name: "Active", selector: (row) => row.IsActive ? "Yes" : "No", sortable: true },
@@ -372,13 +397,14 @@ const AllowanceDeductionTypes = () => {
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title={isEditMode ? "Edit Allowance/Deduction" : "Add Allowance/Deduction"}
+                    // title={isEditMode ? "Edit Allowance/Deduction" : "Add Allowance/Deduction"}
+                    title="Allowance/Deduction Types"
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
                   />
@@ -491,8 +517,8 @@ const AllowanceDeductionTypes = () => {
                               <option value="" disabled>
                                 ---Select---
                               </option>
-                              {allowanceDeductionGroup?.data?.length > 0 ? (
-                                allowanceDeductionGroup.data.map((group) => (
+                              {allowanceDeductionGroup?.length > 0 ? (
+                                allowanceDeductionGroup.map((group) => (
                                   <option key={group.VID} value={group.VID}>
                                     {group.VName}
                                   </option>
@@ -516,7 +542,7 @@ const AllowanceDeductionTypes = () => {
                               Sort Order
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               className="form-control-sm"
                               id="SortOrder"
                               placeholder="Sort Order"

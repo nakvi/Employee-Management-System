@@ -86,7 +86,7 @@ const LeaveBalance = () => {
       LocationID: "-1",  // Default to "-1"
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VName: Yup.string()
@@ -134,6 +134,10 @@ const LeaveBalance = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+        if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteLeaveBalance(deleteId));
     }
     setDeleteModal(false);
@@ -152,7 +156,7 @@ const LeaveBalance = () => {
       LocationID: group.LocationID,
       UID: group.UID,
       CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
+      IsActive: group.IsActive === true,
     });
   };
   const formatDate = (dateString) => {
@@ -162,10 +166,7 @@ const LeaveBalance = () => {
   document.title = "Leave Balance | EMS";
 
   const isEditMode = editingGroup !== null;
-  const handleCancel = () => {
-    formik.resetForm();
-    setEditingGroup(null);
-  };
+ 
   // Export functions
   const exportToExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(filteredData || []);
@@ -392,11 +393,14 @@ const LeaveBalance = () => {
                         <i className="align-bottom me-1"></i>Save
                       </Button>
                       <Button color="dark" className="add-btn me-1 py-1"
-                        onCancel={handleCancel}>
+                         onClick={() => {
+                          formik.resetForm();
+                          setEditingGroup(null);
+                        }}>
                         <i className="align-bottom me-1"></i> Cancel
                       </Button>
                     </div>
-                    <div className="d-inline-block position-relative">
+                    {/* <div className="d-inline-block position-relative">
                       <Button
                         tag="label"
                         type="button" // <-- Fix here
@@ -433,7 +437,7 @@ const LeaveBalance = () => {
                         // onChange={handleFileUpload}
                         style={{ display: "none" }}
                       />
-                    </div>
+                    </div> */}
                   </CardHeader>
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -598,7 +602,6 @@ const LeaveBalance = () => {
                               type="checkbox"
                               className="form-check-input"
                               id="IsActive"
-                              defaultChecked=""
                               {...formik.getFieldProps("IsActive")}
                               checked={formik.values.IsActive}
                             />

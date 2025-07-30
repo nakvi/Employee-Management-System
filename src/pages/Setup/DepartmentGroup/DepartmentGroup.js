@@ -52,7 +52,7 @@ const DepartmentGroup = () => {
       SortOrder: 0,
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VCode: Yup.string()
@@ -70,21 +70,32 @@ const DepartmentGroup = () => {
         .required("Sort Order is required."),
       IsActive: Yup.boolean(),
     }),
-    onSubmit: (values) => {
-      // Add your form submission logic here
+    onSubmit: async (values, { setSubmitting }) => {
       const transformedValues = {
         ...values,
         IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
       };
-      // dispatch(submitDepartmentGroup(transformedValues));
-      if (editingGroup) {
-        dispatch(
-          updateDepartmentGroup({ ...transformedValues, VID: editingGroup.VID })
-        );
-      } else {
-        dispatch(submitDepartmentGroup(transformedValues));
+
+      try {
+        let result;
+        if (editingGroup) {
+          // Update existing department group
+          result = await dispatch(
+            updateDepartmentGroup({ ...transformedValues, VID: editingGroup.VID })
+          ).unwrap();
+        } else {
+          // Create new department group
+          result = await dispatch(submitDepartmentGroup(transformedValues)).unwrap();
+        }
+        // Only reset the form if the request was successful
+        formik.resetForm();
+      } catch (error) {
+        // Error is already handled in the thunk with toast notifications
+        // No need to reset the form on error
+        console.error("Submission error:", error);
+      } finally {
+        setSubmitting(false); // Ensure form is not stuck in submitting state
       }
-      formik.resetForm();
     },
   });
   // Fetch data on component mount
@@ -116,6 +127,10 @@ const DepartmentGroup = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteDepartmentGroup(deleteId));
     }
     setDeleteModal(false);
@@ -337,7 +352,7 @@ const DepartmentGroup = () => {
       ),
     },
   ];
-  
+
   const customStyles = {
     table: {
       style: {
@@ -365,26 +380,27 @@ const DepartmentGroup = () => {
       },
     },
   };
-  
+
   const isEditMode = editingGroup !== null;
   const handleCancel = () => {
-  formik.resetForm();
-  setEditingGroup(null); // This resets the title to "Add Department Group"
-};
+    formik.resetForm();
+    setEditingGroup(null); // This resets the title to "Add Department Group"
+  };
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                  title={isEditMode ? "Edit Department Group" : "Add Department Group"}
-                  onCancel={handleCancel}
-                  isEditMode={isEditMode}
+                    // title={isEditMode ? "Edit Department Group" : "Add Department Group"}
+                    title="Department Group"
+                    onCancel={handleCancel}
+                    isEditMode={isEditMode}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">
@@ -496,52 +512,52 @@ const DepartmentGroup = () => {
             <Col lg={12}>
               <Card>
                 <CardBody>
-                <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
-                  <div className="d-flex flex-wrap gap-2 mb-2">
-                    <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
-                    <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
-                    <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
-                    <CSVLink
-                      data={departmentGroup?.data || []}
-                      filename="DepartmentGroups.csv"
-                      className="btn btn-sm btn-secondary"
-                    >
-                      Export to CSV
-                    </CSVLink>
+                  <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+                    <div className="d-flex flex-wrap gap-2 mb-2">
+                      <Button className="btn-sm" color="success" onClick={exportToExcel}>Export to Excel</Button>
+                      <Button className="btn-sm" color="primary" onClick={exportToWord}>Export to Word</Button>
+                      <Button className="btn-sm" color="danger" onClick={exportToPDF}>Export to PDF</Button>
+                      <CSVLink
+                        data={departmentGroup?.data || []}
+                        filename="DepartmentGroups.csv"
+                        className="btn btn-sm btn-secondary"
+                      >
+                        Export to CSV
+                      </CSVLink>
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        className="form-control form-control-sm"
+                        style={{ width: '200px' }}
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Search"
-                      className="form-control form-control-sm"
-                      style={{ width: '200px' }}
-                      value={searchText}
-                      onChange={(e) => setSearchText(e.target.value)}
-                    />
-                  </div>
-                </div>
                   <DataTable
                     title="Department Groups"
                     columns={columns}
                     data={filteredData}
                     pagination
-                    paginationPerPage={100} 
-                    paginationRowsPerPageOptions={[100, 200, 500]} 
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 500]}
                     highlightOnHover
                     responsive
                     customStyles={customStyles}
-                    // subHeader
-                    // subHeaderComponent={
-                    //   <div className="d-flex justify-content-end">
-                    //     <input
-                    //       type="text"
-                    //       placeholder="Search"
-                    //       className="form-control-sm"
-                    //       value={searchText}
-                    //       onChange={(e) => setSearchText(e.target.value)} // ate search text
-                    //     />
-                    //   </div>
-                    // }
+                  // subHeader
+                  // subHeaderComponent={
+                  //   <div className="d-flex justify-content-end">
+                  //     <input
+                  //       type="text"
+                  //       placeholder="Search"
+                  //       className="form-control-sm"
+                  //       value={searchText}
+                  //       onChange={(e) => setSearchText(e.target.value)} // ate search text
+                  //     />
+                  //   </div>
+                  // }
                   />
                 </CardBody>
               </Card>
