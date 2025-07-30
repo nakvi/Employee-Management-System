@@ -52,8 +52,8 @@ export const submitDepartmentGroup = createAsyncThunk(
       if (data.status === "0") {
         toast.success(data.message || "Department group added successfully!");
       } else if (data.status === "1") {
-        toast.error(data.message || "An error occurred!");
-        return rejectWithValue(data.message);
+        toast.error(data.error || data.message || "An error occurred!");
+        return rejectWithValue(data.error || data.message || "An error occurred!");``
       } else if (data.status === "2") {
         toast.warning(data.message || "Warning: Please check your input!");
       }
@@ -84,10 +84,11 @@ export const updateDepartmentGroup = createAsyncThunk(
         throw new Error("Failed to update department group");
       }
       const responseData = await response.json();
+      console.log("Response Data:", responseData);
       if (responseData.status === "0") {
         toast.success(responseData.message || "Department group added successfully!");
       } else if (responseData.status === "1") {
-        toast.error(responseData.message || "An error occurred!");
+        toast.error(responseData.error || "An error occurred!");
         return rejectWithValue(responseData.message);
       } else if (responseData.status === "2") {
         toast.warning(responseData.message || "Warning: Please check your input!");

@@ -66,7 +66,7 @@ const Grade = () => {
       SortOrder: 0,
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VCode: Yup.string()
@@ -84,18 +84,37 @@ const Grade = () => {
         .required("Sort Order is required."),
       IsActive: Yup.boolean(),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values, { setSubmitting }) => {
       const transformedValues = {
         ...values,
         IsActive: values.IsActive ? 1 : 0,
       };
-      if (editingGroup) {
-        dispatch(updateGrade({ ...transformedValues, VID: editingGroup.VID }));
-        setEditingGroup(null);
-      } else {
-        dispatch(submitGrade(transformedValues));
-      }
-      formik.resetForm();
+        try {
+              let result;
+              if (editingGroup) {
+                // Update existing attendance code
+                result = await dispatch(
+                  updateGrade({ ...transformedValues, VID: editingGroup.VID })
+                ).unwrap();
+              } else {
+                // Create new attendance code
+                result = await dispatch(submitGrade(transformedValues)).unwrap();
+              }
+              // Only reset the form and clear editing state on success
+              formik.resetForm();
+              setEditingGroup(null);
+            } catch (error) {
+              console.error("Submission error:", error);
+            } finally {
+              setSubmitting(false); // Ensure form is not stuck in submitting state
+            }
+      // if (editingGroup) {
+      //   dispatch(updateGrade({ ...transformedValues, VID: editingGroup.VID }));
+      //   setEditingGroup(null);
+      // } else {
+      //   dispatch(submitGrade(transformedValues));
+      // }
+      // formik.resetForm();
     },
   });
 
@@ -106,6 +125,10 @@ const Grade = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+       if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteGrade(deleteId));
     }
     setDeleteModal(false);
@@ -119,7 +142,7 @@ const Grade = () => {
       SortOrder: group.SortOrder,
       UID: group.UID,
       CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
+      IsActive: group.IsActive === 1 || group.IsActive === true,
     });
   };
   const isEditMode = editingGroup !== null;
@@ -331,7 +354,8 @@ const Grade = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title={isEditMode ? "Edit Grade" : "Add Grade"}
+                    // title={isEditMode ? "Edit Grade" : "Add Grade"}
+                    title="Grades"
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
                   />

@@ -64,6 +64,7 @@ export const getLocation = createAsyncThunk(
 export const submitLocation = createAsyncThunk(
   "Location/submitLocation",
   async (payload, { rejectWithValue }) => {
+    console.log("Payload in submitLocation:", payload);
     try {
       const formData = new FormData();
       
@@ -96,31 +97,54 @@ export const submitLocation = createAsyncThunk(
     }
   }
 );
-// Update Location
 export const updateLocation = createAsyncThunk(
   "Location/updateLocation",
-  async (groupData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue }) => {
     try {
-      const response = await fetch(`${API_ENDPOINT}`, {
+      const response = await fetch(API_ENDPOINT, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(groupData),
+        body: formData, // FormData is sent as is
       });
-     
+
       if (!response.ok) {
-        throw new Error("Failed to update Location");
+        const errData = await response.json();
+        throw new Error(errData?.error || "Failed to update Location");
       }
+
       const responseData = await response.json();
-      toast.success("Location updated successfully!");
-      return responseData.data; // Assuming the updated data is in 'data'
+      toast.success(responseData.message || "Location updated successfully!");
+      return responseData.data;
     } catch (error) {
-      toast.error("Failed to update Location. Please try again!");
+      toast.error(error.message || "Failed to update Location. Please try again!");
       return rejectWithValue(error.message);
     }
   }
 );
+// Update Location
+// export const updateLocation = createAsyncThunk(
+//   "Location/updateLocation",
+//   async (groupData, { rejectWithValue }) => {
+//     try {
+//       const response = await fetch(`${API_ENDPOINT}`, {
+//         method: "PUT",
+//         headers: {
+//           "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify(groupData),
+//       });
+     
+//       if (!response.ok) {
+//         throw new Error("Failed to update Location");
+//       }
+//       const responseData = await response.json();
+//       toast.success("Location updated successfully!");
+//       return responseData.data; // Assuming the updated data is in 'data'
+//     } catch (error) {
+//       toast.error("Failed to update Location. Please try again!");
+//       return rejectWithValue(error.message);
+//     }
+//   }
+// );
 // Delete Location
 export const deleteLocation = createAsyncThunk(
   "Location/deleteLocation",

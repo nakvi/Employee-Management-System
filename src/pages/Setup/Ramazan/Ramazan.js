@@ -68,7 +68,7 @@ const Ramazan = () => {
       DateTo: "",
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VName: Yup.string()
@@ -116,7 +116,7 @@ const Ramazan = () => {
       VName: group.VName,
       UID: group.UID,
       CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
+      IsActive: group.IsActive === 1 || group.IsActive === true,
     });
   };
 
@@ -127,6 +127,10 @@ const Ramazan = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteRamazan(deleteId));
     }
     setDeleteModal(false);
@@ -331,7 +335,8 @@ const Ramazan = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title={isEditMode ? "Edit Ramazan Date" : "Add Ramazan Date"}
+                    // title={isEditMode ? "Edit Ramazan Date" : "Add Ramazan Date"}
+                    title="Ramazan Date"
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
                   />
