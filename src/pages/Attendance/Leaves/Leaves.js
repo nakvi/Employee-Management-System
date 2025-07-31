@@ -197,6 +197,10 @@ document.title = "Leave | EMS";
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm();
+        setEditingGroup(null);
+      }
       dispatch(deleteLeave(deleteId)).then(() => {
         dispatch(getLeave());
         setAttendanceRecords([]);

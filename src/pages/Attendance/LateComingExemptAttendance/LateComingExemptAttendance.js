@@ -142,6 +142,10 @@ const LateComingExemptAttendance = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null);
+      }
       dispatch(deleteLateComingExemptAttendance(deleteId)).then(() => {
         dispatch(getLateComingExemptAttendance());
       });

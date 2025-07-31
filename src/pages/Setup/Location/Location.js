@@ -103,15 +103,15 @@ const Location = () => {
         .typeError("Sort Order must be a number.")
         .required("Sort Order is required."),
       IsActive: Yup.boolean(),
-      Logo: Yup.mixed().test(
-        "fileRequired",
-        "Logo is required.",
-        function (value) {
-          const { ExistingLogo } = this.parent;
-          // Require Logo only if neither a new file nor an existing logo is provided
-          return value || ExistingLogo;
-        }
-      ),
+      // Logo: Yup.mixed().test(
+      //   "fileRequired",
+      //   "Logo is required.",
+      //   function (value) {
+      //     const { ExistingLogo } = this.parent;
+      //     // Require Logo only if neither a new file nor an existing logo is provided
+      //     return value || ExistingLogo;
+      //   }
+      // ),
     }),
 
     onSubmit: async (values) => {

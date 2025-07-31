@@ -147,6 +147,10 @@ const LocalSale = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+        if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteSalaryAllowanceDeduction(deleteId)).then(() => {
         dispatch(getLocalSale());
       });
@@ -378,6 +382,10 @@ const LocalSale = () => {
                   <PreviewCardHeaderUpload
                     title="Local Sale"
                     // onCancel={formik.resetForm}
+                      onCancel={() => {
+                      formik.resetForm();
+                      setEditingGroup(null);
+                    }}
                   />
                   <CardBody className="card-body">
                     <div className="live-preview">

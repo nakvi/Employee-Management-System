@@ -138,6 +138,10 @@ const SpecialLeaveEntry = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm();
+        setEditingGroup(null);
+      }
       dispatch(deleteSpecialLeaveEntry(deleteId)).then(() => {
         dispatch(getSpecialLeaveEntry());
       });

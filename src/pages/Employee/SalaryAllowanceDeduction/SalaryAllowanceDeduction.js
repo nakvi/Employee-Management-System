@@ -270,6 +270,10 @@ const SalaryAllowanceDeduction = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteSalaryAllowanceDeduction(deleteId)).then(() => {
         dispatch(getSalaryAllowanceDeduction());
       });

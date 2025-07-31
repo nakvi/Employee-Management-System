@@ -113,13 +113,31 @@ const LoanDisbursement = () => {
         .required("Installment is required"),
       VDate: Yup.date().required("Date is required"),
     }),
-    onSubmit: (values) => {
-      if (editingGroup) {
-        dispatch(updateLoanDisbursement({ ...values, VID: editingGroup.VID }));
-      } else {
-        dispatch(submitLoanDisbursement(values)).then(() => { });
+    onSubmit: async (values, { setSubmitting }) => {
+      try {
+        let result;
+        if (editingGroup) {
+          // Update existing loan disbursement
+          result = await dispatch(
+            updateLoanDisbursement({ ...values, VID: editingGroup.VID })
+          ).unwrap();
+        } else {
+          // Create new loan disbursement
+          result = await dispatch(submitLoanDisbursement(values)).unwrap();
+        }
+        formik.resetForm();
+        setEditingGroup(null);
+      } catch (error) {
+        console.error("Error submitting form:", error);
+      } finally {
+        setSubmitting(false); // Ensure form is not stuck in submitting state
       }
-      formik.resetForm();
+      // if (editingGroup) {
+      //   dispatch(updateLoanDisbursement({ ...values, VID: editingGroup.VID }));
+      // } else {
+      //   dispatch(submitLoanDisbursement(values)).then(() => { });
+      // }
+      // formik.resetForm();
     },
   });
   // Handle edit click
@@ -156,6 +174,10 @@ const LoanDisbursement = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteLoanDisbursement(deleteId)).then(() => {
       });
     }

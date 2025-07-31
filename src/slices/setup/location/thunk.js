@@ -106,7 +106,7 @@ export const updateLocation = createAsyncThunk(
         body: formData, // FormData is sent as is
       });
 
-      if (!response.ok) {
+      if (!response.ok) { 
         const errData = await response.json();
         throw new Error(errData?.error || "Failed to update Location");
       }
