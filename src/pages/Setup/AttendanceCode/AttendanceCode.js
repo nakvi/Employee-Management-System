@@ -76,7 +76,7 @@ const AttendanceCode = () => {
       GroupID: "-1",
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VCode: Yup.string()
@@ -96,23 +96,37 @@ const AttendanceCode = () => {
       ),
       IsActive: Yup.boolean(),
     }),
-    onSubmit: (values) => {
+    onSubmit: async (values, { setSubmitting }) => {
       const transformedValues = {
         ...values,
-        IsActive: values.IsActive ? 1 : 0,
+        IsActive: values.IsActive ? 1 : 0, // Convert boolean to integer
+        GroupID: values.GroupID === -1 ? "" : values.GroupID, // Handle GroupID
       };
-      if (transformedValues.GroupID === -1) {
-        transformedValues.GroupID = "";
-      }
-      if (editingGroup) {
-        dispatch(
-          updateAttendanceCode({ ...transformedValues, VID: editingGroup.VID })
-        );
+
+      try {
+        let result;
+        if (editingGroup) {
+          // Update existing attendance code
+          result = await dispatch(
+            updateAttendanceCode({ ...transformedValues, VID: editingGroup.VID })
+          ).unwrap();
+        } else {
+          // Create new attendance code
+          result = await dispatch(submitAttendanceCode(transformedValues)).unwrap();
+        }
+        // Only reset the form and clear editing state on success
+        formik.resetForm();
         setEditingGroup(null);
-      } else {
-        dispatch(submitAttendanceCode(transformedValues));
+      } catch (error) {
+        // Error is handled in the thunk with toast notifications
+        console.error("Submission error:", error);
+        // Optionally set field-specific error for duplicate VName
+        if (error === "Duplicate VName not allowed") {
+          formik.setFieldError("VName", "This title is already in use.");
+        }
+      } finally {
+        setSubmitting(false); // Ensure form is not stuck in submitting state
       }
-      formik.resetForm();
     },
   });
 
@@ -123,6 +137,10 @@ const AttendanceCode = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteAttendanceCode(deleteId));
     }
     setDeleteModal(false);
@@ -337,13 +355,14 @@ const AttendanceCode = () => {
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title={isEditMode ? "Edit Attendance Code" : "Add Attendance Code"}
+                    // title={isEditMode ? "Edit Attendance Code" : "Add Attendance Code"}
+                    title="Attendance Code"
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
                   />
@@ -427,14 +446,14 @@ const AttendanceCode = () => {
                               Sort Order
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               className="form-control-sm"
                               id="SortOrder"
                               placeholder="Sort Order"
                               {...formik.getFieldProps("SortOrder")}
                             />
                             {formik.touched.SortOrder &&
-                            formik.errors.SortOrder ? (
+                              formik.errors.SortOrder ? (
                               <div className="text-danger">
                                 {formik.errors.SortOrder}
                               </div>

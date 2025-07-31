@@ -116,8 +116,7 @@ const TrialEmployee = () => {
       EmpIDOld: Yup.string().required("Employee is required"),
       DeptID: Yup.number().min(1, "Department Type is required").required("Required"),
       HireType: Yup.string().required("Hire is required"),
-      EName: Yup.string().required("Name is required"),
-      FName: Yup.string().required("Father Name is required"),
+
       ShiftID: Yup.number().min(1, "Shift Type is required").required("Required"),
       DOJ: Yup.date().required("Date is required"),
       DOB: Yup.date().required("Date is required"),
@@ -181,6 +180,10 @@ const TrialEmployee = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm();
+        setEditingGroup(null);
+      }
       dispatch(deleteEmployeeTrial(deleteId)).then(() => {
         dispatch(getEmployeeTrial());
       });
@@ -693,7 +696,7 @@ const TrialEmployee = () => {
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="EName" className="form-label">
-                              Name <span className="text-danger">*</span>
+                              Name 
                             </Label>
                             <Input
                               type="text"
@@ -703,15 +706,13 @@ const TrialEmployee = () => {
                               placeholder="Name"
                               {...formik.getFieldProps("EName")}
                             />
-                            {formik.touched.EName && formik.errors.EName ? (
-                              <div className="text-danger">{formik.errors.EName}</div>
-                            ) : null}
+                          
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="FName" className="form-label">
-                              Father Name <span className="text-danger">*</span>
+                              Father Name 
                             </Label>
                             <Input
                               type="text"
@@ -721,9 +722,7 @@ const TrialEmployee = () => {
                               placeholder="Father Name"
                               {...formik.getFieldProps("FName")}
                             />
-                            {formik.touched.FName && formik.errors.FName ? (
-                              <div className="text-danger">{formik.errors.FName}</div>
-                            ) : null}
+                          
                           </div>
                         </Col>
                         <Col xxl={2} md={2}>

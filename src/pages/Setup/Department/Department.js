@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  Button,
+  Button, 
   Card,
   CardBody,
   Col,
@@ -72,7 +72,7 @@ const Department = () => {
       CompanyID: "1",
       LocationID: "-1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VCode: Yup.string()
@@ -174,6 +174,10 @@ const Department = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+        if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteDepartment(deleteId));
     }
     setDeleteModal(false);

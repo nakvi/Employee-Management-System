@@ -72,7 +72,7 @@ const SalaryBank = () => {
       LocationID: "1",
       UID: "1",
       IsCash: 0,
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VCode: Yup.string()
@@ -113,6 +113,10 @@ const SalaryBank = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+       if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteSalaryBank(deleteId));
     }
     setDeleteModal(false);
@@ -130,7 +134,7 @@ const SalaryBank = () => {
       SortOrder: group.SortOrder,
       UID: group.UID,
       CompanyID: group.CompanyID,
-      IsActive: group.IsActive === 1,
+      IsActive: group.IsActive === 1 || group.IsActive === true,
     });
   };
   const isEditMode = editingGroup !== null;
@@ -338,7 +342,8 @@ const SalaryBank = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title={isEditMode ? "Edit Salary Bank" : "Add Salary Bank"}
+                    // title={isEditMode ? "Edit Salary Bank" : "Add Salary Bank"}
+                    title="Salary Bank"
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
                   />

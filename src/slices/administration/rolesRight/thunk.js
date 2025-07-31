@@ -39,7 +39,6 @@ export const getRoleRight = createAsyncThunk(
 export const submitRoleRight = createAsyncThunk(
   "role/submitRoleRight",
   async (payload, { rejectWithValue }) => {
-    console.log("gr",payload);
     try {
       const response = await fetch(API_ENDPOINT, {
         method: "POST",
@@ -66,6 +65,8 @@ export const submitRoleRight = createAsyncThunk(
 export const updateRoleRight = createAsyncThunk(
   "role/updateRoleRight",
   async (groupData, { rejectWithValue }) => {
+        console.log("gr",groupData);
+
     try {
       const response = await fetch(`${API_ENDPOINT}`, {
         method: "PUT",

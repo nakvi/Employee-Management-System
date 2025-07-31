@@ -91,7 +91,7 @@ const Shift = () => {
       IsSecurity: false,
       SaturdayHalfTime: false,
       LocationID: "-1",
-      IsActive: false,
+      IsActive: true,
       UID: "1",
       CompanyID: "1",
     },
@@ -128,26 +128,54 @@ const Shift = () => {
       LocationID: Yup.number().required("Location is required."),
       IsActive: Yup.boolean(),
     }),
+onSubmit: async (values, { setSubmitting }) => {
+    const transformedValues = {
+      ...values,
+      IsActive: values.IsActive ? 1 : 0,
+      IsRoster: values.IsRoster ? 1 : 0,
+      IsSecurity: values.IsSecurity ? 1 : 0,
+      SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
+    };
 
-    onSubmit: (values) => {
-      const transformedValues = {
-        ...values,
-        IsActive: values.IsActive ? 1 : 0,
-        IsRoster: values.IsRoster ? 1 : 0,
-        IsSecurity: values.IsSecurity ? 1 : 0,
-        SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
-      };
+    try {
+      let result;
       if (editingGroup) {
-        console.log("Editing Group", transformedValues);
-
-        dispatch(updateShift({ ...transformedValues, VID: editingGroup.VID }));
-        setEditingGroup(null); // Reset after submission
+        // Update existing shift
+        result = await dispatch(
+          updateShift({ ...transformedValues, VID: editingGroup.VID })
+        ).unwrap();
       } else {
-        dispatch(submitShift(transformedValues));
+        // Create new shift
+        result = await dispatch(submitShift(transformedValues)).unwrap();
       }
+      // Only reset the form and clear editing state on success
       formik.resetForm();
-    },
-  });
+      setEditingGroup(null);
+    } catch (error) {
+      // Error is handled in the thunk with toast notifications
+      console.error("Submission error:", error);
+    } finally {
+      setSubmitting(false); // Ensure form is not stuck in submitting state
+    }
+  },
+});
+    // onSubmit: (values) => {
+    //   const transformedValues = {
+    //     ...values,
+    //     IsActive: values.IsActive ? 1 : 0,
+    //     IsRoster: values.IsRoster ? 1 : 0,
+    //     IsSecurity: values.IsSecurity ? 1 : 0,
+    //     SaturdayHalfTime: values.SaturdayHalfTime ? 1 : 0,
+    //   };
+    //   if (editingGroup) {
+    //     dispatch(updateShift({ ...transformedValues, VID: editingGroup.VID }));
+    //     setEditingGroup(null); // Reset after submission
+    //   } else {
+    //     dispatch(submitShift(transformedValues));
+    //   }
+    //   formik.resetForm();
+    // },
+  // });
   // Delete Data
   const handleDeleteClick = (id) => {
     setDeleteId(id);
@@ -155,6 +183,10 @@ const Shift = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteShift(deleteId));
     }
     setDeleteModal(false);
@@ -191,7 +223,7 @@ const Shift = () => {
       IsSecurity: group.IsSecurity === true,
       SaturdayHalfTime: group.SaturdayHalfTime === true,
       LocationID: group.LocationID,
-      IsActive: group.IsActive === true,
+      IsActive: group.IsActive === true || group.IsActive === 1,
       UID: group.UID,
       CompanyID: group.CompanyID,
     });
@@ -424,13 +456,14 @@ const Shift = () => {
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                     title={isEditMode ? "Edit Shift Management" : "Add Shift Management"}
+                    //  title={isEditMode ? "Edit Shift Management" : "Add Shift Management"}
+                    title="Shift Management "
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
                   />

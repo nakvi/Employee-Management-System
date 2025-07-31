@@ -75,10 +75,10 @@ const Holiday = () => {
       VName: "",
       VDate: "",
       LeaveTypeID: "-1",
-      LocationID: "-1",
+      LocationID: "",
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VName: Yup.string()
@@ -88,6 +88,11 @@ const Holiday = () => {
       LeaveTypeID: Yup.string().test(
         "is-valid-leave-type",
         "Holiday Type is required.",
+        (value) => value !== "-1"
+      ),
+      LocationID: Yup.string().test(
+        "is-valid-location",
+        "Location is required.",
         (value) => value !== "-1"
       ),
       IsActive: Yup.boolean(),
@@ -139,6 +144,10 @@ const Holiday = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+         if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteHoliday(deleteId));
     }
     setDeleteModal(false);
@@ -358,7 +367,8 @@ const Holiday = () => {
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeader
-                    title={isEditMode ? "Edit Holiday" : "Add Holiday"}
+                    // title={isEditMode ? "Edit Holiday" : "Add Holiday"}
+                    title="Holiday"
                     onCancel={handleCancel}
                     isEditMode={isEditMode}
                   />

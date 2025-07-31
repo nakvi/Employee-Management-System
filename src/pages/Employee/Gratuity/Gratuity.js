@@ -230,6 +230,10 @@ const Gratuity = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm();
+        setEditingGroup(null);
+      }
       dispatch(deleteGratuity(deleteId)).then(() => {
         dispatch(getGratuity());
       });

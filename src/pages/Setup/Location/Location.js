@@ -84,7 +84,7 @@ const Location = () => {
       ExistingLogo: null,
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       VCode: Yup.string()
@@ -103,8 +103,18 @@ const Location = () => {
         .typeError("Sort Order must be a number.")
         .required("Sort Order is required."),
       IsActive: Yup.boolean(),
+      // Logo: Yup.mixed().test(
+      //   "fileRequired",
+      //   "Logo is required.",
+      //   function (value) {
+      //     const { ExistingLogo } = this.parent;
+      //     // Require Logo only if neither a new file nor an existing logo is provided
+      //     return value || ExistingLogo;
+      //   }
+      // ),
     }),
-    onSubmit: (values) => {
+
+    onSubmit: async (values) => {
       // Add your form submission logic here
       const formData = new FormData();
       formData.append("VCode", values.VCode);
@@ -120,16 +130,38 @@ const Location = () => {
       if (values.Logo instanceof File) {
         formData.append("Logo", values.Logo);
       } else if (values.ExistingLogo) {
-        formData.append("ExistingLogo", values.ExistingLogo); // Send existing logo URL if no new file
+        const existingLogoFileName = values.ExistingLogo.split("/").pop();
+        formData.append("ExistingLogo", existingLogoFileName);
       }
-      if (editingGroup) {
-        dispatch(updateLocation({ ...values, VID: editingGroup.VID }));
-        setEditingGroup(null); // Reset after submission
-      } else {
-        dispatch(submitLocation(values));
+      // if (values.Logo instanceof File) {
+      //   formData.append("Logo", values.Logo);
+      // } else if (values.ExistingLogo) {
+      //   formData.append("ExistingLogo", values.ExistingLogo); // Send existing logo URL if no new file
+      // }
+      // if (editingGroup) {
+      //   dispatch(updateLocation({ ...values, VID: editingGroup.VID }));
+      //   setEditingGroup(null); // Reset after submission
+      // } else {
+      //   dispatch(submitLocation(values));
+      // }
+      // formik.resetForm();
+      // setImagePreview(null); // Reset image preview
+      try {
+        if (editingGroup) {
+          await dispatch(updateLocation({ ...values, VID: editingGroup.VID })).unwrap();
+          setEditingGroup(null);
+        } else {
+          await dispatch(submitLocation(values)).unwrap();
+        }
+        formik.resetForm();
+        setImagePreview(null);
+        formik.setFieldValue("Logo", null);
+        formik.setFieldValue("ExistingLogo", null);
+      } catch (error) {
+        // You can handle validation errors here
+        console.error("Submission failed:", error);
+        // Prevent refresh or display error message
       }
-      formik.resetForm();
-      setImagePreview(null); // Reset image preview
     },
   });
   // Handle file input change
@@ -148,6 +180,10 @@ const Location = () => {
   };
   const handleDeleteConfirm = () => {
     if (deleteId) {
+      if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteLocation(deleteId));
     }
     setDeleteModal(false);
@@ -161,21 +197,20 @@ const Location = () => {
     formik.setValues({
       Address: group.Address,
       AddressUrdu: group.AddressUrdu,
-      Logo: null, // Reset to null to allow new file upload
-      ExistingLogo: existingLogoUrl, // Store existing logo URL
+     Logo: null,
+     ExistingLogo: group.Logo,
       VCode: group.VCode,
       VName: group.VName,
       VNameUrdu: group.VNameUrdu,
       SortOrder: group.SortOrder,
       UID: group.UID,
       CompanyID: group.CompanyID,
-      IsActive: group.IsActive == true,
+      IsActive: group.IsActive == true || group.IsActive === 1,
     });
     setImagePreview(existingLogoUrl);
   };
   document.title = "Location | EMS";
 
-  // ...existing code...
 
   // Export to Excel
   const exportToExcel = () => {
@@ -201,15 +236,15 @@ const Location = () => {
       doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 22, {
         align: "center",
       });
-    // Add date
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(
-      `Generated on: ${new Date().toLocaleDateString()}`,
-      doc.internal.pageSize.getWidth() / 2,
-      28,
-      { align: "center" }
-    );
+      // Add date
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(
+        `Generated on: ${new Date().toLocaleDateString()}`,
+        doc.internal.pageSize.getWidth() / 2,
+        28,
+        { align: "center" }
+      );
 
       // Prepare data for the table
       const headers = [
@@ -234,53 +269,53 @@ const Location = () => {
         loc.IsActive === 1 || loc.IsActive === true ? "Active" : "Inactive",
       ]);
 
-    // Calculate total table width
-    const colWidths = [18, 28, 28, 32, 32, 14, 18];
-    const tableWidth = colWidths.reduce((a, b) => a + b, 0);
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const leftMargin = (pageWidth - tableWidth) / 2;
+      // Calculate total table width
+      const colWidths = [18, 28, 28, 32, 32, 14, 18];
+      const tableWidth = colWidths.reduce((a, b) => a + b, 0);
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const leftMargin = (pageWidth - tableWidth) / 2;
 
-    // Add table centered
-    autoTable(doc, {
-      head: headers,
-      body: data,
-      startY: 38,
-      tableWidth: "auto",
-      margin: { left: leftMargin, right: leftMargin, top: 30 },
-      styles: {
-        cellPadding: 3,
-        fontSize: 10,
-        valign: "middle",
-        halign: "left",
-        overflow: 'linebreak',
-      },
-      headStyles: {
-        fillColor: [41, 128, 185],
-        textColor: 255,
-        fontSize: 10,
-        fontStyle: "bold",
-        halign: "center"
-      },
-      columnStyles: {
-        0: { cellWidth: 18, halign: "center" },   // Code
-        1: { cellWidth: 28 },                     // Title
-        2: { cellWidth: 28 },                     // Title Urdu
-        3: { cellWidth: 32 },                     // Address
-        4: { cellWidth: 32 },                     // Address Urdu
-        5: { cellWidth: 14, halign: "center" },   // Sort Order
-        6: { cellWidth: 18, halign: "center" }    // Status
-      },
-      didDrawPage: (data) => {
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(
-          `Page ${data.pageCount}`,
-          doc.internal.pageSize.width / 2,
-          doc.internal.pageSize.height - 10,
-          { align: "center" }
-        );
-      }
-    });
+      // Add table centered
+      autoTable(doc, {
+        head: headers,
+        body: data,
+        startY: 38,
+        tableWidth: "auto",
+        margin: { left: leftMargin, right: leftMargin, top: 30 },
+        styles: {
+          cellPadding: 3,
+          fontSize: 10,
+          valign: "middle",
+          halign: "left",
+          overflow: 'linebreak',
+        },
+        headStyles: {
+          fillColor: [41, 128, 185],
+          textColor: 255,
+          fontSize: 10,
+          fontStyle: "bold",
+          halign: "center"
+        },
+        columnStyles: {
+          0: { cellWidth: 18, halign: "center" },   // Code
+          1: { cellWidth: 28 },                     // Title
+          2: { cellWidth: 28 },                     // Title Urdu
+          3: { cellWidth: 32 },                     // Address
+          4: { cellWidth: 32 },                     // Address Urdu
+          5: { cellWidth: 14, halign: "center" },   // Sort Order
+          6: { cellWidth: 18, halign: "center" }    // Status
+        },
+        didDrawPage: (data) => {
+          doc.setFontSize(10);
+          doc.setTextColor(100);
+          doc.text(
+            `Page ${data.pageCount}`,
+            doc.internal.pageSize.width / 2,
+            doc.internal.pageSize.height - 10,
+            { align: "center" }
+          );
+        }
+      });
 
       // Save the PDF
       doc.save(`Locations_${new Date().toISOString().slice(0, 10)}.pdf`);
@@ -483,14 +518,18 @@ const Location = () => {
   const isEditMode = editingGroup !== null;
   const handleCancel = () => {
     formik.resetForm();
-    setEditingGroup(null); // This resets the title to "Add Department Group"
+    formik.setFieldValue("Logo", null);
+    formik.setFieldValue("ExistingLogo", null);
+    setImagePreview(null);
+    setEditingGroup(null);
   };
+
   return (
     <React.Fragment>
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
@@ -557,7 +596,7 @@ const Location = () => {
                               {...formik.getFieldProps("VNameUrdu")}
                             />
                             {formik.touched.VNameUrdu &&
-                            formik.errors.VNameUrdu ? (
+                              formik.errors.VNameUrdu ? (
                               <div className="text-danger">
                                 {formik.errors.VNameUrdu}
                               </div>
@@ -570,14 +609,14 @@ const Location = () => {
                               Sort Order
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               className="form-control-sm"
                               id="SortOrder"
                               placeholder="Sort Order"
                               {...formik.getFieldProps("SortOrder")}
                             />
                             {formik.touched.SortOrder &&
-                            formik.errors.SortOrder ? (
+                              formik.errors.SortOrder ? (
                               <div className="text-danger">
                                 {formik.errors.SortOrder}
                               </div>
@@ -616,7 +655,7 @@ const Location = () => {
                               {...formik.getFieldProps("AddressUrdu")}
                             />
                             {formik.touched.AddressUrdu &&
-                            formik.errors.AddressUrdu ? (
+                              formik.errors.AddressUrdu ? (
                               <div className="text-danger">
                                 {formik.errors.AddressUrdu}
                               </div>
@@ -635,6 +674,11 @@ const Location = () => {
                               accept="image/*"
                               onChange={handleFileChange}
                             />
+                            {formik.touched.Logo && formik.errors.Logo ? (
+                              <div className="text-danger">
+                                {formik.errors.Logo}
+                              </div>
+                            ) : null}
                             {imagePreview && (
                               <div className="mt-2">
                                 <img
@@ -724,18 +768,18 @@ const Location = () => {
                     highlightOnHover
                     responsive
                     customStyles={customStyles}
-                    // subHeader
-                    // subHeaderComponent={
-                    //   <div className="d-flex justify-content-end">
-                    //     <input
-                    //       type="text"
-                    //       placeholder="Search"
-                    //       className="form-control-sm"
-                    //       value={searchText}
-                    //       onChange={(e) => setSearchText(e.target.value)} // ate search text
-                    //     />
-                    //   </div>
-                    // }
+                  // subHeader
+                  // subHeaderComponent={
+                  //   <div className="d-flex justify-content-end">
+                  //     <input
+                  //       type="text"
+                  //       placeholder="Search"
+                  //       className="form-control-sm"
+                  //       value={searchText}
+                  //       onChange={(e) => setSearchText(e.target.value)} // ate search text
+                  //     />
+                  //   </div>
+                  // }
                   />
                 </CardBody>
               </Card>

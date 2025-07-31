@@ -91,7 +91,7 @@ const Increment = () => {
       FirstAmount: "",
       CompanyID: "1",
       UID: "1",
-      IsActive: false,
+      IsActive: true,
     },
     validationSchema: Yup.object({
       ETypeID: Yup.number()
@@ -110,20 +110,40 @@ const Increment = () => {
       ),
       FirstAmount: Yup.number().required("First Amount is required"),
     }),
-    onSubmit: (values) => {
+    onSubmit:async (values,{setSubmitting}) => {
       const transformedValues = {
         ...values,
         IsActive: values.IsActive ? 1 : 0,
       };
-      if (editingGroup) {
-        dispatch(
-          updateSalaryIncrement({ ...transformedValues, VID: editingGroup.VID })
-        );
-        setEditingGroup(null);
-      } else {
-        dispatch(submitSalaryIncrement(transformedValues));
-      }
-      formik.resetForm();
+        try {
+            let result;
+            if (editingGroup) {
+              // Update existing shift
+              result = await dispatch(
+                updateSalaryIncrement({ ...transformedValues, VID: editingGroup.VID })
+              ).unwrap();
+            } else {
+              // Create new shift
+              result = await dispatch(submitSalaryIncrement(transformedValues)).unwrap();
+            }
+            // Only reset the form and clear editing state on success
+            formik.resetForm();
+            setEditingGroup(null);
+          } catch (error) {
+            // Error is handled in the thunk with toast notifications
+            console.error("Submission error:", error);
+          } finally {
+            setSubmitting(false); // Ensure form is not stuck in submitting state
+          }
+      // if (editingGroup) {
+      //   dispatch(
+      //     updateSalaryIncrement({ ...transformedValues, VID: editingGroup.VID })
+      //   );
+      //   setEditingGroup(null);
+      // } else {
+      //   dispatch(submitSalaryIncrement(transformedValues));
+      // }
+      // formik.resetForm();
     },
   });
 
@@ -167,6 +187,10 @@ const Increment = () => {
 
   const handleDeleteConfirm = () => {
     if (deleteId) {
+       if (editingGroup && editingGroup.VID === deleteId) {
+        formik.resetForm(); // Reset the form
+        setEditingGroup(null); // Clear the editing state
+      }
       dispatch(deleteSalaryIncrement(deleteId));
     }
     setDeleteModal(false);
@@ -475,17 +499,17 @@ const Increment = () => {
       <div className="page-content">
         <Container fluid>
           {loading && <p>Loading...</p>}
-          {error && <p className="text-danger">{error}</p>}
+          {/* {error && <p className="text-danger">{error}</p>} */}
           <Row>
             <Col lg={12}>
               <Card>
                 <Form onSubmit={formik.handleSubmit}>
                   <PreviewCardHeaderUpload
                     title="Increment"
-                    // onCancel={() => {
-                    //   formik.resetForm();
-                    //   setEditingGroup(null);
-                    // }}
+                    onCancel={() => {
+                      formik.resetForm();
+                      setEditingGroup(null);
+                    }}
                     editing={!!editingGroup}
                     isEditMode={!!editingGroup}
                   />

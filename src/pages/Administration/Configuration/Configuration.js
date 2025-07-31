@@ -92,7 +92,7 @@ const Configuration = () => {
                           </div>
                         </Col>
 
-                        <Col xxl={2} md={2} className="mt-4">
+                        {/* <Col xxl={2} md={2} className="mt-4">
                           <div
                             className="form-check form-switch mt-3 "
                             dir="ltr"
@@ -106,7 +106,7 @@ const Configuration = () => {
                               IsActive
                             </Label>
                           </div>
-                        </Col>
+                        </Col> */}
                       </Row>
                     </div>
                   </CardBody>

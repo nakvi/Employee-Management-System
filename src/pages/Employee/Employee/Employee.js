@@ -68,26 +68,26 @@ const Employee = () => {
     return {
       ...data,
       // Convert numeric booleans to actual booleans
-      Isactive: data.Isactive === 1,
-      IsactiveAct: data.IsactiveAct === 1,
-      HaveOT: data.HaveOT === 1,
-      HaveOTAct: data.HaveOTAct === 1,
-      HaveOTOFF: data.HaveOTOFF === 1,
-      IsBank: data.IsBank === 1,
-      IsGroupInsurance: data.IsGroupInsurance === 1,
-      IsPFundEntitled: data.IsPFundEntitled === 1,
-      IsPFund: data.IsPFund === 1,
-      IsPessi: data.IsPessi === 1,
-      IsExempt: data.IsExempt === 1,
-      IsShiftEmployee: data.IsShiftEmployee === 1,
-      IsShiftEmployeeAct: data.IsShiftEmployeeAct === 1,
-      ExemptLate: data.ExemptLate === 1,
-      IsTransport: data.IsTransport === 1,
-      IsManager: data.IsManager === 1,
-      IsShowForAudit: data.IsShowForAudit === 1,
-      IsStopSalary: data.IsStopSalary === 1,
-      BusDeduction: data.BusDeduction === 1,
-      BlackList: data.BlackList === 1,
+      Isactive: data.Isactive === 1 || data.Isactive === true,
+      IsactiveAct: data.IsactiveAct === 1 || data.IsactiveAct === true,
+      HaveOT: data.HaveOT === 1 || data.HaveOT === true,
+      HaveOTAct: data.HaveOTAct === 1 || data.HaveOTAct === true,
+      HaveOTOFF: data.HaveOTOFF === 1 || data.HaveOTOFF === true,
+      IsBank: data.IsBank === 1 || data.IsBank === true,
+      IsGroupInsurance: data.IsGroupInsurance === 1 || data.IsGroupInsurance === true,
+      IsPFundEntitled: data.IsPFundEntitled === 1 || data.IsPFundEntitled === true,
+      IsPFund: data.IsPFund === 1 || data.IsPFund === true,
+      IsPessi: data.IsPessi === 1 || data.IsPessi === true,
+      IsExempt: data.IsExempt === 1 || data.IsExempt === true,
+      IsShiftEmployee: data.IsShiftEmployee === 1 || data.IsShiftEmployee === true,
+      IsShiftEmployeeAct: data.IsShiftEmployeeAct === 1 || data.IsShiftEmployeeAct === true,
+      ExemptLate: data.ExemptLate === 1 || data.ExemptLate === true,
+      IsTransport: data.IsTransport === 1 || data.IsTransport === true,
+      IsManager: data.IsManager === 1 || data.IsManager === true,
+      IsShowForAudit: data.IsShowForAudit === 1 || data.IsShowForAudit === true,
+      IsStopSalary: data.IsStopSalary === 1 || data.IsStopSalary === true,
+      BusDeduction: data.BusDeduction === 1 || data.BusDeduction === true,
+      BlackList: data.BlackList === 1 || data.BlackList === true,
       // Format date fields
       DOB: formatDate(data.DOB),
       DOJ: formatDate(data.DOJ),
@@ -156,7 +156,7 @@ const Employee = () => {
       IsBank: false,
       BankAccountNo: "",
       CompanyBankID: "",
-      Isactive: false,
+      Isactive: true,
       IsactiveAct: false,
       DOL: "",
       DOLAct: "",
@@ -1796,6 +1796,7 @@ const Employee = () => {
                               type="checkbox"
                               id="IsStopSalary"
                               {...formik.getFieldProps("IsStopSalary")}
+                              checked={formik.values.IsStopSalary}
                             />
                           </span>
                         </Col>

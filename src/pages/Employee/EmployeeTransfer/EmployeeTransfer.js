@@ -540,7 +540,7 @@ const exportToWord = () => {
                               onChange={formik.handleChange}
                               onBlur={formik.handleBlur}
                             >
-                              <option value="-1">---Select---</option>
+                              <option disabled>---Select---</option>
                               {location?.length > 0 ? (
                                 location.map((group) => (
                                   <option key={group.VID} value={group.VID}>
