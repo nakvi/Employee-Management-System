@@ -59,7 +59,7 @@ export const submitSecUserRole = createAsyncThunk(
       }
 
       const data = await response.json();
-      toast.success(data.message || "User Role added successfully!");
+      // toast.success(data.message || "User Role added successfully!");
       return data.data;
     } catch (error) {
       toast.error("Failed to add user Role. Please try again!");
@@ -89,7 +89,7 @@ export const updateSecUserRole = createAsyncThunk(
         throw new Error("Failed to update user Role");
       }
       const responseData = await response.json();
-      toast.success("User Role updated successfully!");
+      // toast.success("User Role updated successfully!");
       return responseData.data;
     } catch (error) {
       toast.error("Failed to update user Role. Please try again!");

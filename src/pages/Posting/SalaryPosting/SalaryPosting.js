@@ -17,6 +17,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getDepartment } from "../../../slices/setup/department/thunk";
 import { getEmployeeType } from "../../../slices/employee/employeeType/thunk";
 import { getEmployee } from "../../../slices/employee/employee/thunk";
+import { getLocation } from "../../../slices/setup/location/thunk";
 
 const SalaryPosting = () => {
   document.title = "Salary Posting | EMS";
@@ -26,11 +27,13 @@ const SalaryPosting = () => {
   const departmentList = department.data || [];
   const { employeeType = [] } = useSelector((state) => state.EmployeeType || {});
   const { employee = {} } = useSelector((state) => state.Employee || {});
+  const { location = [] } = useSelector((state) => state.Location || {});
 
   useEffect(() => {
     dispatch(getDepartment());
     dispatch(getEmployeeType());
     dispatch(getEmployee());
+    dispatch(getLocation());
   }, [dispatch]);
   return (
     <React.Fragment>
@@ -43,7 +46,7 @@ const SalaryPosting = () => {
               <Card>
                 <Form>
                   {/* <PreviewCardHeader2 title="Salary Posting " /> */}
-                  <CardHeader className="align-items-center d-flex py-2">
+                  {/* <CardHeader className="align-items-center d-flex py-2">
                     <h4 className="card-title mb-0 flex-grow-1">Salary Posting</h4>
                     <div className="d-flex flex-wrap">
                       <Button
@@ -58,7 +61,6 @@ const SalaryPosting = () => {
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-
                       >
                         <i className="align-bottom me-1"></i>To Final
                       </Button>
@@ -66,7 +68,6 @@ const SalaryPosting = () => {
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-
                       >
                         <i className="align-bottom me-1"></i>To Salary
                       </Button>
@@ -74,7 +75,6 @@ const SalaryPosting = () => {
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-
                       >
                         <i className="align-bottom me-1"></i>Update Salary
                       </Button>
@@ -85,8 +85,6 @@ const SalaryPosting = () => {
                       >
                         <i className="align-bottom me-1"></i>Update Old Salary
                       </Button>
-
-
                       <Button
                         type="submit"
                         color="success"
@@ -106,31 +104,43 @@ const SalaryPosting = () => {
                         <i className="align-bottom me-1"></i> Cancel
                       </Button>
                     </div>
-                  </CardHeader>
-                  {/* <div className="align-items-center d-flex py-2 ">
-                    <h4 className="card-title mb-0 flex-grow-1"></h4>
-                    <div className="d-flex flex-wrap gap-1">
+                  </CardHeader> */}
+                  <CardHeader className="py-2">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <h4 className="card-title mb-0">Salary Posting</h4>
+                      <div className="d-flex">
+                        <Button
+                          type="submit"
+                          color="success"
+                          className="add-btn me-1 py-1"
+                          id="create-btn"
+                        >
+                          <i className="align-bottom me-1"></i>Posting
+                        </Button>
+                        <Button color="dark" className="add-btn me-1 py-1">
+                          <i className="align-bottom me-1"></i>Cancel
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="d-flex flex-wrap justify-content-end">
                       <Button
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                       
                       >
-                        <i className="align-bottom me-1"></i>Sent To Final
+                        <i className="align-bottom me-1"></i>To Final
                       </Button>
                       <Button
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                        
                       >
-                        <i className="align-bottom me-1"></i>Sent To Salary
+                        <i className="align-bottom me-1"></i>To Salary
                       </Button>
                       <Button
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                       
                       >
                         <i className="align-bottom me-1"></i>Update Salary
                       </Button>
@@ -141,29 +151,26 @@ const SalaryPosting = () => {
                       >
                         <i className="align-bottom me-1"></i>Update Old Salary
                       </Button>
-                     
-                      
                       <Button
                         type="submit"
                         color="success"
                         className="add-btn me-1 py-1"
-                        
                       >
-                        <i className="align-bottom me-1"></i>Full Year Posting
+                        <i className="align-bottom me-1"></i>Year Posting
                       </Button>
                       <Button
                         type="submit"
                         color="danger"
                         className="add-btn me-1 py-1"
                       >
-                        <i className="align-bottom me-1"></i>Delete Salary
+                        <i className="align-bottom me-1"></i>Delete
                       </Button>
                     </div>
-                  </div> */}
+                  </CardHeader>
                   <CardBody className="card-body">
                     <div className="live-preview">
                       <Row className="gy-4 ">
-                        <Col xxl={2} md={3}>
+                        <Col xxl={2} md={2}>
                           <div className="mb-3">
                             <Label
                               htmlFor="departmentGroupInput"
@@ -209,32 +216,38 @@ const SalaryPosting = () => {
                             </select>
                           </div>
                         </Col>
-                        {/* <Col xxl={2} md={3}>
+                        <Col xxl={2} md={3}>
                           <div className="mb-3">
-                            <Label
-                              htmlFor="departmentGroupInput"
-                              className="form-label"
-                            >
-                              Department
+                            <Label htmlFor="locationInput" className="form-label">
+                              Location
                             </Label>
                             <select
-                              className="form-select  form-select-sm"
-                              name="AttGroupID"
-                              id="AttGroupID"
+                              className="form-select form-select-sm"
+                              name="location"
+                              id="locationInput"
+                            // value={formData.location}
+                            // onChange={handleInputChange}
                             >
-                              <option value="">---Select--- </option>
-                              <option value="Choices1">IT</option>
-                              <option value="Choices2">Software</option>
+                              <option value="">---Select---</option>
+                              {location.length > 0 ? (
+                                location.map((loc) => (
+                                  <option key={loc.VID} value={loc.VID}>
+                                    {loc.VName || loc.LocationName || loc.title}
+                                  </option>
+                                ))
+                              ) : (
+                                <option disabled>No locations available</option>
+                              )}
                             </select>
                           </div>
-                        </Col> */}
-                        <Col xxl={2} md={3}>
+                        </Col>
+                        <Col xxl={2} md={2}>
                           <div>
                             <Label htmlFor="VName" className="form-label">
                               Month
                             </Label>
                             <Input
-                              type="date"
+                              type="month"
                               className="form-control-sm"
                               id="VName"
                             />

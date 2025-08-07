@@ -398,9 +398,9 @@ const Navdata = () => {
       },
       subItems: [
         {
-          id: "dailyAttendance",
-          label: "Daily Attendance",
-          link: "/daily-attendance-posting",
+          id: "attendancePosting",
+          label: "Attendance Posting",
+          link: "/attendance-posting",
           parentId: "posting",
         },
         // {
@@ -495,12 +495,12 @@ const Navdata = () => {
           link: "/user-management",
           parentId: "administration",
         },
-        {
-          id: "userRights",
-          label: "User Rights",
-          link: "/user-rights",
-          parentId: "administration",
-        },
+        // {
+        //   id: "userRights",
+        //   label: "User Rights",
+        //   link: "/user-rights",
+        //   parentId: "administration",
+        // },
         // {
         //   id: "Permissions",
         //   label: "Permission Management",

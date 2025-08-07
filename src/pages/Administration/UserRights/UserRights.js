@@ -348,7 +348,7 @@ const UserRights = forwardRef((props, ref) => {
             </Row>
 
             <Row>
-              <Col md={4} lg={3}>
+              <Col md={8} lg={8}>
                 <Card>
                   <CardBody>
                     <div className="table-responsive">
@@ -397,7 +397,7 @@ const UserRights = forwardRef((props, ref) => {
                 </Card>
               </Col>
 
-              <Col md={8} lg={9}>
+              {/* <Col md={8} lg={9}>
                 <Card>
                   <PreviewCardHeader
                     title="User Rights"
@@ -505,7 +505,7 @@ const UserRights = forwardRef((props, ref) => {
                     )}
                   </Button>
                 </div>
-              </Col>
+              </Col> */}
             </Row>
           </form>
         </Container>

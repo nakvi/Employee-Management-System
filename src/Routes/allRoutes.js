@@ -39,9 +39,7 @@ import AttendanceEmployee from "../pages/Attendance/AttendanceEmployee/Attendanc
 import OTEntry from "../pages/Attendance/OTEntry/OTEntry";
 import DailyAttendanceReport from "../pages/Reports/DailyAttendanceReport/DailyAttendanceReport";
 import MonthlyAttendanceReport from "../pages/Reports/MonthlyAttendanceReport/MonthlyAttendanceReport";
-import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
 import EmployeeReport from "../pages/Employee/Reports/EmployeeReport";
-import DailyAttendancePosting from "../pages/Posting/DailyAttendance/DailyAttendance";
 import EmployeeLetter from "../pages/Employee/Letters/EmployeeLetter";
 import Roster from "../pages/Attendance/Roster/Roster";
 import SalaryPosting from "../pages/Posting/SalaryPosting/SalaryPosting";
@@ -68,19 +66,30 @@ import SalaryAllowanceDeduction from "../pages/Employee/SalaryAllowanceDeduction
 // daily att reports 
 import Invoice from "../Components/pdfsPreviews/invoice";
 import ReportsPreview from "../Components/pdfsPreviews/reports";
-import UnpostedPreview from "../Components/pdfsPreviews/UnpostedPreview";
-import PostedPreview from "../Components/pdfsPreviews/PostedPreview";
-import LatecomerPreview from "../Components/pdfsPreviews/LatecomerPreview";
-import AbsenteesPreview from "../Components/pdfsPreviews/AbsenteesPreview";
+import UnpostedPreview from "../Components/pdfsPreviews/DailyAttRpts/UnpostedPreview";
+import PostedPreview from "../Components/pdfsPreviews/DailyAttRpts/PostedPreview";
+import LatecomerPreview from "../Components/pdfsPreviews/DailyAttRpts/LatecomerPreview";
+import AbsenteesPreview from "../Components/pdfsPreviews/DailyAttRpts/AbsenteesPreview";
 // Monthly att reports 
-import MonthlyAttCardPreview from "../Components/pdfsPreviews/MonthlyAttCardPreview";
-import MonthlyAttSheetPreview from "../Components/pdfsPreviews/MonthlyAttSheetPreview";
-import MonthlyAttSummaryPreview from "../Components/pdfsPreviews/MonthlyAttSummaryPreview";
-import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttLeaveListPreview";
+import MonthlyAttCardPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttCardPreview";
+import MonthlyAttSheetPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttSheetPreview";
+import MonthlyAttSummaryPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttSummaryPreview";
+import MonthlyAttLeaveListPreview from "../Components/pdfsPreviews/MonthlyAttRpts/MonthlyAttLeaveListPreview";
 // Salary reports 
 // import MonthlyAttSalarySheetPreview from "../Components/pdfsPreviews/MonthlyAttSalarySheetPreview";
-import SalaryReportPreview from "../Components/pdfsPreviews/SalaryReportPreview";
-import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalarySummaryReportPreview";
+import SalaryHistoryPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryHistoryPreview";
+import SalaryReportPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryReportPreview";
+import SalaryReportTwoPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryReportTwoPreview";
+import SalarySummaryReportPreview from "../Components/pdfsPreviews/SalaryRpts/SalarySummaryReportPreview";
+import SalarySlipPreview from "../Components/pdfsPreviews/SalaryRpts/SalarySlipPreview";
+import SalaryOverTimeSheetPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryOverTimeSheetPreview";
+import SalaryOverTimeSummaryReportPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryOverTimeSummaryReportPreview";
+import SalaryFinalSettlementPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryFinalSettlementPreview";
+import SalaryAllwDedPreview from "../Components/pdfsPreviews/SalaryRpts/SalaryAllwDedPreview";
+
+import AttendancePosting from "../pages/Posting/AttendancePosting/AttendancePosting";
+import SalaryReport from "../pages/Reports/SalaryReport/SalaryReport";
+
 
 
 const authProtectedRoutes = [
@@ -92,8 +101,16 @@ const authProtectedRoutes = [
   { path: "/monthly-attendance-leave-list-preview", component: <MonthlyAttLeaveListPreview /> },
   // Salary reports
   // { path: "/monthly-attendance-salary-report-preview", component: <MonthlyAttSalarySheetPreview /> },
+  { path: "/salary-history-preview", component: <SalaryHistoryPreview /> },
   { path: "/salary-report-preview", component: <SalaryReportPreview /> },
+  { path: "/salary-report-two-preview", component: <SalaryReportTwoPreview /> },
   { path: "/salary-summary-report-preview", component: <SalarySummaryReportPreview /> },
+  { path: "/salary-slip-preview", component: <SalarySlipPreview /> },
+  { path: "/salary-over-time-sheet-preview", component: <SalaryOverTimeSheetPreview /> },
+  { path: "/salary-over-time-summary-report-preview", component: <SalaryOverTimeSummaryReportPreview /> },
+  { path: "/salary-final-settlement-preview", component: <SalaryFinalSettlementPreview /> },
+  { path: "/salary-allowance-deduction-preview", component: <SalaryAllwDedPreview /> },
+
 
   // daily att reports 
   { path: "/report-preview", component: <ReportsPreview /> },
@@ -145,7 +162,7 @@ const authProtectedRoutes = [
   { path: "/roster", component: <Roster/>},
   { path: "/backdate-entry", component: <BackdateEntry/>},
   // Posting
-  { path: "/daily-attendance-posting", component: <DailyAttendancePosting /> },
+  { path: "/attendance-posting", component: <AttendancePosting /> },
   { path: "/salary-posting", component: <SalaryPosting /> },
 
 

@@ -57,7 +57,7 @@ export const submitSecUserLocation = createAsyncThunk(
       }
 
       const data = await response.json();
-      toast.success(data.message || "User location added successfully!");
+      // toast.success(data.message || "User location added successfully!");
       return data.data;
     } catch (error) {
       toast.error("Failed to add user location. Please try again!");
@@ -86,7 +86,7 @@ export const updateSecUserLocation = createAsyncThunk(
         throw new Error("Failed to update user location");
       }
       const responseData = await response.json();
-      toast.success("User location updated successfully!");
+      // toast.success("User location updated successfully!");
       return responseData.data;
     } catch (error) {
       toast.error("Failed to update user location. Please try again!");
@@ -114,7 +114,7 @@ export const deleteSecUserLocation = createAsyncThunk(
 
       const responseData = await response.json();
       if (responseData.status === "0") {
-        toast.success("User location deleted successfully!");
+        // toast.success("User location deleted successfully!");
         return id;
       } else {
         throw new Error(responseData.message || "Failed to delete data.");
